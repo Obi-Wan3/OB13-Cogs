@@ -1,0 +1,13 @@
+.DS_Store
+.idea/
+venv/
+
+# Pre-Alpha WIP Cogs
+conditions/
+dailyxkcd/
+embedreact/
+mentionhelp/
+fah/
+klingon/
+referrals/
+reply/
