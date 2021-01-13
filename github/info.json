@@ -1,0 +1,9 @@
+{
+    "author": ["Obi-Wan3"],
+    "install_msg": "Thanks for installing.",
+    "short": "Github RSS Feeds",
+    "description": "Sends Github commit messages exactly as the webhook would.",
+    "tags": ["github", "rss"],
+    "permissions": ["embed_links"],
+    "requirements": ["feedparser"]
+}

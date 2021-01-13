@@ -1,0 +1,10 @@
+{
+    "author": [
+        "Obi-Wan3"
+    ],
+    "description": "Translate some text using Google Translate.",
+    "hidden": false,
+    "install_msg": "Thank you for installing.",
+    "requirements": ["googletrans"],
+    "short": "Google Translate"
+}

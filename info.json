@@ -1,0 +1,8 @@
+{
+    "author" : ["Obi-Wan3"],
+    "install_msg" : "Thanks for installing!\nIf you have any suggestions, or found any bugs, feel free to create an issue on my repo at https://github.com/Obi-Wan3/OB13-Cogs.",
+    "name" : "OB13-Cogs",
+    "short" : "Assorted Utility Cogs for Red v3",
+    "description" : "Assorted Utility Cogs for Red v3",
+    "tags" : ["utilities", "fun", "translate", "counting"]
+}
