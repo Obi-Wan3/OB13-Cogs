@@ -22,7 +22,7 @@ Please see below for a list of my cogs and their statuses. A big thank you to th
 | ImprovTime | ✓ Beta | One Word Story Channel | Obi-Wan3, Atmos#0101 (Bounty Asker) |
 | Klingon | ✗ Alpha | Translation to [Klingon](http://mrklingo.freeshell.org/uta/index.php) | Obi-Wan3 |
 | MentionHelp | ✗ WIP | Customizable MentionHelp Message | Obi-Wan3 |
-| Referrals | ✗ WIP | Invite Referral -> Credits | Obi-Wan3, Vertyco#0117 (Bounty Asker) |
+| Referrals | ✓ Beta | Invite Referral -> Credits | Obi-Wan3, Vertyco#0117 (Bounty Asker) |
 | Reply | ✗ WIP | Bot Replies to Messages | Obi-Wan3 |
 | Translate | ✓ Beta | Free Google Translations | Obi-Wan3 |
 

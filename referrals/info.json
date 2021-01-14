@@ -1,0 +1,9 @@
+{
+    "author": [
+        "Obi-Wan3"
+    ],
+    "description": "Allows users who refer others to the server to gain credits.",
+    "hidden": false,
+    "install_msg": "Thank you for installing.",
+    "short": "Server Referrals -> Credits"
+}
