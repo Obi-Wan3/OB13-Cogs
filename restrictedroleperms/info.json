@@ -1,0 +1,9 @@
+{
+    "author": [
+        "Obi-Wan3"
+    ],
+    "description": "Gives restricted permissions to certain roles to mention/assign other roles.",
+    "hidden": false,
+    "install_msg": "Thank you for installing.",
+    "short": "Restricted Permissions for Roles"
+}
