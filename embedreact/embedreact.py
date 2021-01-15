@@ -15,23 +15,20 @@ class EmbedReact(commands.Cog):
         self.config = Config.get_conf(self, identifier=14000605, force_registration=True)
         default_guild = {
             "toggle": True,
-            "reactions": [],
-            "channels": []
+            "reactions": {}
         }
         self.config.register_guild(**default_guild)
 
     @commands.Cog.listener("on_message_without_command")
     async def _message_listener(self, message: discord.Message):
-        channels = await self.config.guild(message.guild).channels()
-        reactions = await self.config.guild(message.guild).reactions()
+        reactions = (await self.config.guild(message.guild).reactions()).get(str(message.channel.id))
 
         # Ignore these messages
         if (
-            message.channel.id not in channels or  # Message not in the set channels
             await self.bot.cog_disabled_in_guild(self, message.guild) or  # Cog disabled in guild
             not await self.config.guild(message.guild).toggle() or  # EmbedReact toggled off
             message.author.bot or  # Message author is a bot
-            not reactions  # No reactions set
+            not reactions  # No reactions set in channel
         ):
             return
 
@@ -63,29 +60,42 @@ class EmbedReact(commands.Cog):
         return await ctx.tick()
 
     @embedreact.command(name="reactions", aliases=["emojis"])
-    async def _reactions(self, ctx: commands.Context, *emojis: str):
-        """Set the emojis to automatically react with."""
+    async def _reactions(self, ctx: commands.Context, channel: discord.TextChannel, *emojis: str):
+        """Set the emojis to automatically react with for a channel."""
         for e in emojis:
             try:
-                await ctx.react_quietly(e)
+                await ctx.message.add_reaction(e)
             except (discord.Forbidden, discord.HTTPException, discord.NotFound, discord.InvalidArgument):
                 return await ctx.send(f"Invalid emoji: {e}")
-        await self.config.guild(ctx.guild).reactions.set(emojis)
+        async with self.config.guild(ctx.guild).reactions() as reactions:
+            reactions[str(channel.id)] = emojis
         return await ctx.tick()
 
-    @embedreact.command(name="channels")
-    async def _channels(self, ctx: commands.Context, *channels: discord.TextChannel):
-        """Set the channels to automatically react with emojis in."""
-        await self.config.guild(ctx.guild).channels.set([c.id for c in channels])
+    @embedreact.command(name="remove")
+    async def _remove(self, ctx: commands.Context, *channels: discord.TextChannel):
+        """Remove channels to automatically react with emojis in."""
+        async with self.config.guild(ctx.guild).reactions() as reactions:
+            for c in channels:
+                del reactions[str(c.id)]
+        return await ctx.tick()
+
+    @embedreact.command(name="clear")
+    async def _clear(self, ctx: commands.Context):
+        """Clear & reset the current EmbedReact settings."""
+        await self.config.guild(ctx.guild).clear()
         return await ctx.tick()
 
     @embedreact.command(name="view")
     async def _view(self, ctx: commands.Context):
         """View the current EmbedReact settings."""
         config = await self.config.guild(ctx.guild).all()
-        embed = discord.Embed(title="EmbedReact Settings", color=await ctx.embed_color(), description=f"""
-            **Toggle:** {config['toggle']}
-            **Reactions:** {' '.join(config['reactions']) if config['reactions'] else None}
-            **Channels:** {humanize_list([self.bot.get_channel(c).mention for c in config['channels']]) if config['channels'] else None}
-        """)
+
+        embed = discord.Embed(title="EmbedReact Settings", color=await ctx.embed_color(), description=f"**Toggle:** {config['toggle']}\n{'**Reactions:** None' if not config['reactions'] else ''}")
+
+        if config['reactions']:
+            r_string = ""
+            for k in config['reactions'].keys():
+                r_string += f"{self.bot.get_channel(int(k)).mention} {humanize_list(config['reactions'][k])}\n"
+            embed.add_field(name="Reactions", value=r_string)
+
         return await ctx.send(embed=embed)
