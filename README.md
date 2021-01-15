@@ -24,6 +24,7 @@ Please see below for a list of my cogs and their statuses. A big thank you to th
 | MentionHelp | ✗ WIP | Customizable MentionHelp Message | Obi-Wan3 |
 | Referrals | ✓ Beta | Invite Referral -> Credits | Obi-Wan3, Vertyco#0117 (Bounty Asker) |
 | Reply | ✗ WIP | Bot Replies to Messages | Obi-Wan3 |
+| RestrictedRolePerms | ✗ WIP | Give Certain Roles Restricted Permissions | Obi-Wan3, Mile High#7102 (Bounty Asker) |
 | Translate | ✓ Beta | Free Google Translations | Obi-Wan3 |
 
 # Installation

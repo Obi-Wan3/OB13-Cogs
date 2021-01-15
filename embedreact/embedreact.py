@@ -3,6 +3,7 @@ from redbot.core.utils.chat_formatting import humanize_list
 import discord
 import re
 
+# Thanks ZeLarp for the RegEx
 URL_REGEX = r"<?(https?|ftp)://[^\s/$.?#].[^\s]*>?"
 
 
