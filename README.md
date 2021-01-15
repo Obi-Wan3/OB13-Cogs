@@ -29,6 +29,7 @@ Cogs marked with a ✓ are ready for use, while those with a ✗ are still a Wor
 | Reply | ✗ | Bot Replies to Messages | Obi-Wan3 |
 | RestrictedRolePerms | ✓ | Give Certain Roles Restricted Permissions | Obi-Wan3, Mile High#7102 (BC) |
 | Translate | ✓ | Free Google Translations | Obi-Wan3 |
+| QuizRole | ✗ | Take a Quiz to Gain a Role | Obi-Wan3, Tetra#0001 (BC) |
 
 # Installation
 Run the following commands with your Red instance, replacing `[p]` with your prefix:
