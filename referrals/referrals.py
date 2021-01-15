@@ -17,7 +17,9 @@ class Referrals(commands.Cog):
             "toggle": False,
             "amount": 0,
             "time_limit": None,
-            "already_redeemed": []
+            "already_redeemed": [],
+            "log_channel": None,
+            "account_age": None
         }
         self.config.register_guild(**default_guild)
 
@@ -47,11 +49,21 @@ class Referrals(commands.Cog):
         ):
             return await ctx.send("Unfortunately, you have exceeded the time given to run this command after you join.")
 
+        # Check if user account is older than the minimum age
+        account_age = await self.config.guild(ctx.guild).account_age()
+        if account_age and not (ctx.author.created_at > (datetime.now() - timedelta(hours=time_limit))):
+            return await ctx.send("Your account is too new!")
+
         new = await bank.deposit_credits(member, to_deposit)
         cname = await bank.get_currency_name(ctx.guild)
 
         async with self.config.guild(ctx.guild).already_redeemed() as already_redeemed:
             already_redeemed.append(ctx.author.id)
+
+        # Log into channel if log_channel set
+        log_channel = await self.config.guild(ctx.guild).log_channel()
+        if log_channel:
+            await self.bot.get_channel(log_channel).send(f"{member.mention} has gained {to_deposit} {cname} for referring {ctx.author.mention}.")
 
         return await ctx.send(f"{member.mention} Thanks for referring another user! {to_deposit} {cname} have been deposited to your account. Your new balance is {new} {cname}.")
 
@@ -79,12 +91,33 @@ class Referrals(commands.Cog):
 
     @_referset.command(name="timelimit")
     async def _time_limit(self, ctx: commands.Context, hours: int):
-        """Set the time given to new users to run this command."""
+        """Set the time given to new users to run [p]referredby."""
 
         if not hours or hours < 1:
             return await ctx.send("Please enter a positive integer!")
 
         await self.config.guild(ctx.guild).time_limit.set(hours)
+        return await ctx.tick()
+
+    @_referset.command(name="accountage")
+    async def _account_age(self, ctx: commands.Context, hours: int = None):
+        """Set minimum account age for users to run [p]referredby (leave blank for none)."""
+
+        if hours is None:
+            await self.config.guild(ctx.guild).account_age.set(None)
+        elif hours < 1:
+            return await ctx.send("Please enter a positive integer!")
+        else:
+            await self.config.guild(ctx.guild).account_age.set(hours)
+        return await ctx.tick()
+
+    @_referset.command(name="logchannel")
+    async def _log_channel(self, ctx: commands.Context, channel: discord.TextChannel = None):
+        """Set the channel for logs to go into (leave blank for none)."""
+        if channel:
+            await self.config.guild(ctx.guild).log_channel.set(channel.id)
+        else:
+            await self.config.guild(ctx.guild).log_channel.set(None)
         return await ctx.tick()
 
     @_referset.command(name="initialize")
@@ -113,6 +146,7 @@ class Referrals(commands.Cog):
 
     @_referset.command(name="alreadyreferred")
     async def _already_referred(self, ctx: commands.Context, member: discord.Member):
+        """Check if the user is has already used [p]referredby."""
         already_redeemed_list = await self.config.guild(ctx.guild).already_redeemed()
         if member.id in already_redeemed_list:
             return await ctx.send("This member has already used `[p]referredby`.")
@@ -137,6 +171,8 @@ class Referrals(commands.Cog):
         embed = discord.Embed(title="Referrals Settings", color=await ctx.embed_color(), description=f"""
         **Toggle:** {settings['toggle']}
         **Amount:** {settings['amount']} {await bank.get_currency_name(ctx.guild)}
+        **Log Channel:** {self.bot.get_channel(settings['log_channel']).mention if settings['log_channel'] else "None"}
+        **Min. Account Age:** {str(settings['account_age'])+' hours' if settings['account_age'] else None}
         **Time Limit:** {f"{settings['time_limit']} hours within join" if settings['time_limit'] else "Not Set"}
         """)
         return await ctx.send(embed=embed)
