@@ -14,8 +14,8 @@ class RestrictedRolePerms(commands.Cog):
         self.bot = bot
         self.config = Config.get_conf(self, identifier=14000605, force_registration=True)
         default_guild = {
-            "mentionable": {"toggle": False, "rules": {}},
-            "assignable": {"toggle": False, "rules": {}}
+            "mentionable": {"toggle": False, "rules": {}, "message": None},
+            "assignable": {"toggle": False, "rules": {}, "message": None}
         }
         self.config.register_guild(**default_guild)
 
@@ -43,6 +43,8 @@ class RestrictedRolePerms(commands.Cog):
             return await ctx.send("The mentionability feature is toggled off for this server.")
 
         if not await self._has_rule(rules['rules'], [str(r.id) for r in ctx.author.roles], role.id):
+            if rules['message']:
+                return await ctx.send(rules['message'])
             return await ctx.send(f"Unfortunately, no rules were found allowing you to toggle mentionability for {role.mention}.")
 
         try:
@@ -63,6 +65,8 @@ class RestrictedRolePerms(commands.Cog):
             return await ctx.send("The mentionability feature is toggled off for this server.")
 
         if not await self._has_rule(rules['rules'], [str(r.id) for r in ctx.author.roles], role.id):
+            if rules['message']:
+                return await ctx.send(rules['message'])
             return await ctx.send(f"Unfortunately, no rules were found allowing you to toggle mentionability for {role.mention}.")
 
         try:
@@ -83,6 +87,8 @@ class RestrictedRolePerms(commands.Cog):
             return await ctx.send("The role assignment feature is toggled off for this server.")
 
         if not await self._has_rule(rules['rules'], [str(r.id) for r in ctx.author.roles], role.id):
+            if rules['message']:
+                return await ctx.send(rules['message'])
             return await ctx.send(f"Unfortunately, no rules were found allowing you to assign {role.mention}.")
 
         try:
@@ -103,6 +109,8 @@ class RestrictedRolePerms(commands.Cog):
             return await ctx.send("The role assignment feature is toggled off for this server.")
 
         if not await self._has_rule(rules['rules'], [str(r.id) for r in ctx.author.roles], role.id):
+            if rules['message']:
+                return await ctx.send(rules['message'])
             return await ctx.send(f"Unfortunately, no rules were found allowing you to assign {role.mention}.")
 
         if role not in member.roles:
@@ -134,6 +142,7 @@ class RestrictedRolePerms(commands.Cog):
 
         mentionable_rules = f"""
         **Toggle:** {mentionable["toggle"]}
+        **Message:** {mentionable['message'] if mentionable['message'] else "Default"}
         **Rules:** {"None" if not mentionable['rules'] else ""}\n"""
         for r0, r1 in mentionable["rules"].items():
             mentionable_rules += f"{ctx.guild.get_role(int(r0)).name} can toggle mentionability for {humanize_list([ctx.guild.get_role(int(r2)) for r2 in r1])}"
@@ -141,6 +150,7 @@ class RestrictedRolePerms(commands.Cog):
 
         assignable_rules = f"""
         **Toggle:** {assignable["toggle"]}
+        **Message:** {assignable['message'] if assignable['message'] else "Default"}
         **Rules:** {"None" if not assignable['rules'] else ""}\n"""
         for r0, r1 in assignable["rules"].items():
             assignable_rules += f"{ctx.guild.get_role(int(r0)).name} can assign {humanize_list([ctx.guild.get_role(int(r2)) for r2 in r1])}"
@@ -214,4 +224,20 @@ class RestrictedRolePerms(commands.Cog):
     async def _toggle_assignable(self, ctx: commands.Context, true_or_false: bool):
         """Toggle RRP role assignment commands."""
         await self.config.guild(ctx.guild).assignable.toggle.set(true_or_false)
+        return await ctx.tick()
+
+    @_rrpset.group(name="norulemessage")
+    async def _no_rule_message(self, ctx: commands.Context):
+        """Customize the error message sent when no rules are found giving the user restricted permissions."""
+
+    @_no_rule_message.command(name="mentionable")
+    async def _no_rule_message_mentionable(self, ctx: commands.Context, *, message: str = None):
+        """Customize the mentionability error message (leave empty to reset)."""
+        await self.config.guild(ctx.guild).mentionable.message.set(message)
+        return await ctx.tick()
+
+    @_no_rule_message.command(name="assignable")
+    async def _no_rule_message_assignable(self, ctx: commands.Context, *, message: str = None):
+        """Customize the role assignment error message (leave empty to reset)."""
+        await self.config.guild(ctx.guild).assignable.message.set(message)
         return await ctx.tick()
