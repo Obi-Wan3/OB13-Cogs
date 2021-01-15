@@ -18,7 +18,7 @@ class FaH(commands.Cog):
         """Folding@Home Team & Donor Statistics"""
 
     @fah.command()
-    async def donor(self, ctx: commands.Context, donor_id):
+    async def donor(self, ctx: commands.Context, donor_id: int):
         """FaH Donor Statistics"""
         async with ctx.typing():
             async with aiohttp.ClientSession() as session:
@@ -46,7 +46,7 @@ class FaH(commands.Cog):
         return await ctx.send(embed=embed)
 
     @fah.command()
-    async def team(self, ctx: commands.Context, team_id):
+    async def team(self, ctx: commands.Context, team_id: int):
         """FaH Team Statistics"""
 
         async with ctx.typing():
@@ -79,3 +79,8 @@ class FaH(commands.Cog):
             embed.set_footer(text="Together we are powerful. | https://foldingathome.org")
 
         return await ctx.send(embed=embed)
+
+    @fah.command()
+    async def project(self, ctx: commands.Context, project_id: int):
+        """Get a link to an FaH project page."""
+        return await ctx.send(f"https://stats.foldingathome.org/project?p={project_id}")
