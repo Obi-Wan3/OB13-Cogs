@@ -166,6 +166,13 @@ class RestrictedRolePerms(commands.Cog):
     async def _add_mentionable(self, ctx: commands.Context, role_to_give_perms_to: discord.Role, *roles_to_allow_to_be_made_mentionable: discord.Role):
         """Allow a certain role to make a few other roles mentionable through RRP."""
 
+        # Hierarchy checks
+        if role_to_give_perms_to >= ctx.author.top_role and ctx.author != ctx.guild.owner:
+            return await ctx.send("The role you want to give perms to is above you in the role hierarchy!")
+        for rm in roles_to_allow_to_be_made_mentionable:
+            if rm >= role_to_give_perms_to:
+                return await ctx.send(f"{rm.mention} is above {role_to_give_perms_to.mention} in the role hierarchy!")
+
         async with self.config.guild(ctx.guild).mentionable.rules() as rules:
             if rules.get(str(role_to_give_perms_to.id)):
                 return await ctx.send("There is already a rule for that role! Please remove it first using `[p]rrpset removerule`.")
@@ -176,6 +183,13 @@ class RestrictedRolePerms(commands.Cog):
     @_add_rule.command(name="assignable")
     async def _add_assignable(self, ctx: commands.Context, role_to_give_perms_to: discord.Role, *roles_to_allow_to_be_assigned: discord.Role):
         """Allow a certain role to assign a few other roles through RRP."""
+
+        # Hierarchy checks
+        if role_to_give_perms_to >= ctx.author.top_role and ctx.author != ctx.guild.owner:
+            return await ctx.send("The role you want to give perms to is above you in the role hierarchy!")
+        for ra in roles_to_allow_to_be_assigned:
+            if ra >= role_to_give_perms_to:
+                return await ctx.send(f"{ra.mention} is above {role_to_give_perms_to.mention} in the role hierarchy!")
 
         async with self.config.guild(ctx.guild).assignable.rules() as rules:
             if rules.get(str(role_to_give_perms_to.id)):
