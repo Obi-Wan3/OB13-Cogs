@@ -63,7 +63,7 @@ class QuizRole(commands.Cog):
         time_limit = quiz['timelimit']*60
         min_time = 2*time_limit//len(questions)
         role = ctx.guild.get_role(quiz['role'])
-        await ctx.author.send(f"You are about to the the quiz `{quiz_name}` to get {role.name}. Please type `start` to get started, or `cancel` to cancel. There will be {len(questions)} questions, and you will have {int(time_limit/60)} minutes to complete it (at most {min_time} seconds per question). Once you start, you cannot cancel.")
+        await ctx.author.send(f"You are about to take the quiz `{quiz_name}` to get {role.name}. Please type `start` to get started, or `cancel` to cancel. There will be {len(questions)} questions, and you will have {int(time_limit/60)} minutes to complete it (at most {min_time} seconds per question). Once you start, you cannot cancel.")
         try:
             resp = await self.bot.wait_for("message", check=MessagePredicate.lower_contained_in(['cancel', 'start'], channel=ctx.author.dm_channel, user=ctx.author), timeout=60)
             if resp.content == 'cancel':

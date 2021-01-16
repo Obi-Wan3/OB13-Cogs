@@ -3,7 +3,7 @@
         "Obi-Wan3"
     ],
     "description": "Take a Quiz to Gain a Role",
-    "hidden": true,
+    "hidden": false,
     "install_msg": "Thank you for installing.",
     "short": "QuizRole"
 }
