@@ -10,15 +10,10 @@ class Announcements(commands.Cog):
 
     @commands.admin()
     @commands.command()
-    async def announcement(self, ctx: commands.Context, channel: discord.TextChannel, role: int, *, message=""):
+    async def announcement(self, ctx: commands.Context, channel: discord.TextChannel, role: discord.Role, *, message=""):
         """Send an announcement message to a specific channel with a role ping."""
         guild = ctx.guild
-        r = discord.utils.get(guild.roles, id=role)
-        if r is None:
-            await ctx.tick()
-            return await ctx.send("Invalid role entered.")
-
-        announcement = f"{r.mention} {message}"
+        announcement = f"{role.mention} {message}"
         m = discord.AllowedMentions(roles=True)
         await guild.get_channel(channel.id).send(announcement, allowed_mentions=m)
         return await ctx.tick()
