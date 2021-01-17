@@ -57,7 +57,7 @@ class Referrals(commands.Cog):
 
         # Check if user account is older than the minimum age
         account_age = await self.config.guild(ctx.guild).account_age()
-        if account_age and not (ctx.author.created_at > (datetime.now() - timedelta(hours=time_limit))):
+        if account_age and not (ctx.author.created_at < (datetime.now() - timedelta(hours=time_limit))):
             if log_channel:
                 await self.bot.get_channel(log_channel).send(f"{member.mention} tried to run `[p]referredby` but their account is too new.")
             return await ctx.send("Your account is too new!")
