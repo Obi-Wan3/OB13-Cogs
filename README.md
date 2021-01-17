@@ -19,7 +19,7 @@ Cogs marked with a ✓ are ready for use, while those with a ✗ are still a Wor
 | DailyXkcd | ✗ | Daily [xkcd](http://xkcd.com/) Posts | Obi-Wan3 |
 | DirectMessage | ✓ | Easily Send DMs as Bot | Obi-Wan3 |
 | EmbedReact | ✓ | Automatic Reactions to Messages w/ Embeds | Obi-Wan3, HEW#6942 (BC) |
-| EmojiSave | ✓ | Save Custom Emojis to Folders | Obi-Wan3, SHADOW6six#8807 (BC) |
+| EmojiTools | ✓ | Tools for Managing Custom Emojis | Obi-Wan3, SHADOW6six#8807 (BC) |
 | FaH | ✓ | Various [Folding@Home](https://foldingathome.org/) Stats | Obi-Wan3, SaraCaterina#1015 (BC) |
 | Github | ✓ | Github RSS Commit Feeds | Obi-Wan3 |
 | ImprovTime | ✓ | One Word Story Channel | Obi-Wan3, Atmos#0101 (BC) |

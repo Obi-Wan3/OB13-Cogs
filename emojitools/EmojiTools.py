@@ -8,8 +8,8 @@ import aiofiles
 from zipstream.aiozipstream import AioZipStream
 
 
-class EmojiSave(commands.Cog):
-    """Save Custom Emojis to Folders"""
+class EmojiTools(commands.Cog):
+    """Tools for Managing Custom Emojis"""
 
     def __init__(self, bot):
         self.bot = bot
@@ -17,10 +17,14 @@ class EmojiSave(commands.Cog):
     @commands.guild_only()
     @commands.admin()
     @commands.group()
-    async def emojisave(self, ctx: commands.Context):
+    async def emojitools(self, ctx: commands.Context):
+        """Various tools for managing custom emojis in servers."""
+
+    @emojitools.group(name="save")
+    async def _save(self, ctx: commands.Context):
         """Save Custom Emojis to Folders"""
 
-    @emojisave.command(name="emojis")
+    @_save.command(name="emojis")
     async def _emojis(self, ctx: commands.Context, folder_name: str, *emojis: str):
         """Save to a folder the specified custom emojis (can be from any server)."""
 
@@ -50,7 +54,7 @@ class EmojiSave(commands.Cog):
 
         return await ctx.send(f"{len(emojis)} emojis were saved to `{folder_name}`.")
 
-    @emojisave.command(name="server")
+    @_save.command(name="server")
     async def _server(self, ctx: commands.Context, folder_name: str = None):
         """Save to a folder all custom emojis from this server (folder name defaults to server name)."""
 
@@ -73,9 +77,9 @@ class EmojiSave(commands.Cog):
 
         return await ctx.send(f"{count} emojis were saved to `{folder_name}`.")
 
-    @emojisave.command(name="folders")
+    @_save.command(name="folders")
     async def _folders(self, ctx: commands.Context):
-        """List all your EmojiSave folders."""
+        """List all your EmojiTools folders."""
 
         dirs = os.listdir(f"{data_manager.cog_data_path(self)}")
         dir_string = ""
@@ -84,14 +88,14 @@ class EmojiSave(commands.Cog):
                 dir_string += f"{ind}. {d}\n"
 
         if dir_string == "":
-            dir_string = "You have no EmojiSave folders yet. Save emojis with `[p]emojisave`!"
+            dir_string = "You have no EmojiTools folders yet. Save emojis with `[p]emojitools`!"
 
-        e = discord.Embed(title="EmojiSave Folders", description=dir_string, color=await ctx.embed_color())
+        e = discord.Embed(title="EmojiTools Folders", description=dir_string, color=await ctx.embed_color())
         return await ctx.send(embed=e)
 
-    @emojisave.command(name="remove")
+    @_save.command(name="remove")
     async def _remove(self, ctx: commands.Context, folder_number: int):
-        """Remove an EmojiSave folder."""
+        """Remove an EmojiTools folder."""
 
         dirs = sorted(os.listdir(f"{data_manager.cog_data_path(self)}"))
         try:
@@ -102,9 +106,9 @@ class EmojiSave(commands.Cog):
         shutil.rmtree(os.path.join(f"{data_manager.cog_data_path(self)}", f"{to_remove}"))
         return await ctx.send(f"`{to_remove}` has been removed.")
 
-    @emojisave.command(name="getzip")
+    @_save.command(name="getzip")
     async def _getzip(self, ctx: commands.Context, folder_number: int):
-        """Zip and upload an EmojiSave folder."""
+        """Zip and upload an EmojiTools folder."""
 
         with ctx.typing():
             dirs = sorted(os.listdir(f"{data_manager.cog_data_path(self)}"))
