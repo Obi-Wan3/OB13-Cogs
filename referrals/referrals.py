@@ -32,8 +32,12 @@ class Referrals(commands.Cog):
         if not await self.config.guild(ctx.guild).toggle():
             return
 
+        log_channel = await self.config.guild(ctx.guild).log_channel()
+
         # User already ran command
         if ctx.author.id in await self.config.guild(ctx.guild).already_redeemed():
+            if log_channel:
+                await self.bot.get_channel(log_channel).send(f"{member.mention} tried to run `[p]referredby` but has already done so before.")
             return await ctx.send("You have already ran this command! You can only use this once.")
 
         # No credit set by admin yet
@@ -47,11 +51,15 @@ class Referrals(commands.Cog):
                 ctx.author.joined_at and
                 (ctx.author.joined_at > (datetime.now() - timedelta(hours=time_limit)))
         ):
+            if log_channel:
+                await self.bot.get_channel(log_channel).send(f"{member.mention} tried to run `[p]referredby` but has exceeded the time limit.")
             return await ctx.send("Unfortunately, you have exceeded the time given to run this command after you join.")
 
         # Check if user account is older than the minimum age
         account_age = await self.config.guild(ctx.guild).account_age()
         if account_age and not (ctx.author.created_at > (datetime.now() - timedelta(hours=time_limit))):
+            if log_channel:
+                await self.bot.get_channel(log_channel).send(f"{member.mention} tried to run `[p]referredby` but their account is too new.")
             return await ctx.send("Your account is too new!")
 
         new = await bank.deposit_credits(member, to_deposit)
@@ -61,7 +69,6 @@ class Referrals(commands.Cog):
             already_redeemed.append(ctx.author.id)
 
         # Log into channel if log_channel set
-        log_channel = await self.config.guild(ctx.guild).log_channel()
         if log_channel:
             await self.bot.get_channel(log_channel).send(f"{member.mention} has gained {to_deposit} {cname} for referring {ctx.author.mention}.")
 
