@@ -8,6 +8,7 @@ import aiofiles
 from io import BytesIO
 from zipfile import ZipFile
 from zipstream.aiozipstream import AioZipStream
+from asynctempfile import TemporaryDirectory, NamedTemporaryFile
 
 
 class EmojiTools(commands.Cog):
@@ -17,15 +18,30 @@ class EmojiTools(commands.Cog):
         self.bot = bot
 
     @commands.guild_only()
-    @commands.admin()
+    @commands.admin_or_permissions(manage_emojis=True)
     @commands.group()
     async def emojitools(self, ctx: commands.Context):
-        """Various tools for managing custom emojis in servers."""
+        """
+        Various tools for managing custom emojis in servers.
 
+        `[p]emojitools add` has various tools to add emojis to the current server.
+        `[p]emojitools delete` lets you remove emojis from the server.
+        `[p]emojitools tozip` returns an instant `.zip` archive of emojis (w/o saving a folder permanently).
+        `[p]emojitools save` allows you to save emojis to folders **in the cog data path**: this requires storage!
+        """
+
+    @commands.admin()
     @emojitools.group(name="save")
     async def _save(self, ctx: commands.Context):
-        """Save Custom Emojis to Folders"""
+        """
+        Save Custom Emojis to Folders
 
+        **IMPORTANT**: this **will** save folders to the cog data path, requiring storage in the machine the bot is hosted on.
+        The other `EmojiTools` features that do **NOT** require storage, so disable this command group if you wish.
+        For large public bots, it is highly recommended to restrict usage of or disable this command group.
+        """
+
+    @commands.cooldown(rate=1, per=5)
     @_save.command(name="emojis")
     async def _emojis(self, ctx: commands.Context, folder_name: str, *emojis: str):
         """Save to a folder the specified custom emojis (can be from any server)."""
@@ -35,7 +51,7 @@ class EmojiTools(commands.Cog):
             try:
                 os.mkdir(folder_path)
             except OSError:
-                return await ctx.send("A folder already exists with this name! Please remove the folder first.")
+                await ctx.send("The emojis will be added to the existing folder with this name.")
 
             for e in emojis:
                 try:
@@ -54,6 +70,7 @@ class EmojiTools(commands.Cog):
 
         return await ctx.send(f"{len(emojis)} emojis were saved to `{folder_name}`.")
 
+    @commands.cooldown(rate=1, per=30)
     @_save.command(name="server")
     async def _server(self, ctx: commands.Context, folder_name: str = None):
         """Save to a folder all custom emojis from this server (folder name defaults to server name)."""
@@ -65,7 +82,7 @@ class EmojiTools(commands.Cog):
             try:
                 os.mkdir(folder_path)
             except OSError:
-                return await ctx.send("A folder already exists with this name! Please remove the folder first.")
+                await ctx.send("The emojis will be added to the existing folder with this name.")
 
             count = 0
             for e in ctx.guild.emojis:
@@ -79,7 +96,7 @@ class EmojiTools(commands.Cog):
 
     @_save.command(name="folders")
     async def _folders(self, ctx: commands.Context):
-        """List all your EmojiTools folders."""
+        """List all your saved EmojiTools folders."""
 
         dirs = os.listdir(f"{data_manager.cog_data_path(self)}")
         dir_string = ""
@@ -93,6 +110,7 @@ class EmojiTools(commands.Cog):
         e = discord.Embed(title="EmojiTools Folders", description=dir_string, color=await ctx.embed_color())
         return await ctx.send(embed=e)
 
+    @commands.cooldown(rate=1, per=5)
     @_save.command(name="remove")
     async def _remove(self, ctx: commands.Context, folder_number: int):
         """Remove an EmojiTools folder."""
@@ -106,6 +124,7 @@ class EmojiTools(commands.Cog):
         shutil.rmtree(os.path.join(f"{data_manager.cog_data_path(self)}", f"{to_remove}"))
         return await ctx.send(f"`{to_remove}` has been removed.")
 
+    @commands.cooldown(rate=1, per=10)
     @_save.command(name="getzip")
     async def _getzip(self, ctx: commands.Context, folder_number: int):
         """Zip and upload an EmojiTools folder."""
@@ -142,6 +161,7 @@ class EmojiTools(commands.Cog):
     async def _delete(self, ctx: commands.Context):
         """Delete Server Custom Emojis"""
 
+    @commands.cooldown(rate=1, per=5)
     @_delete.command(name="emoji")
     async def _delete_emoji(self, ctx: commands.Context, emoji_name: str):
         """Delete a specific custom emoji from the server."""
@@ -151,6 +171,7 @@ class EmojiTools(commands.Cog):
                 return await ctx.send(f"The emoji `{emoji_name}` has been removed from this server!")
         return await ctx.send(f"I didn't find any emoji called `{emoji_name}`!")
 
+    @commands.cooldown(rate=1, per=30)
     @_delete.command(name="all")
     async def _delete_all(self, ctx: commands.Context, enter_true_to_confirm: bool):
         """Delete all specific custom emojis from the server."""
@@ -170,6 +191,7 @@ class EmojiTools(commands.Cog):
     async def _add(self, ctx: commands.Context):
         """Add Custom Emojis to Server"""
 
+    @commands.cooldown(rate=1, per=5)
     @_add.command(name="emoji")
     async def _add_emoji(self, ctx: commands.Context, emoji: discord.PartialEmoji, name: str = None):
         """Add an emoji to this server (leave `name` blank to use the emoji's original name)."""
@@ -185,6 +207,7 @@ class EmojiTools(commands.Cog):
 
         return await ctx.send(f"{final_emoji} has been added to this server!")
 
+    @commands.cooldown(rate=1, per=30)
     @_add.command(name="emojis")
     async def _add_emojis(self, ctx: commands.Context, *emojis: str):
         """Add some emojis to this server."""
@@ -206,13 +229,15 @@ class EmojiTools(commands.Cog):
 
         return await ctx.send(f"{len(added_emojis)} emojis were added to this server: {' '.join([str(e) for e in added_emojis])}")
 
+    @commands.admin()
+    @commands.cooldown(rate=1, per=60)
     @_add.command(name="fromzip")
     async def _add_from_zip(self, ctx: commands.Context):
         """
         Add some emojis to this server from a provided .zip archive.
 
         The `.zip` archive should extract to a folder, which contains files in the formats `.png`, `.jpg`, or `.gif`.
-        You can also use the `[p]emojitools save getzip` command to get a zip archive, extract it, remove unnecessary emojis, then re-zip and upload.
+        You can also use the `[p]emojitools tozip` command to get a zip archive, extract it, remove unnecessary emojis, then re-zip and upload.
         """
 
         async with ctx.typing():
@@ -254,3 +279,66 @@ class EmojiTools(commands.Cog):
     def _extract_zip(bfile, path):
         with ZipFile(bfile) as zfile:
             zfile.extractall(path)
+
+    @emojitools.group(name="tozip")
+    async def _to_zip(self, ctx: commands.Context):
+        """Get a `.zip` Archive of Emojis"""
+
+    @commands.cooldown(rate=1, per=15)
+    @_to_zip.command(name="emojis")
+    async def _to_zip_emojis(self, ctx: commands.Context, *emojis: str):
+        """
+        Get a `.zip` archive of a list of emojis.
+
+        The returned `.zip` archive can be used for the `[p]emojitools add fromzip` command.
+        """
+
+        async with ctx.typing():
+            async with TemporaryDirectory() as temp_dir:
+                for e in emojis:
+                    try:
+                        em = await commands.PartialEmojiConverter().convert(ctx=ctx, argument=e)
+                    except commands.BadArgument:
+                        return await ctx.send(f"Invalid emoji: {e}")
+
+                    if em.animated:
+                        await em.url.save(os.path.join(temp_dir, f"{em.name}.gif"))
+                    else:
+                        await em.url.save(os.path.join(temp_dir, f"{em.name}.png"))
+
+                aiozip = AioZipStream(await self.getfiles(temp_dir), chunksize=32768)
+                async with NamedTemporaryFile('wb+') as z:
+                    async for chunk in aiozip.stream():
+                        await z.write(chunk)
+                    await z.seek(0)
+                    zip_file_obj = discord.File(z.name, filename="emojis.zip")
+
+        return await ctx.send(f"{len(emojis)} emojis were saved to this `.zip` archive!", file=zip_file_obj)
+
+    @commands.cooldown(rate=1, per=60)
+    @_to_zip.command(name="server")
+    async def _to_zip_server(self, ctx: commands.Context):
+        """
+        Get a `.zip` archive of all custom emojis in the server.
+
+        The returned `.zip` archive can be used for the `[p]emojitools add fromzip` command.
+        """
+
+        async with ctx.typing():
+            count = 0
+            async with TemporaryDirectory() as temp_dir:
+                for e in ctx.guild.emojis:
+                    count += 1
+                    if e.animated:
+                        await e.url.save(os.path.join(temp_dir, f"{e.name}.gif"))
+                    else:
+                        await e.url.save(os.path.join(temp_dir, f"{e.name}.png"))
+
+                aiozip = AioZipStream(await self.getfiles(temp_dir), chunksize=32768)
+                async with NamedTemporaryFile('wb+') as z:
+                    async for chunk in aiozip.stream():
+                        await z.write(chunk)
+                    await z.seek(0)
+                    zip_file_obj = discord.File(z.name, filename=f"{ctx.guild.name}.zip")
+
+        return await ctx.send(f"{count} emojis were saved to this `.zip` archive!", file=zip_file_obj)

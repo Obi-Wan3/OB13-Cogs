@@ -4,7 +4,7 @@
     ],
     "description": "Various tools for managing custom emojis in servers.",
     "hidden": false,
-    "install_msg": "Thank you for installing. This cog will save emojis to folders in the cog data path, which you can then zip and upload to Discord using a command.",
+    "install_msg": "Thank you for installing. **IMPORTANT**: The `[p]emojiools save` command group will allow server admins to save emojis to folders in the cog data path, which they can upload to Discord as a `.zip` archive at any time. For large public bots, it is highly recommended to restrict usage of or disable the `[p]emojitools save` command group. The other cog features do **NOT** require permanent storage but do result in temporary files, with some IO usage.",
     "short": "Tools for Managing Custom Emojis",
-    "requirements": ["aiofiles", "aiozipstream"]
+    "requirements": ["aiofiles", "aiozipstream", "asynctempfile"]
 }

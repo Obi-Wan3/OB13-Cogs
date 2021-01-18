@@ -1,4 +1,4 @@
-from .EmojiTools import EmojiTools
+from .emojitools import EmojiTools
 
 
 async def setup(bot):
