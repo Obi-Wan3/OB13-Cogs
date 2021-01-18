@@ -6,5 +6,5 @@
     "hidden": false,
     "install_msg": "Thank you for installing. This cog will save emojis to folders in the cog data path, which you can then zip and upload to Discord using a command.",
     "short": "Tools for Managing Custom Emojis",
-    "requirements": ["aiofiles", "zipstream"]
+    "requirements": ["aiofiles", "aiozipstream"]
 }
