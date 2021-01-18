@@ -1,10 +1,12 @@
 from redbot.core import commands, data_manager
 import discord
+
 import os
+import asyncio
 import shutil
-import re
-import aiohttp
 import aiofiles
+from io import BytesIO
+from zipfile import ZipFile
 from zipstream.aiozipstream import AioZipStream
 
 
@@ -28,29 +30,27 @@ class EmojiTools(commands.Cog):
     async def _emojis(self, ctx: commands.Context, folder_name: str, *emojis: str):
         """Save to a folder the specified custom emojis (can be from any server)."""
 
-        with ctx.typing():
+        async with ctx.typing():
             folder_path = os.path.join(f'{data_manager.cog_data_path(self)}', f'{folder_name}')
             try:
                 os.mkdir(folder_path)
             except OSError:
                 return await ctx.send("A folder already exists with this name! Please remove the folder first.")
 
-            for em in emojis:
-                match = re.fullmatch(f"<(a?):(.*?):(\d*)>", em)
-                if match is not None:
-                    async with aiohttp.ClientSession() as session:
-                        if match.group(1):
-                            ext = ".gif"
-                        else:
-                            ext = ".png"
+            for e in emojis:
+                try:
+                    em = await commands.PartialEmojiConverter().convert(ctx=ctx, argument=e)
+                except commands.BadArgument:
+                    return await ctx.send(f"Invalid emoji: {e}")
 
-                        async with session.get(f"https://cdn.discordapp.com/emojis/{match.group(3)}{ext}") as resp:
-                            if resp.status == 200:
-                                async with aiofiles.open(os.path.join(folder_path, f"{match.group(3)}{ext}"), mode='wb') as f:
-                                    await f.write(await resp.read())
-
+                em_image = await em.url.read()
+                if em.animated:
+                    ext = ".gif"
                 else:
-                    return await ctx.send(f"Invalid emoji: {em}")
+                    ext = ".png"
+
+                async with aiofiles.open(os.path.join(folder_path, f"{em.name}{ext}"), mode='wb') as f:
+                    await f.write(em_image)
 
         return await ctx.send(f"{len(emojis)} emojis were saved to `{folder_name}`.")
 
@@ -58,7 +58,7 @@ class EmojiTools(commands.Cog):
     async def _server(self, ctx: commands.Context, folder_name: str = None):
         """Save to a folder all custom emojis from this server (folder name defaults to server name)."""
 
-        with ctx.typing():
+        async with ctx.typing():
             if folder_name is None:
                 folder_name = ctx.guild.name
             folder_path = os.path.join(f'{data_manager.cog_data_path(self)}', f'{folder_name}')
@@ -110,7 +110,7 @@ class EmojiTools(commands.Cog):
     async def _getzip(self, ctx: commands.Context, folder_number: int):
         """Zip and upload an EmojiTools folder."""
 
-        with ctx.typing():
+        async with ctx.typing():
             dirs = sorted(os.listdir(f"{data_manager.cog_data_path(self)}"))
             for d in dirs:
                 if d.endswith(".zip"):
@@ -137,3 +137,120 @@ class EmojiTools(commands.Cog):
             for file in files:
                 files_list.append({"file": os.path.join(root, file)})
         return files_list
+
+    @emojitools.group(name="delete")
+    async def _delete(self, ctx: commands.Context):
+        """Delete Server Custom Emojis"""
+
+    @_delete.command(name="emoji")
+    async def _delete_emoji(self, ctx: commands.Context, emoji_name: str):
+        """Delete a specific custom emoji from the server."""
+        for e in ctx.guild.emojis:
+            if e.name == emoji_name:
+                await e.delete()
+                return await ctx.send(f"The emoji `{emoji_name}` has been removed from this server!")
+        return await ctx.send(f"I didn't find any emoji called `{emoji_name}`!")
+
+    @_delete.command(name="all")
+    async def _delete_all(self, ctx: commands.Context, enter_true_to_confirm: bool):
+        """Delete all specific custom emojis from the server."""
+
+        if not enter_true_to_confirm:
+            return await ctx.send("Please provide `true` as the parameter to confirm.")
+
+        async with ctx.typing():
+            counter = 0
+            for e in ctx.guild.emojis:
+                await e.delete()
+                counter += 1
+
+        return await ctx.send(f"All {counter} custom emojis have been removed from this server.")
+
+    @emojitools.group(name="add")
+    async def _add(self, ctx: commands.Context):
+        """Add Custom Emojis to Server"""
+
+    @_add.command(name="emoji")
+    async def _add_emoji(self, ctx: commands.Context, emoji: discord.PartialEmoji, name: str = None):
+        """Add an emoji to this server (leave `name` blank to use the emoji's original name)."""
+
+        async with ctx.typing():
+            e_image = await emoji.url.read()
+            e_name = name or emoji.name
+            final_emoji = await ctx.guild.create_custom_emoji(
+                name=e_name,
+                image=e_image,
+                reason=f"EmojiTools: emoji added by {ctx.author.name}#{ctx.author.discriminator}"
+            )
+
+        return await ctx.send(f"{final_emoji} has been added to this server!")
+
+    @_add.command(name="emojis")
+    async def _add_emojis(self, ctx: commands.Context, *emojis: str):
+        """Add some emojis to this server."""
+
+        async with ctx.typing():
+            added_emojis = []
+            for e in emojis:
+                try:
+                    em = await commands.PartialEmojiConverter().convert(ctx=ctx, argument=e)
+                except commands.BadArgument:
+                    return await ctx.send(f"Invalid emoji: {e}")
+                em_image = await em.url.read()
+                fe = await ctx.guild.create_custom_emoji(
+                    name=em.name,
+                    image=em_image,
+                    reason=f"EmojiTools: emoji added by {ctx.author.name}#{ctx.author.discriminator}"
+                )
+                added_emojis.append(fe)
+
+        return await ctx.send(f"{len(added_emojis)} emojis were added to this server: {' '.join([str(e) for e in added_emojis])}")
+
+    @_add.command(name="fromzip")
+    async def _add_from_zip(self, ctx: commands.Context):
+        """
+        Add some emojis to this server from a provided .zip archive.
+
+        The `.zip` archive should extract to a folder, which contains files in the formats `.png`, `.jpg`, or `.gif`.
+        You can also use the `[p]emojitools save getzip` command to get a zip archive, extract it, remove unnecessary emojis, then re-zip and upload.
+        """
+
+        async with ctx.typing():
+            if len(ctx.message.attachments) > 1:
+                return await ctx.send("Please only attach 1 file!")
+
+            if len(ctx.message.attachments) < 1:
+                return await ctx.send("Please attach a `.zip` archive!")
+
+            if not ctx.message.attachments[0].filename.endswith(".zip"):
+                return await ctx.send("Please make sure the uploaded file is a `.zip` archive!")
+
+            folder_path = os.path.join(f"{data_manager.cog_data_path(self)}", f"{ctx.message.attachments[0].filename}")
+
+            loop = asyncio.get_running_loop()
+            zip_obj = BytesIO(await ctx.message.attachments[0].read())
+            await loop.run_in_executor(None, lambda: self._extract_zip(zip_obj, folder_path))
+
+            added_emojis = []
+            for efile_name in os.listdir(folder_path):
+                efile_path = os.path.join(folder_path, efile_name)
+                if efile_name.endswith((".png", ".jpg", ".gif")):
+                    async with aiofiles.open(efile_path, 'rb') as efile:
+                        eimage = await efile.read()
+                    fe = await ctx.guild.create_custom_emoji(
+                        name=os.path.splitext(efile_name)[0],
+                        image=eimage,
+                        reason=f"EmojiTools: emoji added by {ctx.author.name}#{ctx.author.discriminator}"
+                    )
+                    added_emojis.append(fe)
+                else:
+                    await ctx.send(f"{efile_name} was not added as it is not a `.jpg`, `.png`, or `.gif` file.")
+
+            shutil.rmtree(folder_path)
+
+        return await ctx.send(f"{len(added_emojis)} emojis were added to this server: {' '.join([str(e) for e in added_emojis])}")
+
+    @staticmethod
+    def _extract_zip(bfile, path):
+        with ZipFile(bfile) as zfile:
+            zfile.extractall(path)
