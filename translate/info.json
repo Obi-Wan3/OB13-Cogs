@@ -5,6 +5,6 @@
     "description": "Translate some text using Google Translate.",
     "hidden": false,
     "install_msg": "Thank you for installing.",
-    "requirements": ["googletrans"],
+    "requirements": ["googletrans==3.1.0a0"],
     "short": "Google Translate"
 }
