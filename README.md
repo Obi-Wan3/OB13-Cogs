@@ -25,7 +25,8 @@ Cogs marked with a ✓ are ready for use, while those with a ✗ are still a Wor
 | ImprovTime | ✓ | One Word Story Channel | Obi-Wan3, Atmos#0101 (BC) |
 | Klingon | ✗ | Translation to [Klingon](http://mrklingo.freeshell.org/uta/index.php) | Obi-Wan3 |
 | MentionHelp | ✗ | Customizable MentionHelp Message | Obi-Wan3 |
-| PrivateRooms | ✗ | Auto Private VC Channels + Lobby | Obi-Wan3, Archetype (Bloib & Echospawn, BC) |
+| PrivateRooms | ✗ | Automatic Private VCs with Lobby | Obi-Wan3, Archetype (Bloib & Echospawn, BC) |
+| PublicRooms | ✗ | Automatic Public VC Creation | Obi-Wan3, Archetype (Bloib & Echospawn, BC) |
 | QuizRole | ✓ | Take a Quiz to Gain a Role | Obi-Wan3, Tetra#0001 (BC) |
 | Referrals | ✓ | Invite Referral -> Credits | Obi-Wan3, Vertyco#0117 (BC) |
 | Reply | ✗ | Bot Replies to Messages | Obi-Wan3 |
