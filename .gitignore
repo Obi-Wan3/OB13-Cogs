@@ -3,6 +3,7 @@
 venv/
 
 # Pre-Alpha WIP Cogs
+brainshop/
 conditions/
 dailyxkcd/
 mentionhelp/
