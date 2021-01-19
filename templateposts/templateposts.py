@@ -46,10 +46,11 @@ class TemplatePosts(commands.Cog):
 
                 missing = []
                 for f in template['fields']:
-                    if f not in message.content:
+                    if f.lower() not in message.content.lower():
                         missing.append(f)
 
                 if missing:
+                    original = message.content
                     await message.delete()
 
                     if template['message'] and await self.config.guild(message.guild).dm():
@@ -59,6 +60,8 @@ class TemplatePosts(commands.Cog):
                             "{fields}", f"{humanize_list([f'`{f}`' for f in template['fields']])}"
                         ).replace(
                             "{missing}", f"{humanize_list([f'`{f}`' for f in missing])}"
+                        ).replace(
+                            "{userpost}", original
                         )
 
                         try:
@@ -66,7 +69,7 @@ class TemplatePosts(commands.Cog):
                                 await message.author.create_dm()
                             await message.author.dm_channel.send(to_send)
                         except discord.Forbidden:
-                            return
+                            await message.channel.send(to_send, delete_after=60)
 
                 return
 
@@ -88,7 +91,7 @@ class TemplatePosts(commands.Cog):
 
     @_template_posts.command(name="dm")
     async def _dm(self, ctx: commands.Context, true_or_false: bool):
-        """Toggle whether to send DMs for incorrect posts in this server."""
+        """Toggle whether to send DMs for incorrect posts in this server (will send a temporary message in the channel if user's DMs are disabled)."""
         await self.config.guild(ctx.guild).dm.set(true_or_false)
         return await ctx.tick()
 
@@ -133,7 +136,7 @@ class TemplatePosts(commands.Cog):
         """
         Set the message to DM a user with if their post is deleted (leave blank to reset to no message).
 
-        Your message can have the following items in it to be replaced: `{channel}`, `{fields}`, and `{missing}`.
+        Your message can have the following items in it to be replaced: `{channel}`, `{fields}`, `{missing}`, and `{userpost}`.
         """
 
         async with self.config.guild(ctx.guild).templates() as templates:
