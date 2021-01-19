@@ -190,7 +190,8 @@ class PrivateRooms(commands.Cog):
     @_edit.command(name="toggle")
     async def _edit_toggle(self, ctx: commands.Context, system_name: str, true_or_false: bool):
         """Toggle a PrivateRooms system in this server."""
-        await self.config.guild(ctx.guild).toggle.set(true_or_false)
+        async with self.config.guild(ctx.guild).systems() as systems:
+            systems[system_name]["toggle"] = true_or_false
         return await ctx.tick()
 
     @_edit.command(name="origin")
