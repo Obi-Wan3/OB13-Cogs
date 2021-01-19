@@ -52,7 +52,7 @@ class TemplatePosts(commands.Cog):
                 if missing:
                     await message.delete()
 
-                    if template['message']:
+                    if template['message'] and await self.config.guild(message.guild).dm():
                         to_send = template['message'].replace(
                             "{channel}", f"{message.channel.mention}"
                         ).replace(
@@ -84,6 +84,12 @@ class TemplatePosts(commands.Cog):
     async def _toggle(self, ctx: commands.Context, true_or_false: bool):
         """Toggle TemplatePosts for this server."""
         await self.config.guild(ctx.guild).toggle.set(true_or_false)
+        return await ctx.tick()
+
+    @_template_posts.command(name="dm")
+    async def _dm(self, ctx: commands.Context, true_or_false: bool):
+        """Toggle whether to send DMs for incorrect posts in this server."""
+        await self.config.guild(ctx.guild).dm.set(true_or_false)
         return await ctx.tick()
 
     @_template_posts.command(name="add")
