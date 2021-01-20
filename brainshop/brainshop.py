@@ -49,7 +49,11 @@ class BrainShop(commands.Cog):
             if not bid or not key:
                 return
 
-            response = await self._get_response(bid=bid, key=key, uid=message.author.id, msg=re.sub(f"<@!?{self.bot.user.id}>", "", message.content))
+            filtered = re.sub(f"<@!?{self.bot.user.id}>", "", message.content)
+            if not filtered:
+                return
+
+            response = await self._get_response(bid=bid, key=key, uid=message.author.id, msg=filtered)
         return await message.channel.send(response)
 
     @commands.command(name="brainshop")
