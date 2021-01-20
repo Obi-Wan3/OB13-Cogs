@@ -1,6 +1,7 @@
 from redbot.core import commands, data_manager, Config, checks
 import discord
 import aiohttp
+import re
 
 
 class BrainShop(commands.Cog):
@@ -27,7 +28,7 @@ class BrainShop(commands.Cog):
     async def _message_listener(self, message: discord.Message):
         if (
                 message.author.bot or  # Message author is a bot
-                not message.content.startswith(f"<@!{self.bot.user.id}>")
+                not message.content.startswith((f"<@{self.bot.user.id}>", f"<@!{self.bot.user.id}>"))
         ):
             return
 
@@ -48,7 +49,7 @@ class BrainShop(commands.Cog):
             if not bid or not key:
                 return
 
-            response = await self._get_response(bid=bid, key=key, uid=message.author.id, msg=message.content.replace(f"<@!{self.bot.user.id}>", "", 1))
+            response = await self._get_response(bid=bid, key=key, uid=message.author.id, msg=re.sub(f"<@!?{self.bot.user.id}>", "", message.content))
         return await message.channel.send(response)
 
     @commands.command(name="brainshop")
