@@ -13,7 +13,7 @@ Cogs marked with a ✓ are ready for use, while those with a ✗ are still a Wor
 | Cog | Status | Description | Authors & Credits |
 | --- | :---: | --- | --- |
 | Announcements | ✓ | Send Message w/ Role Ping | Obi-Wan3 |
-| BrainShop | ✗ | AI Chatbot using [BrainShop](https://brainshop.ai/) | Obi-Wan3, SaraCaterina#1015 (BC) |
+| BrainShop | ✓ | AI Chatbot using [BrainShop](https://brainshop.ai/) | Obi-Wan3, SaraCaterina#1015 (BC) |
 | Conditions | ✗ | Weather Conditions & AQI | Obi-Wan3 |
 | Counting | ✓ | Counting Channel | Obi-Wan3, Atmos#0101 (BC) |
 | CreateChannels | ✓ | Create Text & Voice Channels Using Commands | Obi-Wan3, Mile High#7102 (BC) |
