@@ -72,18 +72,22 @@ class PrivateRooms(commands.Cog):
                                     break
 
                             lobby = member.guild.get_channel(sys['lobby'])
-                            new_overwrites = lobby.overwrites
+                            new_overwrites_lobby = lobby.overwrites
+                            new_overwrites_before = before.channel.overwrites
                             # Reassign to another user
                             if remaining:
                                 a[1] = remaining.id
+                                new_overwrites_before.pop(member)
+                                new_overwrites_before.update({remaining: discord.PermissionOverwrite(move_members=True)})
                                 await before.channel.edit(
                                     name=sys['channel_name'].replace("{creator}", remaining.display_name),
+                                    overwrites=new_overwrites_before,
                                     reason=f"PrivateRooms: {member.display_name} left their VC, ownership transferred to {remaining.id}"
                                 )
-                                new_overwrites.pop(member)
-                                new_overwrites.update({remaining: discord.PermissionOverwrite(move_members=True)})
+                                new_overwrites_lobby.pop(member)
+                                new_overwrites_lobby.update({remaining: discord.PermissionOverwrite(move_members=True)})
                                 await lobby.edit(
-                                    overwrites=new_overwrites,
+                                    overwrites=new_overwrites_lobby,
                                     reason=f"PrivateRooms: {member.display_name} has left their VC, ownership transferred to {remaining.id}"
                                 )
                                 if sys['log_channel']:
@@ -93,9 +97,9 @@ class PrivateRooms(commands.Cog):
                             else:
                                 sys['active'].remove(a)
                                 await before.channel.delete(reason="PrivateRooms: all users have left")
-                                new_overwrites.pop(member)
+                                new_overwrites_lobby.pop(member)
                                 await lobby.edit(
-                                    overwrites=new_overwrites,
+                                    overwrites=new_overwrites_lobby,
                                     reason=f"PrivateRooms: {member.display_name}'s private VC has been deleted"
                                 )
                                 if sys['log_channel']:
@@ -123,7 +127,7 @@ class PrivateRooms(commands.Cog):
                             reason=f"PrivateRooms: created by {member.display_name}",
                             overwrites={
                                 member: discord.PermissionOverwrite(move_members=True),
-                                member.guild.default_role: discord.PermissionOverwrite(view_channel=False)
+                                member.guild.default_role: discord.PermissionOverwrite(connect=False)
                             }
                         )
 
