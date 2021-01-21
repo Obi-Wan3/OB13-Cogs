@@ -44,7 +44,7 @@ class MentionHelp(commands.Cog):
 
     @commands.is_owner()
     @_mention_help.command(name="message")
-    async def _message(self, ctx: commands.Context, *, message: discord.Message):
+    async def _message(self, ctx: commands.Context, *, message: str):
         """Set the MentionHelp message."""
         await self.config.message.set(message)
         return await ctx.tick()
@@ -55,6 +55,12 @@ class MentionHelp(commands.Cog):
         """Toggle MentionHelp globally (an "off" server toggle overrides a global "on")."""
         await self.config.toggle.set(true_or_false)
         return await ctx.tick()
+
+    @commands.is_owner()
+    @_mention_help.command(name="view")
+    async def _view(self, ctx: commands.Context):
+        """View the MentionHelp settings."""
+        return await ctx.send(f"**Global Toggle:** {await self.config.toggle()}\n**Message:** {await self.config.message()}")
 
     @commands.admin()
     @commands.guild_only()
