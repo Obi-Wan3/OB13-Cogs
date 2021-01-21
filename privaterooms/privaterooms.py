@@ -48,7 +48,7 @@ class PrivateRooms(commands.Cog):
                     if sys['origin'] == after.channel.id:
                         joinedroom = True
 
-                    if leftroom or joinedroom:
+                    if leftroom and joinedroom:
                         break
 
         # Left a channel
@@ -171,6 +171,9 @@ class PrivateRooms(commands.Cog):
         """
 
         async with self.config.guild(ctx.guild).systems() as systems:
+            if system_name in systems.keys():
+                return await ctx.send("There is already a PrivateRooms system with that name!")
+
             systems[system_name] = {
                 "toggle": True,
                 "origin": origin_channel.id,
@@ -181,7 +184,7 @@ class PrivateRooms(commands.Cog):
                 "active": []
             }
 
-        return await ctx.send(f'A new PrivateRooms system with origin channel `{origin_channel.name}` and lobby `{lobby_channel.name}` has been created and toggled on. If you would like to toggle it or set a log channel, please us `[p]privaterooms edit {system_name}`.')
+        return await ctx.send(f'A new PrivateRooms system with origin channel `{origin_channel.name}` and lobby `{lobby_channel.name}` has been created and toggled on. If you would like to toggle it or set a log channel, please use `[p]privaterooms edit logchannel {system_name}`.')
 
     @_privaterooms.group(name="edit")
     async def _edit(self, ctx: commands.Context):
