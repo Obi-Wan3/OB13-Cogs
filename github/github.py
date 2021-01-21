@@ -5,6 +5,7 @@ import feedparser
 import re
 import time
 
+from discord.ext import tasks
 from redbot.core import commands, Config
 from redbot.core.utils.chat_formatting import escape
 
@@ -303,7 +304,7 @@ class Github(commands.Cog):
 
         return await ctx.send(embed=discord.Embed(title="Server Github RSS Feeds", description=feeds_string, color=color))
 
-    @discord.ext.tasks.loop(minutes=3)
+    @tasks.loop(minutes=3)
     async def github_rss(self):
         # start = time.time()
         await self.bot.wait_until_red_ready()
