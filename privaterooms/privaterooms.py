@@ -78,7 +78,7 @@ class PrivateRooms(commands.Cog):
                             if remaining:
                                 a[1] = remaining.id
                                 new_overwrites_before.pop(member)
-                                new_overwrites_before.update({remaining: discord.PermissionOverwrite(move_members=True)})
+                                new_overwrites_before.update({remaining: discord.PermissionOverwrite(move_members=True, view_channel=True, connect=True)})
                                 await before.channel.edit(
                                     name=sys['channel_name'].replace("{creator}", remaining.display_name),
                                     overwrites=new_overwrites_before,
@@ -126,7 +126,7 @@ class PrivateRooms(commands.Cog):
                             bitrate=min(sys['bitrate']*1000, member.guild.bitrate_limit),
                             reason=f"PrivateRooms: created by {member.display_name}",
                             overwrites={
-                                member: discord.PermissionOverwrite(move_members=True),
+                                member: discord.PermissionOverwrite(move_members=True, view_channel=True, connect=True),
                                 member.guild.default_role: discord.PermissionOverwrite(connect=False)
                             }
                         )
