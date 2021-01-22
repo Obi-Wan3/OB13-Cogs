@@ -11,7 +11,11 @@ from redbot.core.utils.chat_formatting import escape
 
 
 class Github(commands.Cog):
-    """RSS feeds for your server."""
+    """
+    Github RSS Commit Feeds
+
+    Sends Github commit messages exactly as the webhook would.
+    """
 
     def __init__(self, bot):
         self.bot = bot
@@ -22,7 +26,7 @@ class Github(commands.Cog):
 
         self.color = 0x7289da
         self.githubURL = r"https://github.com/(.*?)/(.*?)/?"
-        self.invalid = "Invalid Github URL. Try doing `!github whatlinks` to see the accepted formats."
+        self.invalid = "Invalid Github URL. Try doing `[p]github whatlinks` to see the accepted formats."
 
     def cog_unload(self):
         self.github_rss.cancel()
@@ -156,11 +160,11 @@ class Github(commands.Cog):
 
     @github.command()
     async def whatlinks(self, ctx: commands.Context):
-        """What links can you submit to `!rss add`?"""
+        """What links can you submit to `[p]github add`?"""
         color = await self.bot.get_embed_color(ctx)
-        e = discord.Embed(title="What links can you submit to `!github add`?", color=color)
-        e.add_field(name="Public Repos", inline=False, value="Just enter your **repo link**! For example, `!github add SomeName https://github.com/github/testrepo`. Any other link (e.g. your `.git` link) will not work.")
-        e.add_field(name="Private Repos", inline=False, value="Inspect element, search in your **repo** html for `.atom`, copy that entire link (with the `?token=sometoken`), do `!github add SomeName ThatLinkYouJustCopied true`. Be sure to include `true` at the end to signal that this is a private repo.")
+        e = discord.Embed(title=f"What links can you submit to `{ctx.clean_prefix}github add`?", color=color)
+        e.add_field(name="Public Repos", inline=False, value=f"Just enter your **repo link**! For example, `{ctx.clean_prefix}github add SomeName https://github.com/github/testrepo`. Any other link (e.g. your `.git` link) will not work.")
+        e.add_field(name="Private Repos", inline=False, value=f"Inspect element, search in your **repo** html for `.atom`, copy that entire link (with the `?token=sometoken`), do `{ctx.clean_prefix}github add SomeName ThatLinkYouJustCopied true`. Be sure to include `true` at the end to signal that this is a private repo.")
         return await ctx.send(embed=e)
 
     @github.command()
@@ -168,7 +172,7 @@ class Github(commands.Cog):
         """
         Add a Github RSS feed to the server.
 
-        For the accepted link formats, see `!github whatlinks`.
+        For the accepted link formats, see `[p]github whatlinks`.
         """
 
         role = await self.config.guild(ctx.guild).role()
@@ -194,7 +198,7 @@ class Github(commands.Cog):
             if not(url.startswith("https://github.com/")): return await ctx.send("That is not a Github link!")
             private_repo = r"https://github.com/(.*?)/(.*?)/.*?\.atom\?token=.*?"
             match = re.fullmatch(private_repo, url)
-            if match is None: return await ctx.send("Your token was missing! Follow the instructions in `!github whatlinks`.")
+            if match is None: return await ctx.send(f"Your token was missing! Follow the instructions in `{ctx.clean_prefix}github whatlinks`.")
 
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as resp:
@@ -242,6 +246,22 @@ class Github(commands.Cog):
 
         return await ctx.send("Feed successfully renamed.")
 
+    @commands.admin()
+    @github.command()
+    async def channel(self, ctx: commands.Context, user: discord.Member, feed_name: str, channel: discord.TextChannel = None):
+        """Set a channel override for a feed (leave empty to reset)."""
+
+        async with self.config.guild(ctx.guild).feeds() as feeds:
+            try:
+                if channel:
+                    feeds[str(user.id)][feed_name]["channel"] = channel.id
+                else:
+                    del feeds[str(user.id)][feed_name]["channel"]
+            except KeyError:
+                return await ctx.send("Feed not found.")
+
+        return await ctx.send("Feed channel successfully overridden.")
+
     @github.command()
     async def remove(self, ctx: commands.Context, name: str):
         """Remove a Github RSS feed from the server."""
@@ -253,7 +273,7 @@ class Github(commands.Cog):
         async with self.config.guild(ctx.guild).feeds() as feeds:
             try:
                 if name not in feeds[str(ctx.author.id)]:
-                    return await ctx.send("There is no feed with that name! Try checking your feeds with `!github list`.")
+                    return await ctx.send(f"There is no feed with that name! Try checking your feeds with `{ctx.clean_prefix}github list`.")
 
                 url = feeds[str(ctx.author.id)][name]["url"]
                 repo_regex = r"(https://github.com/.*?/.*?)/.*"
@@ -262,7 +282,7 @@ class Github(commands.Cog):
 
                 del feeds[str(ctx.author.id)][name]
             except KeyError:
-                return await ctx.send("There is no feed with that name! Try checking your feeds with `!github list`.")
+                return await ctx.send(f"There is no feed with that name! Try checking your feeds with `{ctx.clean_prefix}github list`.")
 
         return await ctx.send("Feed successfully removed.")
 
@@ -284,7 +304,7 @@ class Github(commands.Cog):
                     feeds_string += f"`{name}`: <{re.fullmatch(repo_regex, feed['url']).group(1)}>\n"
             except KeyError:
                 return await ctx.send("No feeds found.")
-        if feeds_string == "": return await ctx.send("No feeds found. Try adding one with `!github add`!")
+        if feeds_string == "": return await ctx.send(f"No feeds found. Try adding one with `{ctx.clean_prefix}github add`!")
         return await ctx.send(embed=discord.Embed(title="Your Github RSS Feeds", description=feeds_string, color=color))
 
     @commands.admin()
@@ -330,9 +350,15 @@ class Github(commands.Cog):
                         new_entries, new_time = await self.new_entries(entries, float(fs["time"]))
                         if len(new_entries) == 1:
                             e = await self.commit_embed(new_entries[0], feedparser.parse(html).feed.link)
-                            await ch.send(embed=e)
+                            if fs.get("channel"):
+                                await self.bot.get_channel(fs["channel"]).send(embed=e)
+                            else:
+                                await ch.send(embed=e)
                         elif len(new_entries) > 1:
                             e = await self.commit_embeds(new_entries, feedparser.parse(html).feed.link, fs["url"])
-                            await ch.send(embed=e)
+                            if fs.get("channel"):
+                                await self.bot.get_channel(fs["channel"]).send(embed=e)
+                            else:
+                                await ch.send(embed=e)
                         fs["time"] = new_time
         # print(f"This loop took {round(int(time.time() - start) / 60, 2)} minutes.")
