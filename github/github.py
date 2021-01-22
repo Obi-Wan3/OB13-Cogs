@@ -156,9 +156,9 @@ class Github(commands.Cog):
 
     @github.command()
     async def whatlinks(self, ctx: commands.Context):
-        """What links can you submit to `!rss add`?"""
+        """What links can you submit to `[p]github add`?"""
         color = await self.bot.get_embed_color(ctx)
-        e = discord.Embed(title="What links can you submit to `!github add`?", color=color)
+        e = discord.Embed(title=f"What links can you submit to `{ctx.clean_prefix}github add`?", color=color)
         e.add_field(name="Public Repos", inline=False, value="Just enter your **repo link**! For example, `!github add SomeName https://github.com/github/testrepo`. Any other link (e.g. your `.git` link) will not work.")
         e.add_field(name="Private Repos", inline=False, value="Inspect element, search in your **repo** html for `.atom`, copy that entire link (with the `?token=sometoken`), do `!github add SomeName ThatLinkYouJustCopied true`. Be sure to include `true` at the end to signal that this is a private repo.")
         return await ctx.send(embed=e)
