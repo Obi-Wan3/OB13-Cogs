@@ -24,7 +24,6 @@ Cogs marked with a ✓ are ready for use, while those with a ✗ are still a Wor
 | FaH | ✓ | Various [Folding@Home](https://foldingathome.org/) Stats | Obi-Wan3, SaraCaterina#1015 (BC) |
 | Github | ✓ | Github RSS Commit Feeds | Obi-Wan3 |
 | ImprovTime | ✓ | One Word Story Channel | Obi-Wan3, Atmos#0101 (BC) |
-| Klingon | ✗ | Translation to [Klingon](http://mrklingo.freeshell.org/uta/index.php) | Obi-Wan3 |
 | MentionHelp | ✓ | Customizable MentionHelp Message | Obi-Wan3 |
 | PrivateRooms | ✓ | Automatic Private VCs with Lobby | Obi-Wan3, Archetype (Bloib & Echospawn, BC) |
 | PublicRooms | ✓ | Automatic Public VC Creation | Obi-Wan3, Archetype (Bloib & Echospawn, BC) |
@@ -34,6 +33,7 @@ Cogs marked with a ✓ are ready for use, while those with a ✗ are still a Wor
 | RestrictedRolePerms | ✓ | Give Certain Roles Restricted Permissions | Obi-Wan3, Mile High#7102 (BC) |
 | TemplatePosts | ✓ | Posts w/ Template Requirements | Obi-Wan3, Barnabas#6666 (BC) |
 | Translate | ✓ | Free Google Translations | Obi-Wan3 |
+| UploadStreaks | ✗ | Streaks & Points for Uploads | Obi-Wan3,  SpiffmasterPrime#8931 (BC)|
 
 # Installation
 Run the following commands with your Red instance, replacing `[p]` with your prefix:
