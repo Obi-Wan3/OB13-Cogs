@@ -5,7 +5,11 @@ import re
 
 
 class BrainShop(commands.Cog):
-    """AI Chatbot using BrainShop"""
+    """
+    AI Chatbot Using BrainShop
+
+    An artificial intelligence chatbot using BrainShop (https://brainshop.ai/).
+    """
 
     def __init__(self, bot):
         self.bot = bot
