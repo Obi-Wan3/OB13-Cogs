@@ -318,7 +318,7 @@ class Github(commands.Cog):
             async with self.config.guild(ctx.guild).feeds() as feeds:
                 repo_regex = r"(https://github.com/.*?/.*?)/.*"
                 for id, fs in feeds.items():
-                    feeds_string += f"{self.bot.get_user(int(id)).mention}: `{len(fs)}` feed(s) \n"
+                    feeds_string += f"{(await self.bot.get_or_fetch_user(int(id))).mention}: `{len(fs)}` feed(s) \n"
                     for n, f in fs.items():
                         feeds_string += f"- `{n}`: <{re.fullmatch(repo_regex, f['url']).group(1)}>\n"
 

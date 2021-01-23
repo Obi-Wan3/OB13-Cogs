@@ -142,7 +142,7 @@ class ImprovTime(commands.Cog):
             **Use Phrases:** {settings["use_phrases"]}
             **Word Limit:** {settings["word_limit"]}
             **Allow Repeat Messages from User:** {settings["allow_repeats"]}
-            **Sentence Ending Blocklist**: {humanize_list([self.bot.get_user(u).mention for u in settings["blocklist"]]) or "None"}
+            **Sentence Ending Blocklist**: {humanize_list([(await self.bot.get_or_fetch_user(u)).mention for u in settings["blocklist"]]) or "None"}
             **Prefix Phrases**:
             {phrases_string or "None"}
             """
