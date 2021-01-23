@@ -129,7 +129,7 @@ class PublicRooms(commands.Cog):
                             public_vc = await member.guild.create_voice_channel(
                                 name=channel_name,
                                 category=after.channel.category,
-                                position=0,
+                                position=after.channel.position+1,
                                 bitrate=min(sys['bitrate'] * 1000, member.guild.bitrate_limit),
                                 reason=f"PublicRooms: created by {member.display_name}",
                             )
