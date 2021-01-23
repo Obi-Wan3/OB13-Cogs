@@ -125,9 +125,11 @@ class PublicRooms(commands.Cog):
 
                         channel_name = sys['overrides'].get(str(member.id))
                         if channel_name:
+                            num = 0
                             public_vc = await member.guild.create_voice_channel(
                                 name=channel_name,
                                 category=after.channel.category,
+                                position=0,
                                 bitrate=min(sys['bitrate'] * 1000, member.guild.bitrate_limit),
                                 reason=f"PublicRooms: created by {member.display_name}",
                             )
@@ -175,7 +177,7 @@ class PublicRooms(commands.Cog):
                             await member.guild.get_channel(sys['log_channel']).send(f'{member.mention} created `{public_vc.name}`')
 
                         # Add to active list
-                        sys['active'].append((public_vc.id, num or 0))
+                        sys['active'].append((public_vc.id, num))
 
                         break
 
