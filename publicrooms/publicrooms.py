@@ -76,7 +76,7 @@ class PublicRooms(commands.Cog):
                             # Find correct position of new channel
                             no_created = False
                             no_missing = False
-                            all_nums = [x[1] for x in sys['active']]
+                            all_nums = [x[1] for x in sys['active'] if x[1] != 0]
                             try:
                                 num = list(set(range(1, max(all_nums) + 1)) - set(all_nums))[0]
                                 for i in sorted(sys['active'], key=lambda x: x[1]):
@@ -123,46 +123,49 @@ class PublicRooms(commands.Cog):
                     if sys['toggle'] and sys['origin'] == after.channel.id:
                         # Create the new VC
 
-                        # Find correct position of new channel
-                        no_created = False
-                        no_missing = False
-                        all_nums = [x[1] for x in sys['active']]
-                        try:
-                            num = list(set(range(1, max(all_nums) + 1)) - set(all_nums))[0]
-                            for i in sorted(sys['active'], key=lambda x: x[1]):
-                                if i[1] > num:
-                                    ch = i[0]
-                                    break
-                            position = member.guild.get_channel(ch).position - 1
-                        except IndexError:
-                            num = max(all_nums) + 1
-                            no_missing = True
-                        except ValueError:
-                            no_created = True
-
                         channel_name = sys['overrides'].get(str(member.id))
-
-                        if no_created or no_missing:
-                            if no_created:
-                                num = 1
-                            if not channel_name:
-                                channel_name = sys['channel_name'].replace("{num}", str(num))
+                        if channel_name:
                             public_vc = await member.guild.create_voice_channel(
                                 name=channel_name,
                                 category=after.channel.category,
-                                bitrate=min(sys['bitrate']*1000, member.guild.bitrate_limit),
-                                reason=f"PublicRooms: created by {member.display_name}",
-                            )
-                        else:
-                            if not channel_name:
-                                channel_name = sys['channel_name'].replace("{num}", str(num))
-                            public_vc = await member.guild.create_voice_channel(
-                                name=channel_name,
-                                category=after.channel.category,
-                                position=position,
                                 bitrate=min(sys['bitrate'] * 1000, member.guild.bitrate_limit),
                                 reason=f"PublicRooms: created by {member.display_name}",
                             )
+                        else:
+                            # Find correct position of new channel
+                            no_created = False
+                            no_missing = False
+                            all_nums = [x[1] for x in sys['active']]
+                            try:
+                                num = list(set(range(1, max(all_nums) + 1)) - set(all_nums))[0]
+                                for i in sorted(sys['active'], key=lambda x: x[1]):
+                                    if i[1] > num:
+                                        ch = i[0]
+                                        break
+                                position = member.guild.get_channel(ch).position - 1
+                            except IndexError:
+                                num = max(all_nums) + 1
+                                no_missing = True
+                            except ValueError:
+                                no_created = True
+
+                            if no_created or no_missing:
+                                if no_created:
+                                    num = 1
+                                public_vc = await member.guild.create_voice_channel(
+                                    name=sys['channel_name'].replace("{num}", str(num)),
+                                    category=after.channel.category,
+                                    bitrate=min(sys['bitrate']*1000, member.guild.bitrate_limit),
+                                    reason=f"PublicRooms: created by {member.display_name}",
+                                )
+                            else:
+                                public_vc = await member.guild.create_voice_channel(
+                                    name=sys['channel_name'].replace("{num}", str(num)),
+                                    category=after.channel.category,
+                                    position=position,
+                                    bitrate=min(sys['bitrate'] * 1000, member.guild.bitrate_limit),
+                                    reason=f"PublicRooms: created by {member.display_name}",
+                                )
 
                         # Move creator to their new room
                         await member.move_to(public_vc, reason="PublicRooms: is VC creator")
@@ -172,7 +175,7 @@ class PublicRooms(commands.Cog):
                             await member.guild.get_channel(sys['log_channel']).send(f'{member.mention} created `{public_vc.name}`')
 
                         # Add to active list
-                        sys['active'].append((public_vc.id, num))
+                        sys['active'].append((public_vc.id, num or 0))
 
                         break
 
@@ -349,8 +352,10 @@ class PublicRooms(commands.Cog):
             if system_name not in systems.keys():
                 return await ctx.send("There was no PublicRooms system found with that name!")
 
-            for u, n in systems[system_name]["overrides"].items():
-                overrides += f"{(await self.bot.get_or_fetch_member(int(u))).mention}: {n}"
+            for user, name in systems[system_name]["overrides"].items():
+                overrides += f"{(await self.bot.get_or_fetch_member(int(user))).mention}: {name}"
+        if not overrides:
+            return await ctx.send("No custom channel name overrides found for this system.")
         return await ctx.send(overrides)
 
     @_publicrooms.command(name="view")
