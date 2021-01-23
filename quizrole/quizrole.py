@@ -180,7 +180,7 @@ class QuizRole(commands.Cog):
         if type(randomize) == int and randomize > numquestions:
             return await ctx.send("The # of randomized questions to select cannot be greater than the # of questions!")
 
-        if role >= (await self.bot.get_or_fetch_member(self.bot.user.id)).top_role or role >= ctx.author.top_role:
+        if role >= ctx.guild.me.top_role or role >= ctx.author.top_role:
             return await ctx.send("That role cannot be assigned due to the Discord role hierarchy.")
 
         await ctx.send("Alright, please enter the questions and answers as I ask you, one by one (type `cancel` at any time to cancel): ")
@@ -239,7 +239,7 @@ class QuizRole(commands.Cog):
         elif field.lower() == "role":
             try:
                 role = await commands.RoleConverter().convert(ctx=ctx, argument=new_value)
-                if role >= (await self.bot.get_or_fetch_member(self.bot.user.id)).top_role or role >= ctx.author.top_role:
+                if role >= ctx.guild.me.top_role or role >= ctx.author.top_role:
                     return await ctx.send("That role cannot be assigned due to the Discord role hierarchy.")
                 async with self.config.guild(ctx.guild).quizzes() as quizzes:
                     quizzes[quiz_name]["role"] = role.id

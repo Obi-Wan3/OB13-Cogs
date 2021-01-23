@@ -355,7 +355,7 @@ class PublicRooms(commands.Cog):
                 return await ctx.send("There was no PublicRooms system found with that name!")
 
             for user, name in systems[system_name]["overrides"].items():
-                overrides += f"{(await self.bot.get_or_fetch_member(int(user))).mention}: {name}"
+                overrides += f"{(await self.bot.get_or_fetch_member(ctx.guild, int(user))).mention}: {name}"
         if not overrides:
             return await ctx.send("No custom channel name overrides found for this system.")
         return await ctx.send(overrides)

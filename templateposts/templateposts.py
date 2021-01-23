@@ -234,7 +234,7 @@ class TemplatePosts(commands.Cog):
         **Toggle:** {settings['toggle']}
         **Send DM:** {settings['dm']}
         **Ignored Roles:** {humanize_list([ctx.guild.get_role(r).mention for r in settings['ignore']['roles']]) if settings['ignore']['roles'] else None}
-        **Ignored Users:** {humanize_list([(await self.bot.get_or_fetch_member(u)).mention for u in settings['ignore']['users']]) if settings['ignore']['users'] else None}
+        **Ignored Users:** {humanize_list([(await self.bot.get_or_fetch_member(ctx.guild, u)).mention for u in settings['ignore']['users']]) if settings['ignore']['users'] else None}
         {"**Templates:** None" if not settings['templates'] else ""}
         """)
 
