@@ -3,7 +3,11 @@ import discord
 
 
 class Announcements(commands.Cog):
-    """Server announcements."""
+    """
+    Send Message w/ Role Ping.
+
+    Server announcements in a particular channel w/ role ping.
+    """
 
     def __init__(self, bot):
         self.bot = bot
@@ -12,8 +16,5 @@ class Announcements(commands.Cog):
     @commands.command()
     async def announcement(self, ctx: commands.Context, channel: discord.TextChannel, role: discord.Role, *, message=""):
         """Send an announcement message to a specific channel with a role ping."""
-        guild = ctx.guild
-        announcement = f"{role.mention} {message}"
-        m = discord.AllowedMentions(roles=True)
-        await guild.get_channel(channel.id).send(announcement, allowed_mentions=m)
+        await ctx.guild.get_channel(channel.id).send(f"{role.mention} {message}", allowed_mentions=discord.AllowedMentions(roles=True))
         return await ctx.tick()

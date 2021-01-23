@@ -2,8 +2,8 @@
     "author": [
         "Obi-Wan3"
     ],
-    "description": "Server announcements in particular channel w/ role ping",
+    "description": "Server announcements in a particular channel w/ role ping.",
     "hidden": false,
     "install_msg": "Thank you for installing.",
-    "short": "Server announcements"
+    "short": "Send Message w/ Role Ping"
 }
