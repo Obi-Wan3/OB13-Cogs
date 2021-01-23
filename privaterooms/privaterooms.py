@@ -188,7 +188,7 @@ class PrivateRooms(commands.Cog):
                 "active": []
             }
 
-        return await ctx.send(f'A new PrivateRooms system with origin channel `{origin_channel.name}` and lobby `{lobby_channel.name}` has been created and toggled on. If you would like to toggle it or set a log channel, please use `[p]privaterooms edit logchannel {system_name}`.')
+        return await ctx.send(f'A new PrivateRooms system with origin channel `{origin_channel.name}` and lobby `{lobby_channel.name}` has been created and toggled on. If you would like to toggle it or set a log channel, please use `{ctx.clean_prefix}privaterooms edit logchannel {system_name}`.')
 
     @_privaterooms.group(name="edit")
     async def _edit(self, ctx: commands.Context):

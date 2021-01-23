@@ -44,7 +44,7 @@ class QuizRole(commands.Cog):
 
         quiz = (await self.config.guild(ctx.guild).quizzes()).get(quiz_name)
         if not quiz:
-            return await ctx.author.send("No quiz was found with this name. To see all available quizzes, run `[p]quizroles`.")
+            return await ctx.author.send(f"No quiz was found with this name. To see all available quizzes, run `{ctx.clean_prefix}quizroles`.")
 
         if quiz['role'] in [r.id for r in ctx.author.roles]:
             return await ctx.author.send("You already have this role!")
@@ -209,7 +209,7 @@ class QuizRole(commands.Cog):
         async with self.config.guild(ctx.guild).quizzes() as quizzes:
             quizzes[name] = quiz
 
-        return await ctx.send("The quiz has been successfully added! View the quizzes with `[p]quizroleset view`. To allow this quiz to be taken, enable it first with `[p]quizroleset edit <quiz> enabled true`.")
+        return await ctx.send(f"The quiz has been successfully added! View the quizzes with `{ctx.clean_prefix}quizroleset view`. To allow this quiz to be taken, enable it first with `{ctx.clean_prefix}quizroleset edit <quiz> enabled true`.")
 
     @_quizroleset.command(name="edit")
     async def _edit(self, ctx: commands.Context, quiz_name: str, field: str, *, new_value: str):

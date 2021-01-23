@@ -158,7 +158,7 @@ class Counting(commands.Cog):
     async def _assignrole(self, ctx: commands.Context, true_or_false: bool):
         """Toggle whether to assign a role to the most recent user to count (requires add/remove role perms)."""
         if not await self.config.guild(ctx.guild).role():
-            return await ctx.send("Please set a role first using `[p]counting role <role>`!")
+            return await ctx.send(f"Please set a role first using `{ctx.clean_prefix}counting role <role>`!")
         await self.config.guild(ctx.guild).assignrole.set(true_or_false)
         return await ctx.tick()
 

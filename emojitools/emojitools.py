@@ -105,7 +105,7 @@ class EmojiTools(commands.Cog):
                 dir_string += f"{ind}. {d}\n"
 
         if dir_string == "":
-            dir_string = "You have no EmojiTools folders yet. Save emojis with `[p]emojitools`!"
+            dir_string = f"You have no EmojiTools folders yet. Save emojis with `{ctx.clean_prefix}emojitools`!"
 
         e = discord.Embed(title="EmojiTools Folders", description=dir_string, color=await ctx.embed_color())
         return await ctx.send(embed=e)

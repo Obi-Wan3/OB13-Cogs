@@ -202,7 +202,7 @@ class RestrictedRolePerms(commands.Cog):
 
         async with self.config.guild(ctx.guild).mentionable.rules() as rules:
             if rules.get(str(role_to_give_perms_to.id)):
-                return await ctx.send("There is already a rule for that role! Please remove it first using `[p]rrpset removerule`.")
+                return await ctx.send(f"There is already a rule for that role! Please remove it first using `{ctx.clean_prefix}rrpset removerule`.")
             if "all" not in roles_to_allow_to_be_made_mentionable:
                 rules[str(role_to_give_perms_to.id)] = [r.id for r in roles_to_allow_to_be_made_mentionable]
                 return await ctx.send(f"{role_to_give_perms_to.mention} is now allowed to toggle mentionability for {humanize_list([r.mention for r in roles_to_allow_to_be_made_mentionable])}")
@@ -228,7 +228,7 @@ class RestrictedRolePerms(commands.Cog):
 
         async with self.config.guild(ctx.guild).assignable.rules() as rules:
             if rules.get(str(role_to_give_perms_to.id)):
-                return await ctx.send("There is already a rule for that role! Please remove it first using `[p]rrpset removerule`.")
+                return await ctx.send(f"There is already a rule for that role! Please remove it first using `{ctx.clean_prefix}rrpset removerule`.")
             if "all" not in roles_to_allow_to_be_assigned:
                 rules[str(role_to_give_perms_to.id)] = [r.id for r in roles_to_allow_to_be_assigned]
                 return await ctx.send(f"{role_to_give_perms_to.mention} is now allowed to assign {humanize_list([r.mention for r in roles_to_allow_to_be_assigned])}")

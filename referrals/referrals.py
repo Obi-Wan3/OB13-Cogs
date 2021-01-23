@@ -37,7 +37,7 @@ class Referrals(commands.Cog):
         # User already ran command
         if ctx.author.id in await self.config.guild(ctx.guild).already_redeemed():
             if log_channel:
-                await self.bot.get_channel(log_channel).send(f"{ctx.author.mention} tried to run `[p]referredby` but has already done so before.")
+                await self.bot.get_channel(log_channel).send(f"{ctx.author.mention} tried to run `{ctx.clean_prefix}referredby` but has already done so before.")
             return await ctx.send("You have already ran this command! You can only use this once.")
 
         # No credit set by admin yet
@@ -52,14 +52,14 @@ class Referrals(commands.Cog):
                 (ctx.author.joined_at > (datetime.now() - timedelta(hours=time_limit)))
         ):
             if log_channel:
-                await self.bot.get_channel(log_channel).send(f"{ctx.author.mention} tried to run `[p]referredby` but has exceeded the time limit.")
+                await self.bot.get_channel(log_channel).send(f"{ctx.author.mention} tried to run `{ctx.clean_prefix}referredby` but has exceeded the time limit.")
             return await ctx.send("Unfortunately, you have exceeded the time given to run this command after you join.")
 
         # Check if user account is older than the minimum age
         account_age = await self.config.guild(ctx.guild).account_age()
         if account_age and not (ctx.author.created_at < (datetime.now() - timedelta(hours=time_limit))):
             if log_channel:
-                await self.bot.get_channel(log_channel).send(f"{ctx.author.mention} tried to run `[p]referredby` but their account is too new.")
+                await self.bot.get_channel(log_channel).send(f"{ctx.author.mention} tried to run `{ctx.clean_prefix}referredby` but their account is too new.")
             return await ctx.send("Your account is too new!")
 
         new = await bank.deposit_credits(member, to_deposit)
@@ -138,7 +138,7 @@ class Referrals(commands.Cog):
             time_limit = await self.config.guild(ctx.guild).time_limit()
 
             if not time_limit:
-                return await ctx.send("Please set the time limit first using `[p]referset timelimit`!")
+                return await ctx.send(f"Please set the time limit first using `{ctx.clean_prefix}referset timelimit`!")
 
             async with self.config.guild(ctx.guild).already_redeemed() as already_redeemed:
                 for m in ctx.guild.members:
@@ -156,9 +156,9 @@ class Referrals(commands.Cog):
         """Check if the user is has already used [p]referredby."""
         already_redeemed_list = await self.config.guild(ctx.guild).already_redeemed()
         if member.id in already_redeemed_list:
-            return await ctx.send("This member has already used `[p]referredby`.")
+            return await ctx.send(f"This member has already used `{ctx.clean_prefix}referredby`.")
         else:
-            return await ctx.send("This member has not yet used `[p]referredby`.")
+            return await ctx.send(f"This member has not yet used `{ctx.clean_prefix}referredby`.")
 
     @_referset.command(name="resetall")
     async def _resetall(self, ctx: commands.Context, enter_true_to_confirm: bool):

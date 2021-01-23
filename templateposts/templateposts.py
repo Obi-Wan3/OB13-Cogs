@@ -106,7 +106,7 @@ class TemplatePosts(commands.Cog):
 
         async with self.config.guild(ctx.guild).templates() as templates:
             if templates.get(template_name):
-                return await ctx.send("There is already a template with that name! If you want to edit it, use `[p]templateposts edit`.")
+                return await ctx.send(f"There is already a template with that name! If you want to edit it, use `{ctx.clean_prefix}templateposts edit`.")
             templates[template_name] = {
                 "toggle": True,
                 "channel": channel.id,
@@ -114,7 +114,7 @@ class TemplatePosts(commands.Cog):
                 "fields": [s.strip() for s in fields.split(";")]
             }
 
-        return await ctx.send(f"The template `{template_name}` has been added and activated in {channel.mention}. If you would like it to DM users that do not comply, use `[p]templateposts edit message {template_name} <message>`.")
+        return await ctx.send(f"The template `{template_name}` has been added and activated in {channel.mention}. If you would like it to DM users that do not comply, use `{ctx.clean_prefix}templateposts edit message {template_name} <message>`.")
 
     @_template_posts.group(name="edit")
     async def _edit(self, ctx: commands.Context):
@@ -183,7 +183,7 @@ class TemplatePosts(commands.Cog):
                 del templates[template_name]
                 return await ctx.send(f"Template `{template_name}` was removed.")
             else:
-                return await ctx.send("There were no templates found with that name! See the set templates with `[p]templateposts view`.")
+                return await ctx.send(f"There were no templates found with that name! See the set templates with `{ctx.clean_prefix}templateposts view`.")
 
     @_template_posts.group(name="ignore")
     async def _ignore(self, ctx: commands.Context):

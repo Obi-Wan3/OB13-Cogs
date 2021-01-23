@@ -170,7 +170,7 @@ class PublicRooms(commands.Cog):
                 "active": [],
             }
 
-        return await ctx.send(f'A new PublicRooms system with origin channel `{origin_channel.name}` has been created and toggled on. If you would like to toggle it or set a log channel, please use `[p]publicrooms edit logchannel {system_name}`.')
+        return await ctx.send(f'A new PublicRooms system with origin channel `{origin_channel.name}` has been created and toggled on. If you would like to toggle it or set a log channel, please use `{ctx.clean_prefix}publicrooms edit logchannel {system_name}`.')
 
     @_publicrooms.group(name="edit")
     async def _edit(self, ctx: commands.Context):
