@@ -96,7 +96,10 @@ class PrivateRooms(commands.Cog):
                             # Remove channel
                             else:
                                 sys['active'].remove(a)
-                                await before.channel.delete(reason="PrivateRooms: all users have left")
+                                try:
+                                    await before.channel.delete(reason="PrivateRooms: all users have left")
+                                except discord.Forbidden:
+                                    pass
                                 new_overwrites_lobby.pop(member)
                                 await lobby.edit(
                                     overwrites=new_overwrites_lobby,
@@ -127,7 +130,8 @@ class PrivateRooms(commands.Cog):
                             reason=f"PrivateRooms: created by {member.display_name}",
                             overwrites={
                                 member: discord.PermissionOverwrite(move_members=True, view_channel=True, connect=True),
-                                member.guild.default_role: discord.PermissionOverwrite(connect=False)
+                                member.guild.default_role: discord.PermissionOverwrite(connect=False),
+                                member.guild.me: discord.PermissionOverwrite(connect=True)
                             }
                         )
 
