@@ -71,6 +71,44 @@ class PublicRooms(commands.Cog):
                                 await member.guild.get_channel(sys['log_channel']).send(f'{member.mention} left `{before.channel.name}`, channel removed')
                             break
 
+                        # Member with custom channel name left
+                        if sys['overrides'].get(str(member.id)) == before.channel.name :
+                            # Find correct position of new channel
+                            no_created = False
+                            no_missing = False
+                            all_nums = [x[1] for x in sys['active']]
+                            try:
+                                num = list(set(range(1, max(all_nums) + 1)) - set(all_nums))[0]
+                                for i in sorted(sys['active'], key=lambda x: x[1]):
+                                    if i[1] > num:
+                                        ch = i[0]
+                                        break
+                                position = member.guild.get_channel(ch).position - 1
+                            except IndexError:
+                                num = max(all_nums) + 1
+                                no_missing = True
+                            except ValueError:
+                                no_created = True
+
+                            if no_created or no_missing:
+                                if no_created:
+                                    num = 1
+                                public_vc = await before.channel.edit(
+                                    name=sys['channel_name'].replace("{num}", str(num)),
+                                    reason=f"PublicRooms: {member.display_name} left room with custom name",
+                                )
+                            else:
+                                public_vc = await before.channel.edit(
+                                    name=sys['channel_name'].replace("{num}", str(num)),
+                                    position=position,
+                                    reason=f"PublicRooms: {member.display_name} left room with custom name",
+                                )
+
+                            if sys['log_channel']:
+                                await member.guild.get_channel(sys['log_channel']).send(f'{member.mention} left `{before.channel.name}`, renamed to {public_vc.name}')
+
+                            break
+
                         # Log user leaving
                         if sys['log_channel']:
                             await member.guild.get_channel(sys['log_channel']).send(f'{member.mention} left `{before.channel.name}`')
@@ -85,6 +123,7 @@ class PublicRooms(commands.Cog):
                     if sys['toggle'] and sys['origin'] == after.channel.id:
                         # Create the new VC
 
+                        # Find correct position of new channel
                         no_created = False
                         no_missing = False
                         all_nums = [x[1] for x in sys['active']]
@@ -101,18 +140,24 @@ class PublicRooms(commands.Cog):
                         except ValueError:
                             no_created = True
 
+                        channel_name = sys['overrides'].get(str(member.id))
+
                         if no_created or no_missing:
                             if no_created:
                                 num = 1
+                            if not channel_name:
+                                channel_name = sys['channel_name'].replace("{num}", str(num))
                             public_vc = await member.guild.create_voice_channel(
-                                name=sys['channel_name'].replace("{num}", str(num)),
+                                name=channel_name,
                                 category=after.channel.category,
                                 bitrate=min(sys['bitrate']*1000, member.guild.bitrate_limit),
                                 reason=f"PublicRooms: created by {member.display_name}",
                             )
                         else:
+                            if not channel_name:
+                                channel_name = sys['channel_name'].replace("{num}", str(num))
                             public_vc = await member.guild.create_voice_channel(
-                                name=sys['channel_name'].replace("{num}", str(num)),
+                                name=channel_name,
                                 category=after.channel.category,
                                 position=position,
                                 bitrate=min(sys['bitrate'] * 1000, member.guild.bitrate_limit),
@@ -168,6 +213,7 @@ class PublicRooms(commands.Cog):
                 "channel_name": channel_name_template,
                 "log_channel": None,
                 "active": [],
+                "overrides": {}
             }
 
         return await ctx.send(f'A new PublicRooms system with origin channel `{origin_channel.name}` has been created and toggled on. If you would like to toggle it or set a log channel, please use `{ctx.clean_prefix}publicrooms edit logchannel {system_name}`.')
@@ -267,6 +313,45 @@ class PublicRooms(commands.Cog):
             systems[system_name]["active"] = []
 
         return await ctx.send(f"The active rooms in `{system_name}` were cleared.")
+
+    @_edit.group(name="custom")
+    async def _custom(self, ctx: commands.Context):
+        """Custom Channel Names for Specific Members"""
+
+    @_custom.command(name="add")
+    async def _custom_add(self, ctx: commands.Context, system_name: str, member: discord.Member, *, channel_name: str):
+        """Add a custom channel name override for a specific member."""
+        async with self.config.guild(ctx.guild).systems() as systems:
+            if system_name not in systems.keys():
+                return await ctx.send("There was no PublicRooms system found with that name!")
+
+            systems[system_name]["overrides"][member.id] = channel_name
+        return await ctx.tick()
+
+    @_custom.command(name="remove", aliases=["delete"])
+    async def _custom_remove(self, ctx: commands.Context, system_name: str, member: discord.Member):
+        """Remove a custom channel name override for a specific member."""
+        async with self.config.guild(ctx.guild).systems() as systems:
+            if system_name not in systems.keys():
+                return await ctx.send("There was no PublicRooms system found with that name!")
+
+            try:
+                del systems[system_name]["overrides"][str(member.id)]
+            except KeyError:
+                return await ctx.send("This member did not have a custom channel name override!")
+        return await ctx.tick()
+
+    @_custom.command(name="list")
+    async def _custom_list(self, ctx: commands.Context, system_name: str):
+        """List the custom channel name overrides for a PublicRooms system."""
+        overrides = ""
+        async with self.config.guild(ctx.guild).systems() as systems:
+            if system_name not in systems.keys():
+                return await ctx.send("There was no PublicRooms system found with that name!")
+
+            for u, n in systems[system_name]["overrides"].items():
+                overrides += f"{(await self.bot.get_or_fetch_member(int(u))).mention}: {n}"
+        return await ctx.send(overrides)
 
     @_publicrooms.command(name="view")
     async def _view(self, ctx: commands.Context):
