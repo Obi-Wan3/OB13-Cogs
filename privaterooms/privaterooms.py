@@ -13,6 +13,22 @@ class PrivateRooms(commands.Cog):
             "systems": {},
         }
         self.config.register_guild(**default_guild)
+        self.bot.loop.create_task(self.initialize())
+
+    async def initialize(self) -> None:
+        await self.bot.wait_until_red_ready()
+        all_guilds = await self.config.all_guilds()
+        for g in all_guilds.keys():
+            async with self.config.guild_from_id(g).all() as guild:
+                for sys in guild['systems'].values():
+                    for a in sys['active']:
+                        try:
+                            vc = self.bot.get_channel(a[0])
+                            if not vc.members:
+                                await vc.delete(reason="PrivateRooms: unused VC after cog load")
+                                sys['active'].remove(a)
+                        except (AttributeError, discord.NotFound, discord.HTTPException, discord.Forbidden, discord.InvalidData):
+                            sys['active'].remove(a)
 
     @commands.Cog.listener("on_voice_state_update")
     async def _voice_listener(self, member: discord.Member, before, after):
