@@ -1,0 +1,9 @@
+{
+    "author": [
+        "Obi-Wan3"
+    ],
+    "description": "A leaderboard with points and streaks for uploading attachments in specific channels per interval of time.",
+    "hidden": false,
+    "install_msg": "Thank you for installing.",
+    "short": "Streaks & Points for Uploads"
+}

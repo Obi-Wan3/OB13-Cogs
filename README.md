@@ -33,7 +33,7 @@ Cogs marked with a ✓ are ready for use, while those with a ✗ are still a Wor
 | RestrictedRolePerms | ✓ | Give Certain Roles Restricted Permissions | Obi-Wan3, Mile High#7102 (BC) |
 | TemplatePosts | ✓ | Posts w/ Template Requirements | Obi-Wan3, Barnabas#6666 (BC) |
 | Translate | ✓ | Free Google Translations | Obi-Wan3 |
-| UploadStreaks | ✗ | Streaks & Points for Uploads | Obi-Wan3,  SpiffmasterPrime#8931 (BC)|
+| UploadStreaks | ✓ | Streaks & Points for Uploads | Obi-Wan3,  SpiffmasterPrime#8931 (BC)|
 
 # Installation
 Run the following commands with your Red instance, replacing `[p]` with your prefix:
