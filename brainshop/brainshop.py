@@ -1,6 +1,7 @@
-from redbot.core import commands, data_manager, Config, checks
+from redbot.core import commands, Config
 import discord
 import aiohttp
+import typing
 import re
 
 
@@ -15,7 +16,7 @@ class BrainShop(commands.Cog):
         self.bot = bot
         self.config = Config.get_conf(self, identifier=14000605)
         default_global = {"auto": True}
-        default_guild = {"auto": True}
+        default_guild = {"auto": True, "channels": []}
         self.config.register_global(**default_global)
         self.config.register_guild(**default_guild)
 
@@ -30,16 +31,20 @@ class BrainShop(commands.Cog):
 
     @commands.Cog.listener("on_message_without_command")
     async def _message_listener(self, message: discord.Message):
+        in_auto_channel = False
         if (
                 message.author.bot or  # Message author is a bot
                 not message.content.startswith((f"<@{self.bot.user.id}>", f"<@!{self.bot.user.id}>"))
         ):
-            return
+            if not message.author.bot and message.guild and message.channel.id in await self.config.guild(message.guild).channels():
+                in_auto_channel = True
+            else:
+                return
 
         if message.guild:
             if (
                     await self.bot.cog_disabled_in_guild(self, message.guild) or  # Cog disabled in guild
-                    not await self.config.guild(message.guild).auto()  # Auto reply toggled off
+                    (not await self.config.guild(message.guild).auto() and not in_auto_channel)  # Auto reply is off
             ):
                 return
         elif not await self.config.auto():  # Global auto reply turned off
@@ -85,6 +90,17 @@ class BrainShop(commands.Cog):
     async def _auto(self, ctx: commands.Context, true_or_false: bool):
         """Toggle whether BrainShop should automatically reply to all messages in the server starting with the bot mention."""
         await self.config.guild(ctx.guild).auto.set(true_or_false)
+        return await ctx.tick()
+
+    @commands.guild_only()
+    @commands.admin()
+    @_brainshopset.command(name="channels")
+    async def _channels(self, ctx: commands.Context, *channels: discord.TextChannel):
+        """Set automatic reply channels for BrainShop (leave blank to remove all)."""
+        if channels:
+            await self.config.guild(ctx.guild).channels.set([c.id for c in channels])
+        else:
+            await self.config.guild(ctx.guild).channels.set([])
         return await ctx.tick()
 
     @commands.is_owner()
