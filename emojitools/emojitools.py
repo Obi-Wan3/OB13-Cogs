@@ -240,6 +240,43 @@ class EmojiTools(commands.Cog):
         return await ctx.send(f"{len(added_emojis)} emojis were added to this server: {' '.join([str(e) for e in added_emojis])}")
 
     @commands.admin()
+    @commands.cooldown(rate=1, per=5)
+    @_add.command(name="fromimage")
+    async def _add_from_image(self, ctx: commands.Context, name: str = None):
+        """
+        Add an emoji to this server from a provided image.
+
+        The attached image should be in one of the following formats: `.png`, `.jpg`, or `.gif`.
+        """
+
+        async with ctx.typing():
+            if len(ctx.message.attachments) > 1:
+                return await ctx.send("Please only attach 1 file!")
+
+            if len(ctx.message.attachments) < 1:
+                return await ctx.send("Please attach an image!")
+
+            if not ctx.message.attachments[0].filename.endswith((".png", ".jpg", ".gif")):
+                return await ctx.send("Please make sure the uploaded image is a `.png`, `.jpg`, or `.gif` file!")
+
+            image = await ctx.message.attachments[0].read()
+
+            try:
+                new = await ctx.guild.create_custom_emoji(
+                    name=name or ctx.message.attachments[0].filename[:-4],
+                    image=image,
+                    reason=f"EmojiTools: emoji added by {ctx.author.name}#{ctx.author.discriminator}"
+                )
+            except discord.Forbidden:
+                return await ctx.send("I cannot create custom emojis!")
+            except discord.HTTPException:
+                return await ctx.send("Something went wrong while adding emojis. Is the file size less than 256kb?")
+            except commands.CommandInvokeError:
+                return await ctx.send("Something went wrong while adding emojis. Has the limit been reached?")
+
+        return await ctx.send(f"{new} has been added to this server!")
+
+    @commands.admin()
     @commands.cooldown(rate=1, per=60)
     @_add.command(name="fromzip")
     async def _add_from_zip(self, ctx: commands.Context):
