@@ -21,6 +21,9 @@ class EmbedReact(commands.Cog):
 
     @commands.Cog.listener("on_message_without_command")
     async def _message_listener(self, message: discord.Message):
+        if not message.guild:
+            return
+
         reactions = (await self.config.guild(message.guild).reactions()).get(str(message.channel.id))
 
         # Ignore these messages
