@@ -53,15 +53,15 @@ class PublicRooms(commands.Cog):
                     active = [x[0] for x in sys['active']]
 
                     # Member joined an active PublicRoom
-                    if sys['log_channel'] and after.channel.id in active:
+                    if sys['log_channel'] and before.channel.id not in active and after.channel.id in active:
                         await member.guild.get_channel(sys['log_channel']).send(f'{member.mention} joined `{after.channel.name}`')
 
                     # Member left a PublicRoom
-                    if before.channel.id in active:
+                    if before.channel.id in active and before.channel.id != after.channel.id:
                         leftroom = True
 
                     # Member went into the origin channel
-                    if sys['origin'] == after.channel.id:
+                    if sys['origin'] == after.channel.id != before.channel.id:
                         joinedroom = True
 
                     if leftroom and joinedroom:
