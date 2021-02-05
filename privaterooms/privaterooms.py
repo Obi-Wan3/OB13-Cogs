@@ -57,11 +57,11 @@ class PrivateRooms(commands.Cog):
                         await member.guild.get_channel(sys['log_channel']).send(f'{member.mention} joined `{after.channel.name}`')
 
                     # Member left a PrivateRoom
-                    if before.channel.id in active_vcs:
+                    if before.channel.id in active_vcs and before.channel.id != after.channel.id:
                         leftroom = True
 
                     # Member went into the origin channel
-                    if sys['origin'] == after.channel.id:
+                    if sys['origin'] == after.channel.id != before.channel.id:
                         joinedroom = True
 
                     if leftroom and joinedroom:
