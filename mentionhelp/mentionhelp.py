@@ -15,6 +15,7 @@ class MentionHelp(commands.Cog):
         default_global = {
             "toggle": True,
             "message": None,
+            "embed": False
         }
         self.config.register_guild(**default_guild)
         self.config.register_global(**default_global)
@@ -22,10 +23,14 @@ class MentionHelp(commands.Cog):
     @commands.Cog.listener("on_message_without_command")
     async def _message_listener(self, message: discord.Message):
         if (
-            message.author.bot or  # Message author is a bot
-            (message.guild and await self.bot.cog_disabled_in_guild(self, message.guild)) or  # Cog disabled in guild
-            not await self.config.toggle() or  # MentionHelp toggled off globally
-            not await self.config.guild(message.guild).toggle()  # MentionHelp toggled off in guild
+                message.author.bot or  # Message author is a bot
+                not await self.config.toggle()  # MentionHelp toggled off globally
+        ):
+            return
+
+        if message.guild and (
+                await self.bot.cog_disabled_in_guild(self, message.guild) or  # Cog disabled in guild
+                not await self.config.guild(message.guild).toggle()  # MentionHelp toggled off in guild
         ):
             return
 
@@ -34,8 +39,13 @@ class MentionHelp(commands.Cog):
         to_send = await self.config.message()
 
         if mention.fullmatch(message.content) and self.bot.user.id in [u.id for u in message.mentions] and to_send:
+            if await self.config.embed():
+                try:
+                    await destination.send(embed=discord.Embed(description=to_send))
+                    return
+                except discord.Forbidden:
+                    pass
             await destination.send(to_send)
-
         return
 
     @commands.group(name="mentionhelp")
@@ -57,10 +67,17 @@ class MentionHelp(commands.Cog):
         return await ctx.tick()
 
     @commands.is_owner()
+    @_mention_help.command(name="embed")
+    async def _embed(self, ctx: commands.Context, true_or_false: bool):
+        """Toggle whether MentionHelp should use embeds."""
+        await self.config.embed.set(true_or_false)
+        return await ctx.tick()
+
+    @commands.is_owner()
     @_mention_help.command(name="view")
     async def _view(self, ctx: commands.Context):
         """View the MentionHelp settings."""
-        return await ctx.send(f"**Global Toggle:** {await self.config.toggle()}\n**Message:** {await self.config.message()}")
+        return await ctx.send(f"**Global Toggle:** {await self.config.toggle()}\n**Use Embeds:**{await self.config.embed()}\n**Message:** {await self.config.message()}")
 
     @commands.admin()
     @commands.guild_only()
