@@ -14,10 +14,10 @@ class SiteStatus(commands.Cog):
             "sites": {}
         }
         self.config.register_guild(**default_guild)
-        self._get_status.start()
+        self._fetch_statuses.start()
 
     def cog_unload(self):
-        self._get_status.cancel()
+        self._fetch_statuses.cancel()
 
     @commands.command(name="getstatus")
     async def _get_status(self, ctx: commands.Context, url: str):
@@ -171,7 +171,7 @@ class SiteStatus(commands.Cog):
         return await ctx.tick()
 
     @tasks.loop(minutes=5)
-    async def _get_status(self):
+    async def _fetch_statuses(self):
         await self.bot.wait_until_red_ready()
         all_guilds = await self.config.all_guilds()
         for guild in all_guilds:
