@@ -1,0 +1,9 @@
+{
+    "author": [
+        "Obi-Wan3"
+    ],
+    "description": "Send DMs as the bot",
+    "hidden": false,
+    "install_msg": "Thank you for installing.",
+    "short": "DM as bot"
+}
