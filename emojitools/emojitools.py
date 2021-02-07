@@ -208,7 +208,9 @@ class EmojiTools(commands.Cog):
             except discord.Forbidden:
                 return await ctx.send("I cannot create custom emojis!")
             except commands.CommandInvokeError:
-                return await ctx.send("Something went wrong while adding emojis. Has the limit been reached?")
+                return await ctx.send("Something went wrong while adding the emoji. Has the limit been reached?")
+            except discord.HTTPException:
+                return await ctx.send("Something went wrong while adding the emoji (the source file may be too big).")
 
         return await ctx.send(f"{final_emoji} has been added to this server!")
 
@@ -236,6 +238,8 @@ class EmojiTools(commands.Cog):
                     return await ctx.send("I cannot create custom emojis!")
                 except commands.CommandInvokeError:
                     return await ctx.send("Something went wrong while adding emojis. Has the limit been reached?")
+                except discord.HTTPException:
+                    return await ctx.send("Something went wrong while adding emojis (the source file may be too big).")
 
         return await ctx.send(f"{len(added_emojis)} emojis were added to this server: {' '.join([str(e) for e in added_emojis])}")
 
