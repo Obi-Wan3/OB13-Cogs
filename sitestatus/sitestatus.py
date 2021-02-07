@@ -19,6 +19,17 @@ class SiteStatus(commands.Cog):
     def cog_unload(self):
         self._get_status.cancel()
 
+    @commands.command(name="getstatus")
+    async def _get_status(self, ctx: commands.Context, url: str):
+        """Get the current status of a website."""
+        await ctx.trigger_typing()
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as response:
+                    return await ctx.send(f"Site returned status code `{response.status}`.")
+        except (aiohttp.InvalidURL, aiohttp.ClientConnectorError):
+            return await ctx.send("There was an error connecting to this site. Is the url valid?")
+
     @commands.guild_only()
     @commands.admin()
     @commands.group(name="sitestatus")
