@@ -306,10 +306,13 @@ class RestrictedRolePerms(commands.Cog):
         You can put in `{role}` or `{role.mention}`, which will be replaced with the role that is modified.
         Please format the message like so: `message for allowmentions//message for denymentions`.
         """
-        success_messages = message.split("//")
-        if not len(success_messages) > 1:
-            return await ctx.send("Please separate the 2 messages with `//`.")
-        await self.config.guild(ctx.guild).mentionable.success.set((success_messages[0].strip(), success_messages[1].strip()))
+        if not message:
+            await self.config.guild(ctx.guild).mentionable.success.set(None)
+        else:
+            success_messages = message.split("//")
+            if not len(success_messages) > 1:
+                return await ctx.send("Please separate the 2 messages with `//`.")
+            await self.config.guild(ctx.guild).mentionable.success.set((success_messages[0].strip(), success_messages[1].strip()))
         return await ctx.tick()
 
     @_success_message.command(name="assignable")
@@ -321,8 +324,11 @@ class RestrictedRolePerms(commands.Cog):
         Also, you can put in `{member}` or `{member.mention}`, which will be replaced with the member.
         Please format the message like so: `message for assignrole//message for removerole`.
         """
-        success_messages = message.split("//")
-        if not len(success_messages) > 1:
-            return await ctx.send("Please separate the 2 messages with `//`.")
-        await self.config.guild(ctx.guild).assignable.success.set((success_messages[0].strip(), success_messages[1].strip()))
+        if not message:
+            await self.config.guild(ctx.guild).mentionable.success.set(None)
+        else:
+            success_messages = message.split("//")
+            if not len(success_messages) > 1:
+                return await ctx.send("Please separate the 2 messages with `//`.")
+            await self.config.guild(ctx.guild).assignable.success.set((success_messages[0].strip(), success_messages[1].strip()))
         return await ctx.tick()
