@@ -2,8 +2,8 @@
     "author": [
         "Obi-Wan3"
     ],
-    "description": "Send DMs as the bot",
+    "description": "Monitor the Statuses of Websites",
     "hidden": false,
     "install_msg": "Thank you for installing.",
-    "short": "DM as bot"
+    "short": "Display Website Statuses"
 }
