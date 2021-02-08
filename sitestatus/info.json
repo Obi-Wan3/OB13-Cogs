@@ -4,6 +4,6 @@
     ],
     "description": "Monitor the Statuses of Websites",
     "hidden": false,
-    "install_msg": "Thank you for installing.",
+    "install_msg": "Thank you for installing! Use `[p]help sitestatus` and `[p]help getstatus` for more info.",
     "short": "Display Website Statuses"
 }

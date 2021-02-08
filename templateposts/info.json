@@ -4,6 +4,6 @@
     ],
     "description": "Requires any messages in a channel which a template is set to follow that template (or be auto-removed).",
     "hidden": false,
-    "install_msg": "Thank you for installing.",
+    "install_msg": "Thank you for installing! Use `[p]help templateposts` for more info.",
     "short": "Posts w/ Template Requirements"
 }

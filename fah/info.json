@@ -4,6 +4,6 @@
     ],
     "description": "Folding@Home Team & Donor Statistics",
     "hidden": false,
-    "install_msg": "Thank you for installing.",
+    "install_msg": "Thank you for installing! Use `[p]help fah` for more info.",
     "short": "Folding@Home Stats"
 }

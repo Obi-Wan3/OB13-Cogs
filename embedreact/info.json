@@ -4,6 +4,6 @@
     ],
     "description": "Automatic Reactions to Embedded Images",
     "hidden": false,
-    "install_msg": "Thank you for installing.",
+    "install_msg": "Thank you for installing! Use `[p]help embedreact` for more info.",
     "short": "Auto-EmbedReact"
 }

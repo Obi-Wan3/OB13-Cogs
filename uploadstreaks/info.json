@@ -4,6 +4,6 @@
     ],
     "description": "A leaderboard with points and streaks for uploading attachments in specific channels per interval of time.",
     "hidden": false,
-    "install_msg": "Thank you for installing.",
+    "install_msg": "Thank you for installing! Use `[p]help uploadstreaks` for more info.",
     "short": "Streaks & Points for Uploads"
 }

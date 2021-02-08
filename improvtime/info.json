@@ -4,6 +4,6 @@
     ],
     "description": "Story improv, one word at a time.",
     "hidden": false,
-    "install_msg": "Thank you for installing.",
+    "install_msg": "Thank you for installing! Use `[p]help improvtime` for more info.",
     "short": "One word story improv."
 }

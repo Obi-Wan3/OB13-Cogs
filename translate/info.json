@@ -4,7 +4,7 @@
     ],
     "description": "Translate some text using Google Translate.",
     "hidden": false,
-    "install_msg": "Thank you for installing.",
+    "install_msg": "Thank you for installing! Use `[p]help translate` for more info.",
     "requirements": ["googletrans==3.1.0a0"],
     "short": "Google Translate"
 }

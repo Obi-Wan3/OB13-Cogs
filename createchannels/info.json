@@ -2,8 +2,8 @@
     "author": [
         "Obi-Wan3"
     ],
-    "description": "Create VCs via command",
+    "description": "Create voice and text channels via a command.",
     "hidden": false,
-    "install_msg": "Thank you for installing.",
-    "short": "Create VCs via command\""
+    "install_msg": "Thank you for installing! Use `[p]help CreateChannels` for more info.",
+    "short": "Channel Creation via Commands"
 }

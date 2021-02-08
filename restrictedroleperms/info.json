@@ -4,6 +4,6 @@
     ],
     "description": "Gives restricted permissions to certain roles to mention/assign other roles.",
     "hidden": false,
-    "install_msg": "Thank you for installing.",
+    "install_msg": "Thank you for installing! Use `[p]help rrp` and `[p]help rrpset` for more info.",
     "short": "Restricted Permissions for Roles"
 }

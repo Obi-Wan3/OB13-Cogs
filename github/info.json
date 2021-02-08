@@ -1,6 +1,6 @@
 {
     "author": ["Obi-Wan3"],
-    "install_msg": "Thanks for installing.",
+    "install_msg": "Thank you for installing! Use `[p]help github` for more info.",
     "short": "Github RSS Commit Feeds",
     "description": "Sends Github commit messages exactly as the webhook would.",
     "tags": ["github", "rss"],

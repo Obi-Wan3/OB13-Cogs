@@ -4,6 +4,6 @@
     ],
     "description": "Send DMs as the bot",
     "hidden": false,
-    "install_msg": "Thank you for installing.",
+    "install_msg": "Thank you for installing! Use `[p]help sdm` for more info.",
     "short": "DM as bot"
 }

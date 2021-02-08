@@ -4,6 +4,6 @@
     ],
     "description": "Custom Message on Bot Mention",
     "hidden": false,
-    "install_msg": "Thank you for installing.",
+    "install_msg": "Thank you for installing! Use `[p]help mentionhelp` for more info.",
     "short": "Custom MentionHelp"
 }

@@ -4,6 +4,6 @@
     ],
     "description": "Allows users who refer others to the server to gain credits.",
     "hidden": false,
-    "install_msg": "Thank you for installing.",
+    "install_msg": "Thank you for installing! Use `[p]help Referrals` for more info.",
     "short": "Server Referrals -> Credits"
 }
