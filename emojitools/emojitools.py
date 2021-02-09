@@ -243,6 +243,57 @@ class EmojiTools(commands.Cog):
 
         return await ctx.send(f"{len(added_emojis)} emojis were added to this server: {' '.join([str(e) for e in added_emojis])}")
 
+    @_add.command(name="fromreaction")
+    async def _add_from_reaction(self, ctx: commands.Context, specific_reaction: str, message: discord.Message, new_name: str = None):
+        """Add an emoji to this server from a specific reaction on a message."""
+
+        final_emoji = None
+        async with ctx.typing():
+            for r in message.reactions:
+                if r.custom_emoji and r.emoji.name == specific_reaction:
+                    try:
+                        final_emoji = await ctx.guild.create_custom_emoji(
+                            name=new_name or r.emoji.name,
+                            image=await r.emoji.url.read(),
+                            reason=f"EmojiTools: emoji added by {ctx.author.name}#{ctx.author.discriminator}"
+                        )
+                    except discord.Forbidden:
+                        return await ctx.send("I cannot create custom emojis!")
+                    except commands.CommandInvokeError:
+                        return await ctx.send("Something went wrong while adding the emoji. Has the limit been reached?")
+                    except discord.HTTPException:
+                        return await ctx.send("Something went wrong while adding the emoji (the source file may be too big).")
+        if final_emoji:
+            return await ctx.send(f"{final_emoji} has been added to this server!")
+        else:
+            return await ctx.send(f"No reaction called `{specific_reaction}` was found on that message!")
+
+    @commands.cooldown(rate=1, per=30)
+    @_add.command(name="allreactionsfrom")
+    async def _add_all_reactions_from(self, ctx: commands.Context, message: discord.Message):
+        """Add emojis to this server from all reactions in a message."""
+
+        async with ctx.typing():
+            added_emojis = []
+            for r in message.reactions:
+                if not r.custom_emoji:
+                    continue
+                try:
+                    fe = await ctx.guild.create_custom_emoji(
+                        name=r.emoji.name,
+                        image=await r.emoji.url.read(),
+                        reason=f"EmojiTools: emoji added by {ctx.author.name}#{ctx.author.discriminator}"
+                    )
+                    added_emojis.append(fe)
+                except discord.Forbidden:
+                    return await ctx.send("I cannot create custom emojis!")
+                except commands.CommandInvokeError:
+                    return await ctx.send("Something went wrong while adding emojis. Has the limit been reached?")
+                except discord.HTTPException:
+                    return await ctx.send("Something went wrong while adding emojis (the source file may be too big).")
+
+        return await ctx.send(f"{len(added_emojis)} emojis were added to this server: {' '.join([str(e) for e in added_emojis])}")
+
     @commands.admin()
     @commands.cooldown(rate=1, per=5)
     @_add.command(name="fromimage")
