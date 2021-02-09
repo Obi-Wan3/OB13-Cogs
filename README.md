@@ -32,6 +32,7 @@ Cogs marked with a ✓ are ready for use, while those with a ✗ are still a Wor
 | Reply | ✗ | Bot Replies to Messages | Obi-Wan3 |
 | RestrictedRolePerms | ✓ | Give Certain Roles Restricted Permissions | Obi-Wan3, Mile High#7102 (BC) |
 | SiteStatus | ✓ | Display Website Statuses | Obi-Wan3, Spomp#1337 (BC) |
+| StatusRole | ✗ | Roles for Certain Custom Statuses | Obi-Wan3, ry#1000 (BC) |
 | TemplatePosts | ✓ | Posts w/ Template Requirements | Obi-Wan3, Barnabas#6666 (BC) |
 | Translate | ✓ | Free Google Translations | Obi-Wan3 |
 | UploadStreaks | ✓ | Streaks & Points for Uploads | Obi-Wan3,  SpiffmasterPrime#8931 (BC)|
