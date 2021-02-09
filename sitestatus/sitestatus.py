@@ -2,6 +2,7 @@ from redbot.core import commands, Config
 from discord.ext import tasks
 import discord
 import aiohttp
+from datetime import datetime
 
 
 class SiteStatus(commands.Cog):
@@ -55,7 +56,8 @@ class SiteStatus(commands.Cog):
                     "online": None,
                     "offline": None,
                     "notify_channel": None,
-                    "notify_role": None
+                    "notify_role": None,
+                    "last": None
                 }
         return await ctx.tick()
 
@@ -176,7 +178,7 @@ class SiteStatus(commands.Cog):
         all_guilds = await self.config.all_guilds()
         for guild in all_guilds:
             async with self.config.guild(self.bot.get_guild(guild)).sites() as sites:
-                for site in sites.values():
+                for name, site in sites.items():
                     if not(site["channel"] or site["notify_channel"] or site["notify_role"]):
                         continue
                     try:
@@ -185,23 +187,72 @@ class SiteStatus(commands.Cog):
                                 code = response.status
                     except (aiohttp.InvalidURL, aiohttp.ClientConnectorError):
                         code = 500
+
+                    # If monitoring channel set up, then update name if necessary
                     if site["channel"]:
                         channel = self.bot.get_channel(site["channel"])
                         if channel:
-                            online = site['online'] or "Online"
-                            offline = site['offline'] or "Offline"
+                            online = site['online'] or "ONLINE"
+                            offline = site['offline'] or "OFFLINE"
                             try:
                                 if code == site["status"]:
-                                    await channel.edit(name=online.replace("{status}", str(code)), reason="SiteStatus: site is online")
+                                    if channel.name != online.replace("{status}", str(code)):  # Edit if necessary
+                                        await channel.edit(name=online.replace("{status}", str(code)), reason="SiteStatus: site is online")
                                 else:
-                                    await channel.edit(name=offline.replace("{status}", str(code)), reason="SiteStatus: site is offline")
+                                    if channel.name != offline.replace("{status}", str(code)):  # Edit if necessary
+                                        await channel.edit(name=offline.replace("{status}", str(code)), reason="SiteStatus: site is offline")
                             except (discord.Forbidden, discord.InvalidArgument, discord.HTTPException):
                                 pass
-                    if site["notify_channel"] and site["notify_role"] and code != site["status"]:
+
+                    # If notifications set up, then send message if necessary
+                    if site["notify_channel"] and site["notify_role"]:
                         notify_channel = self.bot.get_channel(site["notify_channel"])
                         notify_role = self.bot.get_guild(guild).get_role(site["notify_role"])
                         if notify_channel and notify_role:
-                            try:
-                                await notify_channel.send(f"{notify_role.mention} {site['url']} is offline!", allowed_mentions=discord.AllowedMentions(roles=True))
-                            except (discord.Forbidden, discord.HTTPException):
-                                pass
+                            if code != site["status"] and not site.get("last"):
+                                try:
+                                    await notify_channel.send(
+                                        f"{notify_role.mention}",
+                                        allowed_mentions=discord.AllowedMentions(roles=True),
+                                        embed=discord.Embed(
+                                            title="SiteStatus Alert",
+                                            description=f"[{name}]({site['url']}) is currently offline with status code `{code}`!",
+                                            color=discord.Color.red(),
+                                            timestamp=datetime.utcnow()
+                                        )
+                                    )
+                                except discord.Forbidden:
+                                    try:
+                                        await notify_channel.send(
+                                            f"{notify_role.mention} <{site['url']}> is currently offline with status code `{code}`!",
+                                            allowed_mentions=discord.AllowedMentions(roles=True)
+                                        )
+                                    except (discord.Forbidden, discord.HTTPException):
+                                        pass
+                                except discord.HTTPException:
+                                    pass
+                            elif code == site["status"] and site.get("last"):
+                                downtime = datetime.utcnow() - datetime.utcfromtimestamp(int(site.get("last")))
+                                downtime = (downtime.days * 24 * 60 * 60 + downtime.seconds) // 60
+                                try:
+                                    await notify_channel.send(
+                                        embed=discord.Embed(
+                                            title="SiteStatus Alert",
+                                            description=f"[{name}]({site['url']}) is back online! It was down for roughly {downtime} minutes.",
+                                            color=discord.Color.green(),
+                                            timestamp=datetime.utcnow()
+                                        )
+                                    )
+                                except discord.Forbidden:
+                                    try:
+                                        await notify_channel.send(f"<{site['url']}> is back online! It was down for roughly {downtime} minutes.")
+                                    except (discord.Forbidden, discord.HTTPException):
+                                        pass
+                                except discord.HTTPException:
+                                    pass
+
+                    # Set the "last" status
+                    if code != site["status"] and not site.get("last"):
+                        site["last"] = datetime.utcnow()
+                    else:
+                        site["last"] = None
