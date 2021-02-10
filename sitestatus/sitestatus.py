@@ -2,6 +2,8 @@ from redbot.core import commands, Config
 from discord.ext import tasks
 import discord
 import aiohttp
+import asyncio
+import time
 from datetime import datetime
 
 
@@ -197,11 +199,23 @@ class SiteStatus(commands.Cog):
                             try:
                                 if code == site["status"]:
                                     if channel.name != online.replace("{status}", str(code)):  # Edit if necessary
-                                        await channel.edit(name=online.replace("{status}", str(code)), reason="SiteStatus: site is online")
+                                        await asyncio.wait_for(
+                                            channel.edit(
+                                                name=online.replace("{status}", str(code)),
+                                                reason="SiteStatus: site is online"
+                                            ),
+                                            timeout=5
+                                        )
                                 else:
                                     if channel.name != offline.replace("{status}", str(code)):  # Edit if necessary
-                                        await channel.edit(name=offline.replace("{status}", str(code)), reason="SiteStatus: site is offline")
-                            except (discord.Forbidden, discord.InvalidArgument, discord.HTTPException):
+                                        await asyncio.wait_for(
+                                            channel.edit(
+                                                name=offline.replace("{status}", str(code)),
+                                                reason="SiteStatus: site is offline"
+                                            ),
+                                            timeout=5
+                                        )
+                            except (discord.Forbidden, discord.InvalidArgument, discord.HTTPException, asyncio.TimeoutError):
                                 pass
 
                     # If notifications set up, then send message if necessary
@@ -232,10 +246,11 @@ class SiteStatus(commands.Cog):
                                 except discord.HTTPException:
                                     pass
                             elif code == site["status"] and site.get("last"):
-                                downtime = datetime.utcnow() - datetime.utcfromtimestamp(int(site.get("last")))
-                                downtime = (downtime.days * 24 * 60 * 60 + downtime.seconds) // 60
+                                downtime = round((time.time() - site.get("last")) / 60, 1)
                                 try:
                                     await notify_channel.send(
+                                        f"{notify_role.mention}",
+                                        allowed_mentions=discord.AllowedMentions(roles=True),
                                         embed=discord.Embed(
                                             title="SiteStatus Alert",
                                             description=f"[{name}]({site['url']}) is back online! It was down for roughly {downtime} minutes.",
@@ -252,7 +267,7 @@ class SiteStatus(commands.Cog):
                                     pass
 
                     # Set the "last" status
-                    if code != site["status"] and not site.get("last"):
-                        site["last"] = datetime.utcnow()
-                    else:
+                    if not site.get("last"):
+                        site["last"] = None if code == site["status"] else time.time()
+                    elif code == site["status"]:
                         site["last"] = None
