@@ -1,0 +1,9 @@
+{
+    "author": [
+        "Obi-Wan3"
+    ],
+    "description": "Assign roles to users for the duration in which they have certain custom statuses.",
+    "hidden": false,
+    "install_msg": "Thank you for installing! Use `[p]help statusrole` for more info.",
+    "short": "Roles for Certain Custom Statuses"
+}
