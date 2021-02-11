@@ -10,6 +10,12 @@ from zipfile import ZipFile
 from zipstream.aiozipstream import AioZipStream
 from asynctempfile import TemporaryDirectory, NamedTemporaryFile
 
+# Error messages
+TIME_OUT = "The request timed out or we are being ratelimited, please try again after a few moments."
+FORBIDDEN = "I cannot create custom emojis!"
+INVOKE_ERROR = "Something went wrong while adding the emoji(s). Has the limit been reached?"
+HTTP_EXCEPTION = "Something went wrong while adding the emoji(s) (the source file may be too big)."
+
 
 class EmojiTools(commands.Cog):
     """Tools for Managing Custom Emojis"""
@@ -200,17 +206,22 @@ class EmojiTools(commands.Cog):
             e_image = await emoji.url.read()
             e_name = name or emoji.name
             try:
-                final_emoji = await ctx.guild.create_custom_emoji(
-                    name=e_name,
-                    image=e_image,
-                    reason=f"EmojiTools: emoji added by {ctx.author.name}#{ctx.author.discriminator}"
+                final_emoji = await asyncio.wait_for(
+                    ctx.guild.create_custom_emoji(
+                        name=e_name,
+                        image=e_image,
+                        reason=f"EmojiTools: emoji added by {ctx.author.name}#{ctx.author.discriminator}"
+                    ),
+                    timeout=10
                 )
+            except asyncio.TimeoutError:
+                return await ctx.send(TIME_OUT)
             except discord.Forbidden:
-                return await ctx.send("I cannot create custom emojis!")
+                return await ctx.send(FORBIDDEN)
             except commands.CommandInvokeError:
-                return await ctx.send("Something went wrong while adding the emoji. Has the limit been reached?")
+                return await ctx.send(INVOKE_ERROR)
             except discord.HTTPException:
-                return await ctx.send("Something went wrong while adding the emoji (the source file may be too big).")
+                return await ctx.send(HTTP_EXCEPTION)
 
         return await ctx.send(f"{final_emoji} has been added to this server!")
 
@@ -228,18 +239,23 @@ class EmojiTools(commands.Cog):
                     return await ctx.send(f"Invalid emoji: {e}")
                 em_image = await em.url.read()
                 try:
-                    fe = await ctx.guild.create_custom_emoji(
-                        name=em.name,
-                        image=em_image,
-                        reason=f"EmojiTools: emoji added by {ctx.author.name}#{ctx.author.discriminator}"
+                    fe = await asyncio.wait_for(
+                        ctx.guild.create_custom_emoji(
+                            name=em.name,
+                            image=em_image,
+                            reason=f"EmojiTools: emoji added by {ctx.author.name}#{ctx.author.discriminator}"
+                        ),
+                        timeout=10
                     )
                     added_emojis.append(fe)
+                except asyncio.TimeoutError:
+                    return await ctx.send(TIME_OUT)
                 except discord.Forbidden:
-                    return await ctx.send("I cannot create custom emojis!")
+                    return await ctx.send(FORBIDDEN)
                 except commands.CommandInvokeError:
-                    return await ctx.send("Something went wrong while adding emojis. Has the limit been reached?")
+                    return await ctx.send(INVOKE_ERROR)
                 except discord.HTTPException:
-                    return await ctx.send("Something went wrong while adding emojis (the source file may be too big).")
+                    return await ctx.send(HTTP_EXCEPTION)
 
         return await ctx.send(f"{len(added_emojis)} emojis were added to this server: {' '.join([str(e) for e in added_emojis])}")
 
@@ -252,17 +268,22 @@ class EmojiTools(commands.Cog):
             for r in message.reactions:
                 if r.custom_emoji and r.emoji.name == specific_reaction:
                     try:
-                        final_emoji = await ctx.guild.create_custom_emoji(
-                            name=new_name or r.emoji.name,
-                            image=await r.emoji.url.read(),
-                            reason=f"EmojiTools: emoji added by {ctx.author.name}#{ctx.author.discriminator}"
+                        final_emoji = await asyncio.wait_for(
+                            ctx.guild.create_custom_emoji(
+                                name=new_name or r.emoji.name,
+                                image=await r.emoji.url.read(),
+                                reason=f"EmojiTools: emoji added by {ctx.author.name}#{ctx.author.discriminator}"
+                            ),
+                            timeout=10
                         )
+                    except asyncio.TimeoutError:
+                        return await ctx.send(TIME_OUT)
                     except discord.Forbidden:
-                        return await ctx.send("I cannot create custom emojis!")
+                        return await ctx.send(FORBIDDEN)
                     except commands.CommandInvokeError:
-                        return await ctx.send("Something went wrong while adding the emoji. Has the limit been reached?")
+                        return await ctx.send(INVOKE_ERROR)
                     except discord.HTTPException:
-                        return await ctx.send("Something went wrong while adding the emoji (the source file may be too big).")
+                        return await ctx.send(HTTP_EXCEPTION)
         if final_emoji:
             return await ctx.send(f"{final_emoji} has been added to this server!")
         else:
@@ -279,18 +300,23 @@ class EmojiTools(commands.Cog):
                 if not r.custom_emoji:
                     continue
                 try:
-                    fe = await ctx.guild.create_custom_emoji(
-                        name=r.emoji.name,
-                        image=await r.emoji.url.read(),
-                        reason=f"EmojiTools: emoji added by {ctx.author.name}#{ctx.author.discriminator}"
+                    fe = await asyncio.wait_for(
+                        ctx.guild.create_custom_emoji(
+                            name=r.emoji.name,
+                            image=await r.emoji.url.read(),
+                            reason=f"EmojiTools: emoji added by {ctx.author.name}#{ctx.author.discriminator}"
+                        ),
+                        timeout=10
                     )
                     added_emojis.append(fe)
+                except asyncio.TimeoutError:
+                    return await ctx.send(TIME_OUT)
                 except discord.Forbidden:
-                    return await ctx.send("I cannot create custom emojis!")
+                    return await ctx.send(FORBIDDEN)
                 except commands.CommandInvokeError:
-                    return await ctx.send("Something went wrong while adding emojis. Has the limit been reached?")
+                    return await ctx.send(INVOKE_ERROR)
                 except discord.HTTPException:
-                    return await ctx.send("Something went wrong while adding emojis (the source file may be too big).")
+                    return await ctx.send(HTTP_EXCEPTION)
 
         return await ctx.send(f"{len(added_emojis)} emojis were added to this server: {' '.join([str(e) for e in added_emojis])}")
 
@@ -317,17 +343,22 @@ class EmojiTools(commands.Cog):
             image = await ctx.message.attachments[0].read()
 
             try:
-                new = await ctx.guild.create_custom_emoji(
-                    name=name or ctx.message.attachments[0].filename[:-4],
-                    image=image,
-                    reason=f"EmojiTools: emoji added by {ctx.author.name}#{ctx.author.discriminator}"
+                new = await asyncio.wait_for(
+                    ctx.guild.create_custom_emoji(
+                        name=name or ctx.message.attachments[0].filename[:-4],
+                        image=image,
+                        reason=f"EmojiTools: emoji added by {ctx.author.name}#{ctx.author.discriminator}"
+                    ),
+                    timeout=10
                 )
+            except asyncio.TimeoutError:
+                return await ctx.send(TIME_OUT)
             except discord.Forbidden:
-                return await ctx.send("I cannot create custom emojis!")
+                return await ctx.send(FORBIDDEN)
+            except commands.CommandInvokeError:
+                return await ctx.send(INVOKE_ERROR)
             except discord.HTTPException:
                 return await ctx.send("Something went wrong while adding emojis. Is the file size less than 256kb?")
-            except commands.CommandInvokeError:
-                return await ctx.send("Something went wrong while adding emojis. Has the limit been reached?")
 
         return await ctx.send(f"{new} has been added to this server!")
 
@@ -365,16 +396,23 @@ class EmojiTools(commands.Cog):
                     async with aiofiles.open(efile_path, 'rb') as efile:
                         eimage = await efile.read()
                     try:
-                        fe = await ctx.guild.create_custom_emoji(
-                            name=os.path.splitext(efile_name)[0],
-                            image=eimage,
-                            reason=f"EmojiTools: emoji added by {ctx.author.name}#{ctx.author.discriminator}"
+                        fe = await asyncio.wait_for(
+                            ctx.guild.create_custom_emoji(
+                                name=os.path.splitext(efile_name)[0],
+                                image=eimage,
+                                reason=f"EmojiTools: emoji added by {ctx.author.name}#{ctx.author.discriminator}"
+                            ),
+                            timeout=10
                         )
                         added_emojis.append(fe)
+                    except asyncio.TimeoutError:
+                        return await ctx.send(TIME_OUT)
                     except discord.Forbidden:
-                        return await ctx.send("I cannot create custom emojis!")
+                        return await ctx.send(FORBIDDEN)
                     except commands.CommandInvokeError:
-                        return await ctx.send("Something went wrong while adding emojis. Has the limit been reached?")
+                        return await ctx.send(INVOKE_ERROR)
+                    except discord.HTTPException:
+                        return await ctx.send(HTTP_EXCEPTION)
                 else:
                     await ctx.send(f"{efile_name} was not added as it is not a `.jpg`, `.png`, or `.gif` file.")
 
