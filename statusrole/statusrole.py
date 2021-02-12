@@ -47,10 +47,7 @@ class StatusRole(commands.Cog):
 
                 # Now have custom status (did not have before)
                 if not before_status and after_status:
-                    if (
-                            re.fullmatch(sr["status"], after_status.name) and  # Custom status matches regex
-                            await self._emoji_matches(sr["emoji"], after_status.emoji)
-                    ):
+                    if await self._status_matches(sr["status"], sr["emoji"], after_status):
                         try:
                             await after.add_roles(role, reason=f"StatusRole: new custom status matched {name}")
                             if log_channel:
@@ -60,10 +57,7 @@ class StatusRole(commands.Cog):
 
                 # Had custom status (does not anymore)
                 elif before_status and not after_status:
-                    if (
-                            re.fullmatch(sr["status"], before_status.name) and  # Custom status matches regex
-                            await self._emoji_matches(sr["emoji"], before_status.emoji)
-                    ):
+                    if await self._status_matches(sr["status"], sr["emoji"], before_status):
                         try:
                             await after.remove_roles(role, reason=f"StatusRole: custom status no longer matches {name}")
                             if log_channel:
@@ -73,8 +67,8 @@ class StatusRole(commands.Cog):
 
                 # Custom status changed
                 elif before_status and after_status and before_status != after_status:
-                    before_match = re.fullmatch(sr["status"], before_status.name) and await self._emoji_matches(sr["emoji"], before_status.emoji)
-                    after_match = re.fullmatch(sr["status"], after_status.name) and await self._emoji_matches(sr["emoji"], after_status.emoji)
+                    before_match = await self._status_matches(sr["status"], sr["emoji"], before_status)
+                    after_match = await self._status_matches(sr["status"], sr["emoji"], after_status)
 
                     if (
                             not before_match and after_match and  # New status matches
@@ -106,17 +100,34 @@ class StatusRole(commands.Cog):
         return None
 
     @staticmethod
-    async def _emoji_matches(req, em):
-        if not req:  # No requirement
-            return True
-        else:
-            if not em:
-                return False
+    async def _status_matches(st, em, user_status):
+        status = user_status.name
+        emoji = user_status.emoji
+
+        if (not st and not em) or (not status and not emoji):
+            return False
+
+        async def _st_match(r, s):
+            if not r:  # No requirement
+                return True
             else:
-                if em.is_custom_emoji() and req[1] == em.id:  # Custom emoji matches
-                    return True
-                elif em.is_unicode_emoji() and req[0] == em.name:  # Default emoji matches
-                    return True
+                if not s:
+                    return False
+                return re.fullmatch(r, s)
+
+        async def _em_match(r, e):
+            if not r:  # No requirement
+                return True
+            else:
+                if not e:
+                    return False
+                else:
+                    if e.is_custom_emoji() and r[1] == e.id:  # Custom emoji matches
+                        return True
+                    elif e.is_unicode_emoji() and r[0] == e.name:  # Default emoji matches
+                        return True
+
+        return (await _st_match(st, status)) and (await _em_match(em, emoji))
 
     @staticmethod
     async def _send_log(channel: discord.TextChannel, assign: bool, user: discord.Member, role: discord.Role, status: str, emoji: str):
@@ -196,8 +207,8 @@ class StatusRole(commands.Cog):
         return await ctx.tick()
 
     @_edit.command(name="status")
-    async def _edit_status(self, ctx: commands.Context, pair_name: str, *, custom_status_regex: str):
-        """Edit a StatusRole's custom status regex to be matched."""
+    async def _edit_status(self, ctx: commands.Context, pair_name: str, *, custom_status_regex: str = None):
+        """Edit a StatusRole's custom status regex to be matched (leave blank to remove)."""
         async with self.config.guild(ctx.guild).roles() as roles:
             if pair_name not in roles.keys():
                 return await ctx.send("There is no StatusRole with this name!")
@@ -254,10 +265,7 @@ class StatusRole(commands.Cog):
                             if not r:
                                 continue
 
-                            if (
-                                    re.fullmatch(roles[sr]["status"], m_status.name) and  # Custom status matches regex
-                                    await self._emoji_matches(roles[sr]["emoji"], m_status.emoji)
-                            ):
+                            if await self._status_matches(roles[sr]["status"], roles[sr]["emoji"], m_status):
                                 if roles[sr]["role"] not in [r.id for r in m.roles]:  # Does not already have role
                                     await m.add_roles(r, reason=f"StatusRole ForceUpdate: custom status matched {sr}")
                                     if log_channel:
