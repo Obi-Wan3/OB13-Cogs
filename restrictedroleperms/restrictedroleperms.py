@@ -262,6 +262,112 @@ class RestrictedRolePerms(commands.Cog):
 
         return await ctx.send(f"The assignability rule for {role.mention} has been removed.")
 
+    @_rrpset.group(name="editrule")
+    async def _edit_rule(self, ctx: commands.Context):
+        """Edit a rule to give certain roles restricted permissions."""
+
+    @_edit_rule.command(name="mentionable")
+    async def _edit_mentionable(self, ctx: commands.Context, role_to_give_perms_to: discord.Role, true_or_false, *roles_to_edit_mentionability: typing.Union[discord.Role, ExplicitAll]):
+        """
+        Edit a rule to allow a role to make a few other roles mentionable through RRP.
+
+        For `true_or_false`, enter `true` for adding to a rule and `false` for removing from a rule.
+        For `roles_to_allow_to_be_made_mentionable`, either input a list of roles or `all` to allow perms for all roles below the given role.
+        """
+
+        # Hierarchy checks
+        if role_to_give_perms_to >= ctx.author.top_role and ctx.author != ctx.guild.owner:
+            return await ctx.send("The role you want to give perms to is above you in the role hierarchy!")
+        if "all" not in roles_to_edit_mentionability:
+            for rm in roles_to_edit_mentionability:
+                if rm >= role_to_give_perms_to:
+                    return await ctx.send(
+                        f"{rm.mention} is above {role_to_give_perms_to.mention} in the role hierarchy!")
+
+        async with self.config.guild(ctx.guild).mentionable.rules() as rules:
+            if not rules.get(str(role_to_give_perms_to.id)):
+                return await ctx.send(f"There no rule for that role!")
+            for role_to_edit in roles_to_edit_mentionability:
+                if role_to_edit != "all":
+                    if true_or_false:
+                        if role_to_edit in rules[str(role_to_give_perms_to.id)]:
+                            await ctx.send(f"Cannot add {role_to_edit.mention} as it was already in the rule.")
+                            continue
+                        rules[str(role_to_give_perms_to.id)].append(role_to_edit.id)
+                        await ctx.send(f"{role_to_give_perms_to.mention} is now allowed to toggle mentionability for {role_to_edit.mention}")
+                    else:
+                        if role_to_edit not in rules[str(role_to_give_perms_to.id)]:
+                            await ctx.send(f"Cannot remove {role_to_edit.mention} as it was not in the rule.")
+                            continue
+                        rules[str(role_to_give_perms_to.id)].remove(role_to_edit.id)
+                        await ctx.send(f"{role_to_give_perms_to.mention} is no longer allowed to toggle mentionability for {role_to_edit.mention}")
+                else:
+                    if true_or_false:
+                        if role_to_edit in rules[str(role_to_give_perms_to.id)]:
+                            await ctx.send(f'Cannot add "all" as it was already in the rule.')
+                            continue
+                        rules[str(role_to_give_perms_to.id)].append("all")
+                        await ctx.send(f"{role_to_give_perms_to.mention} is now allowed to toggle mentionability for all roles below it.")
+                    else:
+                        if role_to_edit not in rules[str(role_to_give_perms_to.id)]:
+                            await ctx.send(f'Cannot remove "all" as it was not in the rule.')
+                            continue
+                        rules[str(role_to_give_perms_to.id)].remove("all")
+                        await ctx.send(f"{role_to_give_perms_to.mention} is no longer allowed to toggle mentionability for {role_to_edit.mention}")
+
+    @_edit_rule.command(name="assignable")
+    async def _edit_assignable(self, ctx: commands.Context, role_to_give_perms_to: discord.Role, true_or_false, *roles_to_edit_assignability: typing.Union[discord.Role, ExplicitAll]):
+        """
+        Edit a rule to allow a certain role to assign a few other roles through RRP.
+
+        For `true_or_false`, enter `true` for adding to a rule and `false` for removing from a rule.
+        For `roles_to_allow_to_be_assigned`, either input a list of roles or `all` to allow perms for all roles below the given role.
+        """
+
+        # Hierarchy checks
+        if role_to_give_perms_to >= ctx.author.top_role and ctx.author != ctx.guild.owner:
+            return await ctx.send("The role you want to give perms to is above you in the role hierarchy!")
+        if "all" not in roles_to_edit_assignability:
+            for ra in roles_to_edit_assignability:
+                if ra >= role_to_give_perms_to:
+                    return await ctx.send(
+                        f"{ra.mention} is above {role_to_give_perms_to.mention} in the role hierarchy!")
+
+        async with self.config.guild(ctx.guild).mentionable.rules() as rules:
+            if not rules.get(str(role_to_give_perms_to.id)):
+                return await ctx.send(f"There no rule for that role!")
+            for role_to_edit in roles_to_edit_assignability:
+                if role_to_edit != "all":
+                    if true_or_false:
+                        if role_to_edit in rules[str(role_to_give_perms_to.id)]:
+                            await ctx.send(f"Cannot add {role_to_edit.mention} as it was already in the rule.")
+                            continue
+                        rules[str(role_to_give_perms_to.id)].append(role_to_edit.id)
+                        await ctx.send(
+                            f"{role_to_give_perms_to.mention} is now allowed to assign {role_to_edit.mention}")
+                    else:
+                        if role_to_edit not in rules[str(role_to_give_perms_to.id)]:
+                            await ctx.send(f"Cannot remove {role_to_edit.mention} as it was not in the rule.")
+                            continue
+                        rules[str(role_to_give_perms_to.id)].remove(role_to_edit.id)
+                        await ctx.send(
+                            f"{role_to_give_perms_to.mention} is no longer allowed to assign {role_to_edit.mention}")
+                else:
+                    if true_or_false:
+                        if role_to_edit in rules[str(role_to_give_perms_to.id)]:
+                            await ctx.send(f'Cannot add "all" as it was already in the rule.')
+                            continue
+                        rules[str(role_to_give_perms_to.id)].append("all")
+                        await ctx.send(
+                            f"{role_to_give_perms_to.mention} is now allowed to assign all roles below it.")
+                    else:
+                        if role_to_edit not in rules[str(role_to_give_perms_to.id)]:
+                            await ctx.send(f'Cannot remove "all" as it was not in the rule.')
+                            continue
+                        rules[str(role_to_give_perms_to.id)].remove("all")
+                        await ctx.send(
+                            f"{role_to_give_perms_to.mention} is no longer allowed to assign {role_to_edit.mention}")
+
     @_rrpset.group(name="toggle")
     async def _toggle(self, ctx: commands.Context):
         """Toggle whether each RRP feature is active."""
