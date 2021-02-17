@@ -29,7 +29,7 @@ Cogs marked with a ✓ are ready for use, while those with a ✗ are still a Wor
 | PublicRooms | ✓ | Automatic Public VC Creation | Obi-Wan3, Archetype (Bloib & Echospawn, BC) |
 | QuizRole | ✓ | Take a Quiz to Gain a Role | Obi-Wan3, Tetra#0001 (BC) |
 | Referrals | ✓ | Invite Referral -> Credits | Obi-Wan3, Vertyco#0117 (BC) |
-| Reply | ✗ | Bot Replies to Messages | Obi-Wan3 |
+| Reply | ✓ | Bot Replies to Messages | Obi-Wan3 |
 | RestrictedRolePerms | ✓ | Give Certain Roles Restricted Permissions | Obi-Wan3, Mile High#7102 (BC) |
 | SiteStatus | ✓ | Display Website Statuses | Obi-Wan3, Spomp#1337 (BC) |
 | StatusRole | ✓ | Roles for Certain Custom Statuses | Obi-Wan3, ry#1000 (BC) |
