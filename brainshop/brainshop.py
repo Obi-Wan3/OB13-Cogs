@@ -63,6 +63,9 @@ class BrainShop(commands.Cog):
                 return
 
             response = await self._get_response(bid=bid, key=key, uid=message.author.id, msg=filtered)
+
+        if hasattr(message, "reply"):
+            return await message.reply(response, mention_author=False)
         return await message.channel.send(response)
 
     @commands.command(name="brainshop")
@@ -78,6 +81,9 @@ class BrainShop(commands.Cog):
                 return await ctx.send("The BrainShop API has not been set up yet!")
 
             response = await self._get_response(bid=bid, key=key, uid=ctx.author.id, msg=message)
+
+        if hasattr(ctx.message, "reply"):
+            return await ctx.reply(response, mention_author=False)
         return await ctx.send(response)
 
     @commands.group(name="brainshopset")
