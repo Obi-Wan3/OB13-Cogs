@@ -113,7 +113,10 @@ class StatusRole(commands.Cog):
             else:
                 if not s:
                     return False
-                return re.fullmatch(r, s)
+                try:
+                    return re.fullmatch(r, s)
+                except re.error:
+                    return False
 
         async def _em_match(r, e):
             if not r:  # No requirement
@@ -176,6 +179,10 @@ class StatusRole(commands.Cog):
         async with self.config.guild(ctx.guild).roles() as roles:
             if pair_name in roles.keys():
                 return await ctx.send("There is already a StatusRole with this name! Please edit/delete it or choose another name.")
+            try:
+                re.compile(custom_status_regex)
+            except re.error:
+                return await ctx.send("There was an error compiling that status regex. Is the regex valid?")
             roles[pair_name] = {
                 "role": role.id,
                 "emoji": None,
@@ -212,6 +219,10 @@ class StatusRole(commands.Cog):
         async with self.config.guild(ctx.guild).roles() as roles:
             if pair_name not in roles.keys():
                 return await ctx.send("There is no StatusRole with this name!")
+            try:
+                re.compile(custom_status_regex)
+            except re.error:
+                return await ctx.send("There was an error compiling that status regex. Is the regex valid?")
             roles[pair_name]["status"] = custom_status_regex
         return await ctx.tick()
 
