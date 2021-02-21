@@ -54,7 +54,10 @@ class PrivateRooms(commands.Cog):
 
                     # Member joined an active PrivateRoom
                     if sys['log_channel'] and sys['lobby'] == before.channel.id and after.channel.id in active_vcs:
-                        await member.guild.get_channel(sys['log_channel']).send(f'{member.mention} joined `{after.channel.name}`')
+                        await member.guild.get_channel(sys['log_channel']).send(
+                            f'{member.mention} joined `{after.channel.name}`',
+                            allowed_mentions=discord.AllowedMentions.none()
+                        )
 
                     # Member left a PrivateRoom
                     if before.channel.id in active_vcs and before.channel.id != after.channel.id:
@@ -107,7 +110,10 @@ class PrivateRooms(commands.Cog):
                                     reason=f"PrivateRooms: {member.display_name} has left their VC, ownership transferred to {remaining.id}"
                                 )
                                 if sys['log_channel']:
-                                    await member.guild.get_channel(sys['log_channel']).send(f'{member.mention} left `{before.channel.name}`, channel reassigned to {remaining.mention}')
+                                    await member.guild.get_channel(sys['log_channel']).send(
+                                        f'{member.mention} left `{before.channel.name}`, channel reassigned to {remaining.mention}',
+                                        allowed_mentions=discord.AllowedMentions.none()
+                                    )
 
                             # Remove channel
                             else:
@@ -122,13 +128,19 @@ class PrivateRooms(commands.Cog):
                                     reason=f"PrivateRooms: {member.display_name}'s private VC has been deleted"
                                 )
                                 if sys['log_channel']:
-                                    await member.guild.get_channel(sys['log_channel']).send(f'{member.mention} left `{before.channel.name}`, channel removed')
+                                    await member.guild.get_channel(sys['log_channel']).send(
+                                        f'{member.mention} left `{before.channel.name}`, channel removed',
+                                        allowed_mentions=discord.AllowedMentions.none()
+                                    )
 
                             break
 
                         # Other user left channel
                         elif sys['log_channel']:
-                            await member.guild.get_channel(sys['log_channel']).send(f'{member.mention} left `{before.channel.name}`')
+                            await member.guild.get_channel(sys['log_channel']).send(
+                                f'{member.mention} left `{before.channel.name}`',
+                                allowed_mentions=discord.AllowedMentions.none()
+                            )
                             break
 
         # Joined a channel
