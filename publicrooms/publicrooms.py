@@ -54,7 +54,10 @@ class PublicRooms(commands.Cog):
 
                     # Member joined an active PublicRoom
                     if sys['log_channel'] and before.channel.id not in active and after.channel.id in active:
-                        await member.guild.get_channel(sys['log_channel']).send(f'{member.mention} joined `{after.channel.name}`')
+                        await member.guild.get_channel(sys['log_channel']).send(
+                            f'{member.mention} joined `{after.channel.name}`',
+                            allowed_mentions=discord.AllowedMentions.none()
+                        )
 
                     # Member left a PublicRoom
                     if before.channel.id in active and before.channel.id != after.channel.id:
@@ -84,7 +87,10 @@ class PublicRooms(commands.Cog):
                             sys['active'].remove(a)
                             await before.channel.delete(reason="PublicRooms: all users have left")
                             if sys['log_channel']:
-                                await member.guild.get_channel(sys['log_channel']).send(f'{member.mention} left `{before.channel.name}`, channel removed')
+                                await member.guild.get_channel(sys['log_channel']).send(
+                                    f'{member.mention} left `{before.channel.name}`, channel removed',
+                                    allowed_mentions=discord.AllowedMentions.none()
+                                )
                             break
 
                         # Member with custom channel name left
@@ -121,13 +127,19 @@ class PublicRooms(commands.Cog):
                                 )
 
                             if sys['log_channel']:
-                                await member.guild.get_channel(sys['log_channel']).send(f'{member.mention} left `{before.channel.name}`, renamed to {public_vc.name}')
+                                await member.guild.get_channel(sys['log_channel']).send(
+                                    f'{member.mention} left `{before.channel.name}`, renamed to {public_vc.name}',
+                                    allowed_mentions=discord.AllowedMentions.none()
+                                )
 
                             break
 
                         # Log user leaving
                         if sys['log_channel']:
-                            await member.guild.get_channel(sys['log_channel']).send(f'{member.mention} left `{before.channel.name}`')
+                            await member.guild.get_channel(sys['log_channel']).send(
+                                f'{member.mention} left `{before.channel.name}`',
+                                allowed_mentions=discord.AllowedMentions.none()
+                            )
                             break
 
         # Joined a channel
@@ -190,7 +202,10 @@ class PublicRooms(commands.Cog):
 
                         # If log channel set, then send logs
                         if sys['log_channel']:
-                            await member.guild.get_channel(sys['log_channel']).send(f'{member.mention} created `{public_vc.name}`')
+                            await member.guild.get_channel(sys['log_channel']).send(
+                                f'{member.mention} created `{public_vc.name}`',
+                                allowed_mentions=discord.AllowedMentions.none()
+                            )
 
                         # Add to active list
                         sys['active'].append((public_vc.id, num))
@@ -199,7 +214,10 @@ class PublicRooms(commands.Cog):
 
                     # Member joined an active PublicRoom
                     elif sys['toggle'] and sys['log_channel'] and after.channel.id in [x[0] for x in sys['active']]:
-                        await member.guild.get_channel(sys['log_channel']).send(f'{member.mention} joined `{after.channel.name}`')
+                        await member.guild.get_channel(sys['log_channel']).send(
+                            f'{member.mention} joined `{after.channel.name}`',
+                            allowed_mentions=discord.AllowedMentions.none()
+                        )
 
         return
 
