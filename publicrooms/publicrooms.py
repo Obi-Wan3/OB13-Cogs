@@ -295,9 +295,9 @@ class PublicRooms(commands.Cog):
     @_edit.command(name="name")
     async def _edit_name(self, ctx: commands.Context, system_name: str, *, channel_name_template: str):
         """
-        Edit the Lobby channel for a PublicRooms system in this server.
+        Edit the channel name template for a PublicRooms system in this server.
 
-        Enter a string, with `{creator}` contained if you want it to be replaced with the VC creator's display name.
+        Enter a string, with `{num}` contained if you want it to be replaced with the number of active VCs.
         """
 
         async with self.config.guild(ctx.guild).systems() as systems:
