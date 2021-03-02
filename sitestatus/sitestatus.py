@@ -28,7 +28,7 @@ class SiteStatus(commands.Cog):
         await ctx.trigger_typing()
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get(url) as response:
+                async with session.head(url) as response:
                     return await ctx.send(f"Site returned status code `{response.status}`.")
         except (aiohttp.InvalidURL, aiohttp.ClientConnectorError):
             return await ctx.send("There was an error connecting to this site. Is the url valid?")
@@ -46,7 +46,7 @@ class SiteStatus(commands.Cog):
             async with self.config.guild(ctx.guild).sites() as sites:
                 try:
                     async with aiohttp.ClientSession() as session:
-                        async with session.get(url) as response:
+                        async with session.head(url) as response:
                             await ctx.send(f"Site returned status code `{response.status}`.")
                 except (aiohttp.InvalidURL, aiohttp.ClientConnectorError):
                     return await ctx.send("There was an error connecting to this site. Is the url valid?")
@@ -73,7 +73,7 @@ class SiteStatus(commands.Cog):
 
                 try:
                     async with aiohttp.ClientSession() as session:
-                        async with session.get(url) as response:
+                        async with session.head(url) as response:
                             await ctx.send(f"Site returned status code `{response.status}`.")
                 except (aiohttp.InvalidURL, aiohttp.ClientConnectorError):
                     return await ctx.send("There was an error connecting to this site. Is the url valid?")
@@ -185,7 +185,7 @@ class SiteStatus(commands.Cog):
                         continue
                     try:
                         async with aiohttp.ClientSession() as session:
-                            async with session.get(site['url']) as response:
+                            async with session.head(site['url']) as response:
                                 code = response.status
                     except (aiohttp.InvalidURL, aiohttp.ClientConnectorError):
                         code = 500
