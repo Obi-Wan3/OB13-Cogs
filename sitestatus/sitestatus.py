@@ -27,9 +27,12 @@ class SiteStatus(commands.Cog):
         """Get the current status of a website."""
         await ctx.trigger_typing()
         try:
+            if url[0] == "<" and url[-1] == ">":
+                url = url[1:-1]
             async with aiohttp.ClientSession() as session:
+                start = time.perf_counter()
                 async with session.head(url) as response:
-                    return await ctx.send(f"Site returned status code `{response.status}`.")
+                    return await ctx.maybe_send_embed(f"Site returned status `{response.status} {response.reason}` with latency `{round(time.perf_counter() - start, 1)}`s.")
         except (aiohttp.InvalidURL, aiohttp.ClientConnectorError):
             return await ctx.send("There was an error connecting to this site. Is the url valid?")
 
@@ -46,8 +49,9 @@ class SiteStatus(commands.Cog):
             async with self.config.guild(ctx.guild).sites() as sites:
                 try:
                     async with aiohttp.ClientSession() as session:
+                        start = time.perf_counter()
                         async with session.head(url) as response:
-                            await ctx.send(f"Site returned status code `{response.status}`.")
+                            await ctx.maybe_send_embed(f"Site returned status `{response.status} {response.reason}` with latency `{round(time.perf_counter() - start, 1)}`s.")
                 except (aiohttp.InvalidURL, aiohttp.ClientConnectorError):
                     return await ctx.send("There was an error connecting to this site. Is the url valid?")
 
@@ -73,8 +77,9 @@ class SiteStatus(commands.Cog):
 
                 try:
                     async with aiohttp.ClientSession() as session:
+                        start = time.perf_counter()
                         async with session.head(url) as response:
-                            await ctx.send(f"Site returned status code `{response.status}`.")
+                            await ctx.maybe_send_embed(f"Site returned status `{response.status} {response.reason}` with latency `{round(time.perf_counter() - start, 1)}`s.")
                 except (aiohttp.InvalidURL, aiohttp.ClientConnectorError):
                     return await ctx.send("There was an error connecting to this site. Is the url valid?")
 
@@ -130,7 +135,10 @@ class SiteStatus(commands.Cog):
         """
         Set the channel name template for an "online" website status (leave blank to reset).
 
-        If you would like to display the HTTP status code received, include `{status}` inside the template.
+        The following are options you can include inside the template:
+        `{status}` to display the HTTP status code received
+        `{reason}` to display the meaning behind the HTTP status code
+        `{latency}` to display the latency of the request (in the form of `x.x` seconds)
         """
         async with self.config.guild(ctx.guild).sites() as sites:
             if sitename not in sites.keys():
@@ -144,7 +152,10 @@ class SiteStatus(commands.Cog):
         """
         Set the channel name template for an "offline" website status (leave blank to reset).
 
-        If you would like to display the HTTP status code received, include `{status}` inside the template.
+        The following are options you can include inside the template:
+        `{status}` to display the HTTP status code received
+        `{reason}` to display the meaning behind the HTTP status code
+        `{latency}` to display the latency of the request (in the form of `x.x` seconds)
         """
         async with self.config.guild(ctx.guild).sites() as sites:
             if sitename not in sites.keys():
@@ -185,10 +196,12 @@ class SiteStatus(commands.Cog):
                         continue
                     try:
                         async with aiohttp.ClientSession() as session:
+                            start = time.perf_counter()
                             async with session.head(site['url']) as response:
-                                code = response.status
+                                latency = time.perf_counter() - start
+                                code = (response.status, response.reason)
                     except (aiohttp.InvalidURL, aiohttp.ClientConnectorError):
-                        code = 500
+                        code = (500, "Internal Server Error")
 
                     # If monitoring channel set up, then update name if necessary
                     if site["channel"]:
@@ -196,21 +209,25 @@ class SiteStatus(commands.Cog):
                         if channel:
                             online = site['online'] or "ONLINE"
                             offline = site['offline'] or "OFFLINE"
+
+                            online_filled = await self._fill_template(online, code, latency)
+                            offline_filled = await self._fill_template(online, code, latency)
+
                             try:
-                                if code == site["status"]:
-                                    if channel.name != online.replace("{status}", str(code)):  # Edit if necessary
+                                if code[0] == site["status"]:
+                                    if channel.name != online_filled:  # Edit if necessary
                                         await asyncio.wait_for(
                                             channel.edit(
-                                                name=online.replace("{status}", str(code)),
+                                                name=online_filled,
                                                 reason="SiteStatus: site is online"
                                             ),
                                             timeout=5
                                         )
                                 else:
-                                    if channel.name != offline.replace("{status}", str(code)):  # Edit if necessary
+                                    if channel.name != offline_filled:  # Edit if necessary
                                         await asyncio.wait_for(
                                             channel.edit(
-                                                name=offline.replace("{status}", str(code)),
+                                                name=offline_filled,
                                                 reason="SiteStatus: site is offline"
                                             ),
                                             timeout=5
@@ -223,14 +240,14 @@ class SiteStatus(commands.Cog):
                         notify_channel = self.bot.get_channel(site["notify_channel"])
                         notify_role = self.bot.get_guild(guild).get_role(site["notify_role"])
                         if notify_channel and notify_role:
-                            if code != site["status"] and not site.get("last"):
+                            if code[0] != site["status"] and not site.get("last"):
                                 try:
                                     await notify_channel.send(
                                         f"{notify_role.mention}",
                                         allowed_mentions=discord.AllowedMentions(roles=True),
                                         embed=discord.Embed(
                                             title="SiteStatus Alert",
-                                            description=f"[{name}]({site['url']}) is currently offline with status code `{code}`!",
+                                            description=f"[{name}]({site['url']}) is currently offline with status code `{code[0]} {code[1]}`!",
                                             color=discord.Color.red(),
                                             timestamp=datetime.utcnow()
                                         )
@@ -238,14 +255,14 @@ class SiteStatus(commands.Cog):
                                 except discord.Forbidden:
                                     try:
                                         await notify_channel.send(
-                                            f"{notify_role.mention} <{site['url']}> is currently offline with status code `{code}`!",
+                                            f"{notify_role.mention} <{site['url']}> is currently offline with status code `{code[0]} {code[1]}`!",
                                             allowed_mentions=discord.AllowedMentions(roles=True)
                                         )
                                     except (discord.Forbidden, discord.HTTPException):
                                         pass
                                 except discord.HTTPException:
                                     pass
-                            elif code == site["status"] and site.get("last"):
+                            elif code[0] == site["status"] and site.get("last"):
                                 downtime = round((time.time() - site.get("last")) / 60, 1)
                                 try:
                                     await notify_channel.send(
@@ -268,6 +285,16 @@ class SiteStatus(commands.Cog):
 
                     # Set the "last" status
                     if not site.get("last"):
-                        site["last"] = None if code == site["status"] else time.time()
-                    elif code == site["status"]:
+                        site["last"] = None if code[0] == site["status"] else time.time()
+                    elif code[0] == site["status"]:
                         site["last"] = None
+
+    @staticmethod
+    async def _fill_template(template, code, lat):
+        return template.replace(
+            "{status}", str(code[0])
+        ).replace(
+            "{reason}", code[1]
+        ).replace(
+            "{latency}", f"{round(lat, 1)}s"
+        )
