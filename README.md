@@ -48,4 +48,4 @@ If you don't already have Downloader loaded, go ahead and do that first: `[p]loa
 ```
 
 # Contact
-Feel free to DM me on Discord at Obi-Wan3#0003. You can also find me in the Red & Cog Support servers. If you have any suggestions, or found any bugs, open an issue or make a PR!
+Feel free to DM me on Discord at Obi-Wan3#0003. You can also find me in the [Red](https://discord.gg/red) & [Cog Support](https://discord.gg/GET4DVk) servers. If you have any suggestions, or found any bugs, open an issue! If you would like to contribute, please talk to me first before opening a PR.
