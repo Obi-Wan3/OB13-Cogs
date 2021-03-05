@@ -114,7 +114,7 @@ class StatusRole(commands.Cog):
                 if not s:
                     return False
                 try:
-                    return re.fullmatch(r, s)
+                    return re.match(r, s)
                 except re.error:
                     return False
 
