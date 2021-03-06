@@ -155,51 +155,55 @@ class RestrictedRolePerms(commands.Cog):
         """View the current rules for RestrictedRolePerms."""
 
     @_view.command(name="mentionable")
-    async def _view_mentionable(self, ctx: commands.Context):
+    async def _view_mentionable(self, ctx: commands.Context, role: discord.Role = None):
         """View the mentionability rules for RestrictedRolePerms."""
         rules = await self.config.guild(ctx.guild).mentionable()
 
-        desc = f"""
-        **Toggle:** {rules["toggle"]}
-        **Error Message:** {rules['message'] if rules['message'] else "Default"}
-        **Success Message:** {f"{rules['success'][0]}, {rules['success'][1]}" if rules['success'] else "Default"}
-        **Rules:** {"None" if not rules['rules'] else ""}"""
-
-        await ctx.send(embed=discord.Embed(
-            title="RRP Mentionability Rules",
-            color=await ctx.embed_color(),
-            description=desc
-        ))
-
-        for r0, r1 in rules["rules"].items():
-            if "all" in r1:
-                await ctx.send(f"**{ctx.guild.get_role(int(r0)).name}** can toggle mentionability for all roles below it.")
-            else:
-                for p in pagify(f"**{ctx.guild.get_role(int(r0)).name}** can toggle mentionability for {humanize_list([ctx.guild.get_role(int(r2)) for r2 in r1])}", delims=[", "]):
-                    await ctx.send(p)
-
-    @_view.command(name="assignable")
-    async def _view_assignable(self, ctx: commands.Context):
-        """View the assignability rules for RestrictedRolePerms."""
-        rules = await self.config.guild(ctx.guild).assignable()
-
-        desc = f"""
+        if not role:
+            desc = f"""
             **Toggle:** {rules["toggle"]}
             **Error Message:** {rules['message'] if rules['message'] else "Default"}
             **Success Message:** {f"{rules['success'][0]}, {rules['success'][1]}" if rules['success'] else "Default"}
-            **Rules:** {"None" if not rules['rules'] else ""}\n"""
+            **Rules:** {"None" if not rules['rules'] else ""}"""
 
-        await ctx.send(embed=discord.Embed(
-            title="RRP Assignability Rules",
-            color=await ctx.embed_color(),
-            description=desc
-        ))
+            await ctx.send(embed=discord.Embed(
+                title="RRP Mentionability Rules",
+                color=await ctx.embed_color(),
+                description=desc
+            ))
 
-        for r0, r1 in rules["rules"].items():
-            if "all" in r1:
-                await ctx.send(f"**{ctx.guild.get_role(int(r0)).name}** can toggle mentionability for all roles below it.")
+            return await ctx.send(f"**There are rules for:** {humanize_list([ctx.guild.get_role(int(r)).name for r in rules['rules'].keys()])}")
+        else:
+            if "all" in rules["rules"][str(role.id)]:
+                await ctx.send(f"**{role.name}** can toggle mentionability for all roles below it.")
             else:
-                for p in pagify(f"**{ctx.guild.get_role(int(r0)).name}** can assign {humanize_list([ctx.guild.get_role(int(r2)) for r2 in r1])}", delims=[", "]):
+                for p in pagify(f"**{role.name}** can toggle mentionability for {humanize_list([ctx.guild.get_role(int(r)) for r in rules['rules'][str(role.id)]])}", delims=[", "]):
+                    await ctx.send(p)
+
+    @_view.command(name="assignable")
+    async def _view_assignable(self, ctx: commands.Context, role: discord.Role = None):
+        """View the assignability rules for RestrictedRolePerms."""
+        rules = await self.config.guild(ctx.guild).assignable()
+
+        if not role:
+            desc = f"""
+                **Toggle:** {rules["toggle"]}
+                **Error Message:** {rules['message'] if rules['message'] else "Default"}
+                **Success Message:** {f"{rules['success'][0]}, {rules['success'][1]}" if rules['success'] else "Default"}
+                **Rules:** {"None" if not rules['rules'] else ""}\n"""
+
+            await ctx.send(embed=discord.Embed(
+                title="RRP Assignability Rules",
+                color=await ctx.embed_color(),
+                description=desc
+            ))
+
+            return await ctx.send(f"**There are rules for:** {humanize_list([ctx.guild.get_role(int(r)).name for r in rules['rules'].keys()])}")
+        else:
+            if "all" in rules["rules"][str(role.id)]:
+                await ctx.send(f"**{role.name}** can assign all roles below it.")
+            else:
+                for p in pagify(f"**{role.name}** can assign {humanize_list([ctx.guild.get_role(int(r)) for r in rules['rules'][str(role.id)]])}", delims=[", "]):
                     await ctx.send(p)
 
     @_rrpset.group(name="addrule")
