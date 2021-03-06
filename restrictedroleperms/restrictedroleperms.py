@@ -154,7 +154,7 @@ class RestrictedRolePerms(commands.Cog):
     async def _view(self, ctx: commands.Context):
         """View the current rules for RestrictedRolePerms."""
 
-    @_rrpset.command(name="mentionable")
+    @_view.command(name="mentionable")
     async def _view_mentionable(self, ctx: commands.Context):
         """View the mentionability rules for RestrictedRolePerms."""
         rules = await self.config.guild(ctx.guild).mentionable()
@@ -178,7 +178,7 @@ class RestrictedRolePerms(commands.Cog):
                 for p in pagify(f"**{ctx.guild.get_role(int(r0)).name}** can toggle mentionability for {humanize_list([ctx.guild.get_role(int(r2)) for r2 in r1])}", delims=[", "]):
                     await ctx.send(p)
 
-    @_rrpset.command(name="assignable")
+    @_view.command(name="assignable")
     async def _view_assignable(self, ctx: commands.Context):
         """View the assignability rules for RestrictedRolePerms."""
         rules = await self.config.guild(ctx.guild).assignable()
