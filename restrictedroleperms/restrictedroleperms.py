@@ -28,7 +28,7 @@ class RestrictedRolePerms(commands.Cog):
             found = rules.get(ar)
             if found and role1 in found:
                 perms = True
-            elif found and "any" in found:
+            elif found and "all" in found:
                 perms = None
         return perms
 
