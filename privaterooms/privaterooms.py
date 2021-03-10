@@ -330,6 +330,7 @@ class PrivateRooms(commands.Cog):
 
         return await ctx.send(f"The active rooms in `{system_name}` were cleared.")
 
+    @commands.bot_has_permissions(embed_links=True)
     @_privaterooms.command(name="view")
     async def _view(self, ctx: commands.Context):
         """View the PrivateRooms settings in this server."""

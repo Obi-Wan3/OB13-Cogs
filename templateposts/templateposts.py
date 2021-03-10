@@ -225,6 +225,7 @@ class TemplatePosts(commands.Cog):
 
         return await ctx.tick()
 
+    @commands.bot_has_permissions(embed_links=True)
     @_template_posts.command(name="view")
     async def _view(self, ctx: commands.Context):
         """View TemplatePosts settings for this server."""

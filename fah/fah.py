@@ -12,13 +12,14 @@ class FaH(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.group()
+    @commands.group(name="fah")
     @commands.bot_has_permissions(embed_links=True)
-    async def fah(self, ctx: commands.Context):
+    async def _fah(self, ctx: commands.Context):
         """Folding@Home Team & Donor Statistics"""
 
-    @fah.command()
-    async def donor(self, ctx: commands.Context, donor_id: int):
+    @commands.bot_has_permissions(embed_links=True)
+    @_fah.command(name="donor")
+    async def _donor(self, ctx: commands.Context, donor_id: int):
         """FaH Donor Statistics"""
         async with ctx.typing():
             async with aiohttp.ClientSession() as session:
@@ -45,8 +46,9 @@ class FaH(commands.Cog):
 
         return await ctx.send(embed=embed)
 
-    @fah.command()
-    async def team(self, ctx: commands.Context, team_id: int):
+    @commands.bot_has_permissions(embed_links=True)
+    @_fah.command(name="team")
+    async def _team(self, ctx: commands.Context, team_id: int):
         """FaH Team Statistics"""
 
         async with ctx.typing():
@@ -80,7 +82,7 @@ class FaH(commands.Cog):
 
         return await ctx.send(embed=embed)
 
-    @fah.command()
-    async def project(self, ctx: commands.Context, project_id: int):
+    @_fah.command(name="project")
+    async def _project(self, ctx: commands.Context, project_id: int):
         """Get a link to an FaH project page."""
         return await ctx.send(f"https://stats.foldingathome.org/project?p={project_id}")

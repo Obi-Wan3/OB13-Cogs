@@ -9,8 +9,8 @@ class DirectMessage(commands.Cog):
         self.bot = bot
 
     @commands.is_owner()
-    @commands.command()
-    async def sdm(self, ctx: commands.Context, user: discord.User, *, message):
+    @commands.command(name="directmessage", aliases=["sdm"])
+    async def _direct_message(self, ctx: commands.Context, user: discord.User, *, message):
         """Sends a DM to a user (sends raw text directly)."""
         try:
             if user.dm_channel is None:

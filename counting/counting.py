@@ -55,20 +55,23 @@ class Counting(commands.Cog):
         if to_delete:
             self.deleted.append(message.id)
             msg_copy = copy(message)
-            await message.delete()
-            penalty = await self.config.guild(message.guild).penalty()
-            async with self.config.guild(message.guild).wrong() as wrong:
-                try:
-                    wrong[str(message.author.id)] += 1
-                except KeyError:
-                    wrong[str(message.author.id)] = 1
-                if wrong[str(message.author.id)] >= penalty[0] and message.author.id != message.guild.owner.id and not message.author.guild_permissions.administrator:
-                    channel_mute = self.bot.get_command("channelmute")
-                    msg_copy.author = message.guild.owner
-                    ctx = await self.bot.get_context(msg_copy)
-                    if channel_mute is not None:
-                        await channel_mute(ctx=ctx, users=[message.author], time_and_reason={"duration": datetime.timedelta(seconds=penalty[1]), "reason": "Counting: too many wrong counts"})
-                    wrong[str(message.author.id)] = 0
+            try:
+                await message.delete()
+                penalty = await self.config.guild(message.guild).penalty()
+                async with self.config.guild(message.guild).wrong() as wrong:
+                    try:
+                        wrong[str(message.author.id)] += 1
+                    except KeyError:
+                        wrong[str(message.author.id)] = 1
+                    if wrong[str(message.author.id)] >= penalty[0] and message.author.id != message.guild.owner.id and not message.author.guild_permissions.administrator:
+                        channel_mute = self.bot.get_command("channelmute")
+                        msg_copy.author = message.guild.owner
+                        ctx = await self.bot.get_context(msg_copy)
+                        if channel_mute:
+                            await channel_mute(ctx=ctx, users=[message.author], time_and_reason={"duration": datetime.timedelta(seconds=penalty[1]), "reason": "Counting: too many wrong counts"})
+                        wrong[str(message.author.id)] = 0
+            except Exception:
+                pass
             return
 
         await self.config.guild(message.guild).counter.set(counter+1)
@@ -117,8 +120,10 @@ class Counting(commands.Cog):
             return
 
         c = await self.bot.get_embed_colour(message.channel)
-        e = discord.Embed(color=c, description=f"{message.author.mention} edited or deleted [their message]({message.jump_url}). Original message: ```{message.content}```")
-        return await message.channel.send(embed=e)
+        try:
+            return await message.channel.send(embed=discord.Embed(color=c, description=f"{message.author.mention} edited or deleted [their message]({message.jump_url}). Original message: ```{message.content}```"))
+        except discord.Forbidden:
+            return await message.channel.send(f"{message.author.mention} edited or deleted [their message]({message.jump_url}). Original message: ```{message.content}```")
 
     @commands.Cog.listener("on_message_edit")
     async def _message_edit_listener(self, before: discord.Message, after: discord.Message):
@@ -180,6 +185,7 @@ class Counting(commands.Cog):
         await self.config.guild(ctx.guild).clear()
         return await ctx.tick()
 
+    @commands.bot_has_permissions(embed_links=True)
     @counting.command(name="view")
     async def _view(self, ctx: commands.Context):
         """View the current Counting settings."""
@@ -193,4 +199,4 @@ class Counting(commands.Cog):
             **Assign Role:** {settings["assignrole"]}
             **Wrong Count Penalty:** {f'ChannelMute for {settings["penalty"][1]}s if {settings["penalty"][0]} wrong tries in a row' if settings["penalty"][0] and settings["penalty"][1] else "Not Set"}
             """
-        await ctx.send(embed=discord.Embed(title="Counting Settings", color=await ctx.embed_color(), description=desc))
+        return await ctx.send(embed=discord.Embed(title="Counting Settings", color=await ctx.embed_color(), description=desc))

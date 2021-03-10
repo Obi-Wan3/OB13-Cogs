@@ -289,6 +289,7 @@ class StatusRole(commands.Cog):
 
         return await ctx.send("Force update completed!")
 
+    @commands.bot_has_permissions(embed_links=True)
     @_status_role.command(name="view", aliases=["list"])
     async def _view(self, ctx: commands.Context):
         """View the StatusRole settings for this server."""

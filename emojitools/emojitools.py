@@ -113,8 +113,7 @@ class EmojiTools(commands.Cog):
         if dir_string == "":
             dir_string = f"You have no EmojiTools folders yet. Save emojis with `{ctx.clean_prefix}emojitools`!"
 
-        e = discord.Embed(title="EmojiTools Folders", description=dir_string, color=await ctx.embed_color())
-        return await ctx.send(embed=e)
+        return await ctx.maybe_send_embed(dir_string)
 
     @commands.cooldown(rate=1, per=5)
     @_save.command(name="remove")
@@ -130,6 +129,7 @@ class EmojiTools(commands.Cog):
         shutil.rmtree(os.path.join(f"{data_manager.cog_data_path(self)}", f"{to_remove}"))
         return await ctx.send(f"`{to_remove}` has been removed.")
 
+    @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(rate=1, per=10)
     @_save.command(name="getzip")
     async def _getzip(self, ctx: commands.Context, folder_number: int):
@@ -163,6 +163,7 @@ class EmojiTools(commands.Cog):
                 files_list.append({"file": os.path.join(root, file)})
         return files_list
 
+    @commands.bot_has_permissions(manage_emojis=True)
     @emojitools.group(name="delete")
     async def _delete(self, ctx: commands.Context):
         """Delete Server Custom Emojis"""
@@ -193,6 +194,7 @@ class EmojiTools(commands.Cog):
 
         return await ctx.send(f"All {counter} custom emojis have been removed from this server.")
 
+    @commands.bot_has_permissions(manage_emojis=True)
     @emojitools.group(name="add")
     async def _add(self, ctx: commands.Context):
         """Add Custom Emojis to Server"""
@@ -425,6 +427,7 @@ class EmojiTools(commands.Cog):
         with ZipFile(bfile) as zfile:
             zfile.extractall(path)
 
+    @commands.bot_has_permissions(attach_files=True)
     @emojitools.group(name="tozip")
     async def _to_zip(self, ctx: commands.Context):
         """Get a `.zip` Archive of Emojis"""

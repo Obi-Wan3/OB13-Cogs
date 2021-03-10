@@ -64,9 +64,12 @@ class BrainShop(commands.Cog):
 
             response = await self._get_response(bid=bid, key=key, uid=message.author.id, msg=filtered)
 
-        if hasattr(message, "reply"):
-            return await message.reply(response, mention_author=False)
-        return await message.channel.send(response)
+        try:
+            if hasattr(message, "reply"):
+                return await message.reply(response, mention_author=False)
+            return await message.channel.send(response)
+        except (discord.HTTPException, discord.Forbidden, discord.InvalidArgument):
+            pass
 
     @commands.command(name="brainshop")
     async def _brainshop(self, ctx: commands.Context, *, message: str):
@@ -117,7 +120,6 @@ class BrainShop(commands.Cog):
         return await ctx.tick()
 
     @commands.is_owner()
-    @commands.bot_has_permissions(embed_links=True)
     @_brainshopset.command(name="view")
     async def _view(self, ctx: commands.Context):
         """

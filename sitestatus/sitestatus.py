@@ -96,6 +96,7 @@ class SiteStatus(commands.Cog):
             del sites[sitename]
         return await ctx.tick()
 
+    @commands.bot_has_permissions(embed_links=True)
     @_site_status.command(name="list")
     async def _site_status_list(self, ctx: commands.Context):
         """List the current SiteStatus monitored websites."""

@@ -150,6 +150,7 @@ class RestrictedRolePerms(commands.Cog):
     async def _rrpset(self, ctx: commands.Context):
         """RestrictedRolePerms Settings"""
 
+    @commands.bot_has_permissions(embed_links=True)
     @_rrpset.group(name="view", aliases=["rules"])
     async def _view(self, ctx: commands.Context):
         """View the current rules for RestrictedRolePerms."""

@@ -72,6 +72,7 @@ class UploadStreaks(commands.Cog):
     async def _upload_streaks(self, ctx: commands.Context):
         """UploadStreaks Settings"""
 
+    @commands.bot_has_permissions(embed_links=True)
     @_upload_streaks.command(name="list")
     async def _list(self, ctx: commands.Context):
         """List the current UploadStreaks challenges."""
@@ -86,6 +87,7 @@ class UploadStreaks(commands.Cog):
                 embed.description += f"**{count+1}.** {name}"
         return await ctx.send(embed=embed)
 
+    @commands.bot_has_permissions(embed_links=True)
     @_upload_streaks.command(name="leaderboard", aliases=['ldb'])
     async def _leaderboard(self, ctx: commands.Context, challenge: str, num=10):
         """See the current UploadStreaks leaderboard for a challenge."""
@@ -105,6 +107,7 @@ class UploadStreaks(commands.Cog):
             embed.description += "```"
         return await ctx.send(embed=embed)
 
+    @commands.bot_has_permissions(embed_links=True)
     @_upload_streaks.command(name="user")
     async def _user(self, ctx: commands.Context, user: discord.Member):
         """See a user's UploadStreaks points."""
@@ -338,6 +341,7 @@ class UploadStreaks(commands.Cog):
 
         return await ctx.tick()
 
+    @commands.bot_has_permissions(embed_links=True)
     @_settings.command(name="view")
     async def _settings_view(self, ctx: commands.Context):
         """View the settings of UploadStreaks challenges in this server."""

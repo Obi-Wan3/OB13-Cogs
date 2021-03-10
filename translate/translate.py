@@ -9,8 +9,9 @@ class Translate(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command()
-    async def translate(self, ctx: commands.Context, language, *, message):
+    @commands.bot_has_permissions(embed_links=True)
+    @commands.command(name="translate")
+    async def _translate(self, ctx: commands.Context, language, *, message):
         """Translate some text."""
         translator = googletrans.Translator()
         translated_embed = discord.Embed(title='Translation', color=discord.Color.green())

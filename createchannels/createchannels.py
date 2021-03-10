@@ -45,8 +45,11 @@ class CreateChannels(commands.Cog):
                     ind = [a[0] for a in active].index(vc.id)
                     if not vc.members:
                         if time.time() > active[ind][2]+timeout:
-                            await vc.delete(reason="CreateVoice: inactive VC")
-                            active.pop(ind)
+                            try:
+                                await vc.delete(reason="CreateVoice: inactive VC")
+                                active.pop(ind)
+                            except discord.Forbidden:
+                                pass
                 except ValueError:
                     pass
         return
@@ -66,9 +69,10 @@ class CreateChannels(commands.Cog):
             except ValueError:
                 pass
 
+    @commands.bot_has_permissions(manage_channels=True)
     @commands.guild_only()
-    @commands.command()
-    async def createvoice(self, ctx: commands.Context, name: str, max_users: typing.Optional[int] = None):
+    @commands.command(name="createvoice")
+    async def _createvoice(self, ctx: commands.Context, name: str, max_users: typing.Optional[int] = None):
         """Create a Voice Channel"""
 
         if not await self.config.guild(ctx.guild).voice.toggle(): return
@@ -175,6 +179,7 @@ class CreateChannels(commands.Cog):
         await self.config.guild(ctx.guild).voice.role_req_msg.set(message)
         return await ctx.tick()
 
+    @commands.bot_has_permissions(embed_links=True)
     @createvoiceset.command(name="view")
     async def _voice_view(self, ctx: commands.Context):
         """View the current CreateVoice settings."""
@@ -197,9 +202,10 @@ class CreateChannels(commands.Cog):
         await self.config.guild(ctx.guild).voice.clear()
         return await ctx.tick()
 
+    @commands.bot_has_permissions(manage_channels=True)
     @commands.guild_only()
-    @commands.command()
-    async def createtext(self, ctx: commands.Context, name: str):
+    @commands.command(name="createtext")
+    async def _createtext(self, ctx: commands.Context, name: str):
         """Create a Text Channel"""
         if not await self.config.guild(ctx.guild).text.toggle(): return
 
@@ -267,6 +273,7 @@ class CreateChannels(commands.Cog):
         await self.config.guild(ctx.guild).text.role_req_msg.set(message)
         return await ctx.tick()
 
+    @commands.bot_has_permissions(embed_links=True)
     @createtextset.command(name="view")
     async def _text_view(self, ctx: commands.Context):
         """View the current CreateText settings."""

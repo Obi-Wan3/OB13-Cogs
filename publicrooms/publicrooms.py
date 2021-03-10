@@ -394,6 +394,7 @@ class PublicRooms(commands.Cog):
             return await ctx.send("No custom channel name overrides found for this system.")
         return await ctx.send(overrides)
 
+    @commands.bot_has_permissions(embed_links=True)
     @_publicrooms.command(name="view")
     async def _view(self, ctx: commands.Context):
         """View the PublicRooms settings in this server."""

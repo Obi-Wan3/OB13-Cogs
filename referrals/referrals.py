@@ -170,6 +170,7 @@ class Referrals(commands.Cog):
         await self.config.guild(ctx.guild).clear()
         return await ctx.tick()
 
+    @commands.bot_has_permissions(embed_links=True)
     @_referset.command(name="view")
     async def _view(self, ctx: commands.Context):
         """View current Referrals settings."""

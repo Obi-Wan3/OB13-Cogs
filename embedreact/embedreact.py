@@ -8,7 +8,7 @@ URL_REGEX = r"<?(https?|ftp)://[^\s/$.?#].[^\s]*>?"
 
 
 class EmbedReact(commands.Cog):
-    """Automatic Reactions to Embedded Images"""
+    """Automatic Reactions to Embedded Content"""
 
     def __init__(self, bot):
         self.bot = bot
@@ -88,6 +88,7 @@ class EmbedReact(commands.Cog):
         await self.config.guild(ctx.guild).clear()
         return await ctx.tick()
 
+    @commands.bot_has_permissions(embed_links=True)
     @embedreact.command(name="view")
     async def _view(self, ctx: commands.Context):
         """View the current EmbedReact settings."""

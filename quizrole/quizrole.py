@@ -103,6 +103,7 @@ class QuizRole(commands.Cog):
                 await self.bot.get_channel(logchannel).send(f"{ctx.author.mention} did not pass `{quiz_name}` with a score of {score}/{len(questions)}.")
             return await ctx.author.send(f"Unfortunately, you did not pass the quiz `{quiz_name}`; the minimum score was {quiz['minscore']}/{len(questions)} and you received a score of {score}/{len(questions)}.")
 
+    @commands.bot_has_permissions(embed_links=True)
     @commands.guild_only()
     @commands.command(name="quizroles")
     async def _quizroles(self, ctx: commands.Context):
@@ -361,6 +362,7 @@ class QuizRole(commands.Cog):
 
         return await ctx.send(f"Quiz `{quiz_name}` was removed from this server's QuizRoles.")
 
+    @commands.bot_has_permissions(embed_links=True)
     @_quizroleset.command(name="view", aliases=["list"])
     async def _view(self, ctx: commands.Context):
         """View QuizRole settings for this server."""
