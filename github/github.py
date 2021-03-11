@@ -346,7 +346,7 @@ class Github(commands.Cog):
                             async with session.get(url) as resp:
                                 html = await resp.read()
                                 if resp.status != 200:
-                                    print(f"Invalid Github URL: {url}")
+                                    continue
 
                         entries = feedparser.parse(html).entries
                         new_entries, new_time = await self.new_entries(entries, float(fs["time"]))
