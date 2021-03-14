@@ -177,7 +177,10 @@ class PrivateRooms(commands.Cog):
 
                         # If log channel set, then send logs
                         if sys['log_channel']:
-                            await member.guild.get_channel(sys['log_channel']).send(f'{member.mention} created `{private_vc.name}`')
+                            await member.guild.get_channel(sys['log_channel']).send(
+                                f'{member.mention} created `{private_vc.name}`',
+                                allowed_mentions=discord.AllowedMentions.none()
+                            )
 
                         # Add to active list
                         sys['active'].append((private_vc.id, member.id))
