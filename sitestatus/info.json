@@ -2,8 +2,17 @@
     "author": [
         "Obi-Wan3"
     ],
-    "description": "Monitor the Statuses of Websites",
+    "description": "Monitor the statuses of websites and receive down alerts.",
+    "disabled" : false,
+    "end_user_data_statement" : "This cog stores provided server settings about sites to monitor, as well as their downtime info.",
     "hidden": false,
     "install_msg": "Thank you for installing! Use `[p]help sitestatus` and `[p]help getstatus` for more info.",
-    "short": "Display Website Statuses"
+    "min_bot_version" : "3.4.0",
+    "min_python_version" : [3, 8, 1],
+    "permissions" : [],
+    "required_cogs" : {},
+    "requirements" : [],
+    "short": "Monitor the statuses of websites and receive down alerts.",
+    "tags" : ["website", "status", "downtime", "alerts"],
+    "type": "COG"
 }

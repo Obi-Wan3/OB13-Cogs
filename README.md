@@ -12,14 +12,14 @@ Cogs marked with a ✓ are ready for use, while those with a ✗ are still a Wor
 
 | Cog | Status | Description | Authors & Credits |
 | --- | :---: | --- | --- |
-| Announcements | ✓ | Send Message w/ Role Ping | Obi-Wan3 |
+| Announcements | ✓ | Announcement w/ Role Ping | Obi-Wan3 |
 | BrainShop | ✓ | AI Chatbot using [BrainShop](https://brainshop.ai/) | Obi-Wan3, SaraCaterina#1015 (BC) |
 | Conditions | ✗ | Weather Conditions & AQI | Obi-Wan3 |
 | Counting | ✓ | Counting Channel | Obi-Wan3, Atmos#0101 (BC) |
 | CreateChannels | ✓ | Create Text & Voice Channels Using Commands | Obi-Wan3, Mile High#7102 (BC) |
 | DailyXkcd | ✗ | Daily [xkcd](http://xkcd.com/) Posts | Obi-Wan3 |
 | DirectMessage | ✓ | Easily Send DMs as Bot | Obi-Wan3 |
-| EmbedReact | ✓ | Automatic Reactions to Messages w/ Embeds | Obi-Wan3, HEW#6942 (BC) |
+| EmbedReact | ✓ | Auto-Reactions to Embeds | Obi-Wan3, HEW#6942 (BC) |
 | EmojiTools | ✓ | Tools for Managing Custom Emojis | Obi-Wan3, SHADOW6six#8807 (BC) |
 | FaH | ✓ | Various [Folding@Home](https://foldingathome.org/) Stats | Obi-Wan3, SaraCaterina#1015 (BC) |
 | Github | ✓ | Github RSS Commit Feeds | Obi-Wan3 |
@@ -48,4 +48,15 @@ If you don't already have Downloader loaded, go ahead and do that first: `[p]loa
 ```
 
 # Contact
-Feel free to DM me on Discord at Obi-Wan3#0003. You can also find me in the [Red](https://discord.gg/red) & [Cog Support](https://discord.gg/GET4DVk) servers. If you have any suggestions, or found any bugs, open an issue! If you would like to contribute, please talk to me first before opening a PR.
+Feel free to DM me on Discord at Obi-Wan3#0003. You can also find me in the [Red](https://discord.gg/red) & [Cog Support](https://discord.gg/GET4DVk) servers.
+
+
+## Contributing
+If you have any suggestions, or found any bugs, please let me know or open an issue on my repo!
+
+If you would like to contribute, please talk to me about your ideas first before opening a PR.
+
+
+## Cog Requests & Bounties
+I am always open to any ideas or suggestions for new cogs! 
+If you would like to discuss a possible cog commission, please contact me through Discord.

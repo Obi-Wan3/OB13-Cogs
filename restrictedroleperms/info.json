@@ -3,7 +3,16 @@
         "Obi-Wan3"
     ],
     "description": "Gives restricted permissions to certain roles to mention/assign other roles.",
+    "disabled" : false,
+    "end_user_data_statement" : "This cog stores provided server settings (e.g. toggles, rules, custom success messages, etc.).",
     "hidden": false,
     "install_msg": "Thank you for installing! Use `[p]help rrp` and `[p]help rrpset` for more info.",
-    "short": "Restricted Permissions for Roles"
+    "min_bot_version" : "3.4.0",
+    "min_python_version" : [3, 8, 1],
+    "permissions" : [],
+    "required_cogs" : {},
+    "requirements" : [],
+    "short": "Gives restricted permissions to certain roles to mention/assign other roles.",
+    "tags" : ["restricted", "role", "permissions", "assign", "mention"],
+    "type": "COG"
 }

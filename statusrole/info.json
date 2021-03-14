@@ -3,7 +3,16 @@
         "Obi-Wan3"
     ],
     "description": "Assign roles to users for the duration in which they have certain custom statuses.",
+    "disabled" : false,
+    "end_user_data_statement" : "This cog stores provided server settings (i.e. custom status to watch for, the respective roles to assign, and an optional log channel).",
     "hidden": false,
     "install_msg": "Thank you for installing! Use `[p]help statusrole` for more info.",
-    "short": "Roles for Certain Custom Statuses"
+    "min_bot_version" : "3.4.0",
+    "min_python_version" : [3, 8, 1],
+    "permissions" : ["manage_roles"],
+    "required_cogs" : {},
+    "requirements" : [],
+    "short": "Assign roles to users for the duration in which they have certain custom statuses.",
+    "tags" : ["custom status", "roles"],
+    "type": "COG"
 }

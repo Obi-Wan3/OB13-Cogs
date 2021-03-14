@@ -2,8 +2,17 @@
     "author": [
         "Obi-Wan3"
     ],
-    "description": "Custom Message on Bot Mention",
+    "description": "Set a custom message to be sent on bot mention.",
+    "disabled" : false,
+    "end_user_data_statement" : "This cog stores provided server and global settings.",
     "hidden": false,
     "install_msg": "Thank you for installing! Use `[p]help mentionhelp` for more info.",
-    "short": "Custom MentionHelp"
+    "min_bot_version" : "3.4.0",
+    "min_python_version" : [3, 8, 1],
+    "permissions" : [],
+    "required_cogs" : {},
+    "requirements" : [],
+    "short": "Set a custom message to be sent on bot mention.",
+    "tags" : ["mentionhelp", "custom", "message"],
+    "type": "COG"
 }

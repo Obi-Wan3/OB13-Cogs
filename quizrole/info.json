@@ -2,8 +2,17 @@
     "author": [
         "Obi-Wan3"
     ],
-    "description": "Take a Quiz to Gain a Role",
+    "description": "Automatically assign roles to users who have taken and successfully passed a quiz through DMs.",
+    "disabled" : false,
+    "end_user_data_statement" : "This cog stores provided server settings, as well as the last time a member (identified by UserID) has taken a quiz.",
     "hidden": false,
     "install_msg": "Thank you for installing! Use `[p]help quizrole` for more info.",
-    "short": "QuizRole"
+    "min_bot_version" : "3.4.0",
+    "min_python_version" : [3, 8, 1],
+    "permissions" : [],
+    "required_cogs" : {},
+    "requirements" : [],
+    "short": "Automatically assign roles to users who have taken and successfully passed a quiz through DMs.",
+    "tags" : ["quiz", "role", "auto"],
+    "type": "COG"
 }

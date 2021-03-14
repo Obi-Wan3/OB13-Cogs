@@ -1,9 +1,18 @@
 {
-    "author": ["Obi-Wan3"],
-    "install_msg": "Thank you for installing! Use `[p]help github` for more info.",
-    "short": "Github RSS Commit Feeds",
+    "author": [
+        "Obi-Wan3"
+    ],
     "description": "Sends Github commit messages exactly as the webhook would.",
-    "tags": ["github", "rss"],
+    "disabled" : false,
+    "end_user_data_statement" : "This cog stores provided server settings, as well as the Github commit RSS feed links provided by users (in order to periodically check and fetch new commit info from).",
+    "hidden": false,
+    "install_msg": "Thank you for installing! Use `[p]help github` for more info.",
+    "min_bot_version" : "3.4.0",
+    "min_python_version" : [3, 8, 1],
     "permissions": ["embed_links"],
-    "requirements": ["feedparser"]
+    "required_cogs" : {},
+    "requirements": ["feedparser"],
+    "short": "Sends Github commit messages exactly as the webhook would.",
+    "tags": ["github", "rss", "feed", "commits"],
+    "type": "COG"
 }

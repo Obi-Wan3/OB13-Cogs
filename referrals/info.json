@@ -3,7 +3,16 @@
         "Obi-Wan3"
     ],
     "description": "Allows users who refer others to the server to gain credits.",
+    "disabled" : false,
+    "end_user_data_statement" : "This cog stores provided server settings, as well as users who have already redeemed their credits (identified by UserIDs).",
     "hidden": false,
     "install_msg": "Thank you for installing! Use `[p]help Referrals` for more info.",
-    "short": "Server Referrals -> Credits"
+    "min_bot_version" : "3.4.0",
+    "min_python_version" : [3, 8, 1],
+    "permissions" : [],
+    "required_cogs" : {},
+    "requirements" : [],
+    "short": "Allows users who refer others to the server to gain credits.",
+    "tags" : ["referrals", "reward", "invite"],
+    "type": "COG"
 }

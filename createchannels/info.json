@@ -3,7 +3,16 @@
         "Obi-Wan3"
     ],
     "description": "Create voice and text channels via a command.",
+    "disabled" : false,
+    "end_user_data_statement" : "This cog stores provided server settings, as well as the current channels created through the cog.",
     "hidden": false,
     "install_msg": "Thank you for installing! Use `[p]help CreateChannels` for more info.",
-    "short": "Channel Creation via Commands"
+    "min_bot_version" : "3.4.0",
+    "min_python_version" : [3, 8, 1],
+    "permissions" : ["manage_channels"],
+    "required_cogs" : {},
+    "requirements" : [],
+    "short": "Create voice and text channels via a command.",
+    "tags" : ["create", "channels", "text", "voice"],
+    "type": "COG"
 }

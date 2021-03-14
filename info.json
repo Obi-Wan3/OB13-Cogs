@@ -1,8 +1,8 @@
 {
     "author" : ["Obi-Wan3"],
-    "install_msg" : "Thanks for installing!\nIf you have any suggestions, or found any bugs, feel free to create an issue on my repo at https://github.com/Obi-Wan3/OB13-Cogs or contact me in Red's 3rd-party Cog Support server at https://discord.gg/GET4DVk.",
+    "description" : "Assorted utility cogs for Red v3: custom emoji management, website status monitoring, public/private VC system creation, custom bot mentionhelp, and more!",
+    "install_msg" : "Thanks for installing!\nIf you have any suggestions, or found any bugs, feel free to create an issue on my repo at https://github.com/Obi-Wan3/OB13-Cogs or contact me in Red's 3rd-party Cog Support server at <https://discord.gg/GET4DVk>.",
     "name" : "OB13-Cogs",
-    "short" : "Assorted Utility Cogs for Red v3",
-    "description" : "Assorted utility cogs for Red v3: custom emoji management, free translations, public/private VC system creation, custom bot mentionhelp, and more!",
-    "tags" : ["utilities", "fun", "emojis", "translate", "counting", "quizrole", "website status", "referrals", "github", "mentionhelp", "voice channels", "rooms", "chatbot"]
+    "short" : "Utility Cogs for Red by Obi-Wan3",
+    "tags" : ["utilities", "fun", "emojis", "status", "translate", "counting", "quizrole", "website status", "custom status", "role", "referrals", "github", "mentionhelp", "voice channels", "rooms", "chatbot"]
 }

@@ -3,7 +3,16 @@
         "Obi-Wan3"
     ],
     "description": "A leaderboard with points and streaks for uploading attachments in specific channels per interval of time.",
+    "disabled" : false,
+    "end_user_data_statement" : "This cog stores provided server settings, as well as each participating user's streak, points, and time of last entry.",
     "hidden": false,
     "install_msg": "Thank you for installing! Use `[p]help uploadstreaks` for more info.",
-    "short": "Streaks & Points for Uploads"
+    "min_bot_version" : "3.4.0",
+    "min_python_version" : [3, 8, 1],
+    "permissions" : ["embed_links"],
+    "required_cogs" : {},
+    "requirements" : [],
+    "short": "A leaderboard with points and streaks for uploading attachments in specific channels per interval of time.",
+    "tags" : ["upload", "streak", "points", "leaderboard"],
+    "type": "COG"
 }

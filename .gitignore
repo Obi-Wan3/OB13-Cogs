@@ -1,6 +1,10 @@
-.DS_Store
+# Environment
 .idea/
 venv/
+
+# Other
+.DS_Store
+cogtemplate/
 
 # Pre-Alpha WIP Cogs
 conditions/

@@ -3,7 +3,16 @@
         "Obi-Wan3"
     ],
     "description": "Requires any messages in a channel which a template is set to follow that template (or be auto-removed).",
+    "disabled" : false,
+    "end_user_data_statement" : "This cog stores provided server settings (e.g. toggles, channels and their templates, etc.).",
     "hidden": false,
     "install_msg": "Thank you for installing! Use `[p]help templateposts` for more info.",
-    "short": "Posts w/ Template Requirements"
+    "min_bot_version" : "3.4.0",
+    "min_python_version" : [3, 8, 1],
+    "permissions" : ["manage_messages"],
+    "required_cogs" : {},
+    "requirements" : [],
+    "short": "Requires any messages in a channel which a template is set to follow that template (or be auto-removed).",
+    "tags" : ["required", "template", "message", "channel"],
+    "type": "COG"
 }

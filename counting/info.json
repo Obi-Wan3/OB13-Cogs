@@ -3,7 +3,16 @@
         "Obi-Wan3"
     ],
     "description": "Create a counting channel for your server, with various additional management options!",
+    "disabled" : false,
+    "end_user_data_statement" : "This cog stores provided server settings (e.g. toggle, channel, role, etc.), as well as the amount of times a user (identified by their Discord ID) has counted wrong, for the purpose of a wrong-count penalty.",
     "hidden": false,
     "install_msg": "Thank you for installing! Use `[p]help counting` for more info.",
-    "short": "Counting Channel"
+    "min_bot_version" : "3.4.1",
+    "min_python_version" : [3, 8, 1],
+    "permissions" : [],
+    "required_cogs" : {},
+    "requirements" : [],
+    "short": "Create a counting channel for your server, with various additional management options!",
+    "tags" : ["counting", "channel", "role", "mute"],
+    "type": "COG"
 }
