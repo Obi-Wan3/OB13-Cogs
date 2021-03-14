@@ -15,10 +15,10 @@ Cogs marked with a ✓ are ready for use, while those with a ✗ are still a Wor
 | Announcements | ✓ | Announcement w/ Role Ping | Obi-Wan3 |
 | BrainShop | ✓ | AI Chatbot using [BrainShop](https://brainshop.ai/) | Obi-Wan3, SaraCaterina#1015 (BC) |
 | Conditions | ✗ | Weather Conditions & AQI | Obi-Wan3 |
-| Counting | ✓ | Counting Channel | Obi-Wan3, Atmos#0101 (BC) |
+| Counting | ✓ | Multifeatured Counting Channel | Obi-Wan3, Atmos#0101 (BC) |
 | CreateChannels | ✓ | Create Text & Voice Channels Using Commands | Obi-Wan3, Mile High#7102 (BC) |
 | DailyXkcd | ✗ | Daily [xkcd](http://xkcd.com/) Posts | Obi-Wan3 |
-| DirectMessage | ✓ | Easily Send DMs as Bot | Obi-Wan3 |
+| DirectMessage | ✓ | Easily Send DMs as the Bot | Obi-Wan3 |
 | EmbedReact | ✓ | Auto-Reactions to Embeds | Obi-Wan3, HEW#6942 (BC) |
 | EmojiTools | ✓ | Tools for Managing Custom Emojis | Obi-Wan3, SHADOW6six#8807 (BC) |
 | FaH | ✓ | Various [Folding@Home](https://foldingathome.org/) Stats | Obi-Wan3, SaraCaterina#1015 (BC) |
@@ -31,7 +31,7 @@ Cogs marked with a ✓ are ready for use, while those with a ✗ are still a Wor
 | Referrals | ✓ | Invite Referral -> Credits | Obi-Wan3, Vertyco#0117 (BC) |
 | Reply | ✓ | Bot Replies to Messages | Obi-Wan3 |
 | RestrictedRolePerms | ✓ | Give Certain Roles Restricted Permissions | Obi-Wan3, Mile High#7102 (BC) |
-| SiteStatus | ✓ | Display Website Statuses | Obi-Wan3 |
+| SiteStatus | ✓ | Monitor Website Statuses | Obi-Wan3 |
 | StatusRole | ✓ | Roles for Certain Custom Statuses | Obi-Wan3, ry#1000 (BC) |
 | TemplatePosts | ✓ | Posts w/ Template Requirements | Obi-Wan3, Barnabas#6666 (BC) |
 | Translate | ✓ | Free Google Translations | Obi-Wan3 |

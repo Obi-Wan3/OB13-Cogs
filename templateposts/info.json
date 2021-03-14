@@ -12,7 +12,7 @@
     "permissions" : ["manage_messages"],
     "required_cogs" : {},
     "requirements" : [],
-    "short": "Requires any messages in a channel which a template is set to follow that template (or be auto-removed).",
+    "short": "Posts w/ Template Requirements",
     "tags" : ["required", "template", "message", "channel"],
     "type": "COG"
 }

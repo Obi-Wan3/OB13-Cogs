@@ -12,7 +12,7 @@
     "permissions" : ["embed_links"],
     "required_cogs" : {},
     "requirements" : [],
-    "short": "Various Folding@Home team & donor statistics (https://foldingathome.org/).",
+    "short": "Various Folding@Home Stats (https://foldingathome.org/).",
     "tags" : ["Folding@Home", "stats"],
     "type": "COG"
 }

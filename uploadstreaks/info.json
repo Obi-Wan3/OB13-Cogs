@@ -12,7 +12,7 @@
     "permissions" : ["embed_links"],
     "required_cogs" : {},
     "requirements" : [],
-    "short": "A leaderboard with points and streaks for uploading attachments in specific channels per interval of time.",
+    "short": "Streaks & Points for Uploads",
     "tags" : ["upload", "streak", "points", "leaderboard"],
     "type": "COG"
 }

@@ -12,7 +12,7 @@
     "permissions" : [],
     "required_cogs" : {},
     "requirements" : [],
-    "short": "Allows users who refer others to the server to gain credits.",
+    "short": "Invite Referral -> Credits",
     "tags" : ["referrals", "reward", "invite"],
     "type": "COG"
 }

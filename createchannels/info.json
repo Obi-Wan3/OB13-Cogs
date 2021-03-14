@@ -12,7 +12,7 @@
     "permissions" : ["manage_channels"],
     "required_cogs" : {},
     "requirements" : [],
-    "short": "Create voice and text channels via a command.",
+    "short": "Create Text & Voice Channels Using Commands",
     "tags" : ["create", "channels", "text", "voice"],
     "type": "COG"
 }

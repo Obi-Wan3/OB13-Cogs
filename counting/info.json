@@ -12,7 +12,7 @@
     "permissions" : [],
     "required_cogs" : {},
     "requirements" : [],
-    "short": "Create a counting channel for your server, with various additional management options!",
+    "short": "Multifeatured Counting Channel",
     "tags" : ["counting", "channel", "role", "mute"],
     "type": "COG"
 }

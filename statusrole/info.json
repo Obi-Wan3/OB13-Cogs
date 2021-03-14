@@ -12,7 +12,7 @@
     "permissions" : ["manage_roles"],
     "required_cogs" : {},
     "requirements" : [],
-    "short": "Assign roles to users for the duration in which they have certain custom statuses.",
+    "short": "Roles for Certain Custom Statuses",
     "tags" : ["custom status", "roles"],
     "type": "COG"
 }

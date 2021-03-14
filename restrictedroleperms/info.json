@@ -12,7 +12,7 @@
     "permissions" : [],
     "required_cogs" : {},
     "requirements" : [],
-    "short": "Gives restricted permissions to certain roles to mention/assign other roles.",
+    "short": "Give Certain Roles Restricted Permissions",
     "tags" : ["restricted", "role", "permissions", "assign", "mention"],
     "type": "COG"
 }

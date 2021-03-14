@@ -12,7 +12,7 @@
     "permissions" : [],
     "required_cogs" : {},
     "requirements" : [],
-    "short": "Story improv, one word at a time.",
+    "short": "One Word Story Channel",
     "tags" : ["improv", "story", "channel"],
     "type": "COG"
 }

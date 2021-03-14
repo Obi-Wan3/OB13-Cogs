@@ -12,7 +12,7 @@
     "permissions" : [],
     "required_cogs" : {},
     "requirements" : [],
-    "short": "Automatically assign roles to users who have taken and successfully passed a quiz through DMs.",
+    "short": "Take a Quiz to Gain a Role",
     "tags" : ["quiz", "role", "auto"],
     "type": "COG"
 }

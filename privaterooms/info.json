@@ -12,7 +12,7 @@
     "permissions" : ["manage_channels"],
     "required_cogs" : {},
     "requirements" : [],
-    "short": "Private VCs that are created automatically, with permission overrides for a lobby channel.",
+    "short": "Automatic Private VCs with Lobby",
     "tags" : ["privaterooms", "voice channels", "automatic", "creation"],
     "type": "COG"
 }

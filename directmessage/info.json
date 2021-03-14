@@ -12,7 +12,7 @@
     "permissions" : [],
     "required_cogs" : {},
     "requirements" : [],
-    "short": "Send DMs as the bot!",
+    "short": "Easily Send DMs as the Bot",
     "tags" : ["DM", "direct message"],
     "type": "COG"
 }

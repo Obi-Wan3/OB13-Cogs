@@ -34,7 +34,7 @@ from redbot.core import commands, Config
 
 class SiteStatus(commands.Cog):
     """
-    Display Website Statuses
+    Monitor Website Statuses
 
     Monitor the statuses of websites and receive down alerts.
     """

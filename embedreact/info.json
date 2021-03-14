@@ -12,7 +12,7 @@
     "permissions" : ["add_reactions"],
     "required_cogs" : {},
     "requirements" : [],
-    "short": "Automatically add reactions to messages with embedded content.",
+    "short": "Auto-Reactions to Embeds",
     "tags" : ["embeds", "reactions", "automatic"],
     "type": "COG"
 }

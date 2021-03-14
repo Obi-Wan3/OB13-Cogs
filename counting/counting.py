@@ -31,7 +31,7 @@ from redbot.core import commands, Config
 
 class Counting(commands.Cog):
     """
-    Counting Channel
+    Multifeatured Counting Channel
 
     Create a counting channel for your server, with various additional management options!
     """

@@ -12,7 +12,7 @@
     "permissions" : [],
     "required_cogs" : {},
     "requirements" : [],
-    "short": "Reply to a message using the Discord reply feature.",
+    "short": "Bot Replies to Messages",
     "tags" : ["replies"],
     "type": "COG"
 }

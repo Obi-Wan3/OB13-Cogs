@@ -12,7 +12,7 @@
     "permissions" : [],
     "required_cogs" : {},
     "requirements" : [],
-    "short": "An artificial intelligence chatbot using BrainShop (https://brainshop.ai/).",
-    "tags" : ["brainshop", "chatbot"],
+    "short": "AI Chatbot Using BrainShop (https://brainshop.ai/).",
+    "tags" : ["brainshop", "ai", "chatbot"],
     "type": "COG"
 }
