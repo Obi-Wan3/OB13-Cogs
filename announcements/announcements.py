@@ -33,8 +33,8 @@ class Announcements(commands.Cog):
         self.bot = bot
 
     @commands.admin()
-    @commands.command(name="announce", aliases=["announcement"])
-    async def _announce(self, ctx: commands.Context, channel: discord.TextChannel, role: discord.Role, *, message=""):
+    @commands.command(name="announcement")
+    async def _announcement(self, ctx: commands.Context, channel: discord.TextChannel, role: discord.Role, *, message=""):
         """Send an announcement message to a specific channel with a role ping."""
         try:
             await ctx.guild.get_channel(channel.id).send(f"{role.mention} {message}", allowed_mentions=discord.AllowedMentions(roles=True))
