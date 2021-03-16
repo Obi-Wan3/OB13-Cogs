@@ -201,6 +201,9 @@ class StatusRole(commands.Cog):
     @_status_role.command(name="add")
     async def _add(self, ctx: commands.Context, pair_name: str, role: discord.Role, *, custom_status_regex: str):
         """Add a role to be assigned to users with a matching emoji (optional) and custom status (accepts regex)."""
+        if role >= ctx.author.top_role and ctx.author != ctx.guild.owner:
+            return await ctx.send("That role is above you in the role hierarchy!")
+
         async with self.config.guild(ctx.guild).roles() as roles:
             if pair_name in roles.keys():
                 return await ctx.send("There is already a StatusRole with this name! Please edit/delete it or choose another name.")
@@ -303,14 +306,20 @@ class StatusRole(commands.Cog):
 
                             if await self._status_matches(roles[sr]["status"], roles[sr]["emoji"], m_status):
                                 if roles[sr]["role"] not in [r.id for r in m.roles]:  # Does not already have role
-                                    await m.add_roles(r, reason=f"StatusRole ForceUpdate: custom status matched {sr}")
-                                    if log_channel:
-                                        await self._send_log(log_channel, True, m, r, m_status.name, m_status.emoji.name if m_status.emoji else "None")
+                                    try:
+                                        await m.add_roles(r, reason=f"StatusRole ForceUpdate: custom status matched {sr}")
+                                        if log_channel:
+                                            await self._send_log(log_channel, True, m, r, m_status.name, m_status.emoji.name if m_status.emoji else "None")
+                                    except discord.Forbidden:
+                                        pass
                             else:
                                 if roles[sr]["role"] in [r.id for r in m.roles]:  # Has role but status does not match
-                                    await m.remove_roles(r, reason=f"StatusRole ForceUpdate: custom status does not match {sr}")
-                                    if log_channel:
-                                        await self._send_log(log_channel, False, m, r, m_status.name, m_status.emoji.name if m_status.emoji else "None")
+                                    try:
+                                        await m.remove_roles(r, reason=f"StatusRole ForceUpdate: custom status does not match {sr}")
+                                        if log_channel:
+                                            await self._send_log(log_channel, False, m, r, m_status.name, m_status.emoji.name if m_status.emoji else "None")
+                                    except discord.Forbidden:
+                                        pass
 
         return await ctx.send("Force update completed!")
 
