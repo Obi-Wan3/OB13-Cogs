@@ -34,6 +34,7 @@ Cogs marked with a ✓ are ready for use, while those with a ✗ are still a Wor
 | RestrictedRolePerms | ✓ | Give Certain Roles Restricted Permissions | Obi-Wan3, Mile High#7102 (BC) |
 | SiteStatus | ✓ | Monitor Website Statuses | Obi-Wan3 |
 | StatusRole | ✓ | Roles for Certain Custom Statuses | Obi-Wan3, ry#1000 (BC) |
+| StreamRole | ✓ | Roles for Discord Streamers | Obi-Wan3 |
 | TemplatePosts | ✓ | Posts w/ Template Requirements | Obi-Wan3, Barnabas#6666 (BC) |
 | TempRole | ✓ | Assign Temporary Roles | Obi-Wan3, Tetra#0001 (BC) |
 | Translate | ✓ | Free Google Translations | Obi-Wan3 |
