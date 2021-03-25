@@ -145,7 +145,7 @@ class BrainShop(commands.Cog):
 
     @commands.is_owner()
     @_brainshopset.command(name="view")
-    async def _view(self, ctx: commands.Context):
+    async def _view(self, ctx: commands.Context, show_api_key: bool = False):
         """
         View the settings for BrainShop.
 
@@ -169,9 +169,12 @@ class BrainShop(commands.Cog):
             description=f"""
             **Global Toggle:** {await self.config.auto()}
             **Brain ID**: {brainshop_api.get("bid") if brainshop_api.get("bid") else "Not set (see this command's help message)."}
-            **API Key**: {f"||{brainshop_api.get('key')}||" if brainshop_api.get("key") else "Not set (see this command's help message)."}
             """
         )
+
+        if show_api_key:
+            embed.description += f"""**API Key**: {f"||{brainshop_api.get('key')}||" if brainshop_api.get("key") else "Not set (see this command's help message)."}"""
+
         embed.set_footer(text="Powered by BrainShop | https://brainshop.ai/")
 
         return await ctx.author.send(embed=embed)
