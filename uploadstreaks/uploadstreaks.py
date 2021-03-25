@@ -382,7 +382,7 @@ class UploadStreaks(commands.Cog):
                         **Streak Name:** {challenge['streak']}
                         **Interval:** {challenge['interval'][0]} days (started on {datetime.utcfromtimestamp(challenge['interval'][1])})
                         **Credits:** {challenge['streak']}
-                        **Role:** {ctx.guild.get_role(challenge['role']).mention}
+                        **Role:** {ctx.guild.get_role(challenge['role']).mention if challenge['role'] else None }
                         **Channels:** {humanize_list([ctx.guild.get_channel(c).mention for c in challenge['channels']])}
                         """)
         return await ctx.send(embed=embed)
