@@ -29,8 +29,8 @@ from redbot.core import commands, Config
 from redbot.core.utils.chat_formatting import humanize_list
 
 
-# Thanks ZeLarp for the RegEx
-URL_REGEX = r"<?(https?|ftp)://[^\s/$.?#].[^\s]*>?"
+# Thanks ZeLarp for the original RegEx
+URL_REGEX = r"<?https?:\/\/[^\s/$.?#].[^\s]*>?"
 
 
 class EmbedReact(commands.Cog):
@@ -129,7 +129,11 @@ class EmbedReact(commands.Cog):
         if config['reactions']:
             r_string = ""
             for k in config['reactions'].keys():
-                r_string += f"{self.bot.get_channel(int(k)).mention} {humanize_list(config['reactions'][k])}\n"
+                try:
+                    r_string += f"{self.bot.get_channel(int(k)).mention} {humanize_list(config['reactions'][k])}\n"
+                except AttributeError:
+                    async with self.config.guild(ctx.guild).reactions() as s:
+                        del s[k]
             embed.add_field(name="Reactions", value=r_string)
 
         return await ctx.send(embed=embed)
