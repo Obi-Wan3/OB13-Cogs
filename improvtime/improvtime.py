@@ -59,14 +59,20 @@ class ImprovTime(commands.Cog):
             return
 
         # Delete these messages
-        if (
-            len(message.content.strip().split()) > await self.config.guild(message.guild).word_limit() or  # Message too long
-            (
-                not(await self.config.guild(message.guild).allow_repeats()) and
-                (await message.channel.history(limit=1, before=message).flatten())[0].author.id == message.author.id
-            )  # Allow repeats is off and last message is also from same author
-        ):
-            return await message.delete()
+        try:
+            if (
+                len(message.content.strip().split()) > await self.config.guild(message.guild).word_limit() or  # Message too long
+                (
+                    not(await self.config.guild(message.guild).allow_repeats()) and
+                    (await message.channel.history(limit=1, before=message).flatten())[0].author.id == message.author.id
+                )  # Allow repeats is off and last message is also from same author
+            ):
+                try:
+                    return await message.delete()
+                except discord.Forbidden:
+                    return
+        except discord.Forbidden:
+            pass
 
         # These messages are sentence endings
         blocklist = await self.config.guild(message.guild).blocklist()
@@ -92,7 +98,10 @@ class ImprovTime(commands.Cog):
             if len(message.content) == 1:
                 sentence = sentence[:-2] + sentence[-1]
 
-            return await message.channel.send(sentence)
+            try:
+                return await message.channel.send(sentence)
+            except discord.Forbidden:
+                return
 
     @commands.guild_only()
     @commands.mod()
@@ -161,14 +170,22 @@ class ImprovTime(commands.Cog):
     @_improvtime.command(name="view")
     async def _view(self, ctx: commands.Context):
         """View the current ImprovTime settings."""
+
         settings = await self.config.guild(ctx.guild).all()
+
         phrases = settings["phrase_list"]
         phrases_string = ""
+
         for phrase_index, phrase in enumerate(phrases):
             phrases_string += f"{phrase_index}. {phrase}\n"
+        
+        channel = None
+        if settings["channel"] and (ch := ctx.guild.get_channel(settings["channel"])):
+            channel = ch.mention
+
         desc = f"""
             **Toggle:** {settings["toggle"]}
-            **Channel:** {self.bot.get_channel(settings["channel"]).mention if settings["channel"] is not None else None}
+            **Channel:** {channel}
             **Use Phrases:** {settings["use_phrases"]}
             **Word Limit:** {settings["word_limit"]}
             **Allow Repeat Messages from User:** {settings["allow_repeats"]}
