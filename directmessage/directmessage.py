@@ -37,8 +37,6 @@ class DirectMessage(commands.Cog):
     async def _direct_message(self, ctx: commands.Context, user: discord.User, *, message):
         """Sends a DM to a user (sends raw text directly)."""
         try:
-            if user.dm_channel is None:
-                await user.create_dm()
-            await user.dm_channel.send(message)
+            await user.send(message)
         except discord.Forbidden:
             await ctx.author.send(f"User does not have DMs enabled.")
