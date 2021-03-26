@@ -22,7 +22,7 @@ Cogs marked with a ✓ are ready for use, while those with a ✗ are still a Wor
 | EmbedReact | ✓ | Auto-Reactions to Embeds | Obi-Wan3, HEW#6942 (BC) |
 | EmojiTools | ✓ | Tools for Managing Custom Emojis | Obi-Wan3, SHADOW6six#8807 (BC) |
 | FaH | ✓ | Various [Folding@Home](https://foldingathome.org/) Stats | Obi-Wan3, SaraCaterina#1015 (BC) |
-| Github | ✓ | Github RSS Commit Feeds | Obi-Wan3 |
+| GitHub | ✓ | Github RSS Commit Feeds | Obi-Wan3 |
 | ImprovTime | ✓ | One Word Story Channel | Obi-Wan3, Atmos#0101 (BC) |
 | MentionHelp | ✓ | Customizable MentionHelp Message | Obi-Wan3 |
 | NoDMs | ✓ | Disallow DM Commands | Obi-Wan3 |
