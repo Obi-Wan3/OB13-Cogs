@@ -70,12 +70,13 @@ class MentionHelp(commands.Cog):
         if mention.fullmatch(message.content) and self.bot.user.id in [u.id for u in message.mentions] and to_send:
             if await self.config.embed():
                 try:
-                    await destination.send(embed=discord.Embed(description=to_send, color=await self.bot.get_embed_color(destination)))
-                    return
+                    return await destination.send(embed=discord.Embed(description=to_send, color=await self.bot.get_embed_color(destination)))
                 except discord.Forbidden:
                     pass
-            await destination.send(to_send)
-        return
+            try:
+                return await destination.send(to_send)
+            except discord.Forbidden:
+                return
 
     @commands.group(name="mentionhelp")
     async def _mention_help(self, ctx: commands.Context):
