@@ -54,8 +54,7 @@ class Counting(commands.Cog):
             message.channel.id != counting_channel or  # Message not in counting channel
             await self.bot.cog_disabled_in_guild(self, message.guild) or  # Cog disabled in guild
             not await self.config.guild(message.guild).toggle() or  # Counting toggled off
-            message.author.bot or  # Message author is a bot
-            counting_channel is None  # Counting channel not set
+            message.author.bot  # Message author is a bot
         ):
             return
 
@@ -135,8 +134,7 @@ class Counting(commands.Cog):
                 message.channel.id != counting_channel or  # Message not in counting channel
                 await self.bot.cog_disabled_in_guild(self, message.guild) or  # Cog disabled in guild
                 not await self.config.guild(message.guild).toggle() or  # Counting toggled off
-                message.author.bot or  # Message author is a bot
-                counting_channel is None  # Counting channel not set
+                message.author.bot  # Message author is a bot
         ):
             return
 
@@ -159,7 +157,7 @@ class Counting(commands.Cog):
         await self._message_deletion_listener(before)
 
     @commands.guild_only()
-    @commands.mod()
+    @commands.mod_or_permissions(manage_messages=True)
     @commands.group()
     async def counting(self, ctx: commands.Context):
         """Settings for Counting"""
@@ -182,9 +180,16 @@ class Counting(commands.Cog):
         await self.config.guild(ctx.guild).counter.set(num)
         return await ctx.tick()
 
+    @commands.admin_or_permissions(manage_roles=True)
     @counting.command(name="role")
     async def _role(self, ctx: commands.Context, role: discord.Role):
         """Set the role to assign to the most recent user to count."""
+
+        if role >= ctx.author.top_role and ctx.author != ctx.guild.owner:
+            return await ctx.send("That role is above you in the role hierarchy!")
+        elif role >= ctx.guild.me.top_role:
+            return await ctx.send("That role is above me in the role hierarchy!")
+
         await self.config.guild(ctx.guild).role.set(role.id)
         return await ctx.tick()
 
@@ -219,13 +224,23 @@ class Counting(commands.Cog):
     async def _view(self, ctx: commands.Context):
         """View the current Counting settings."""
         settings = await self.config.guild(ctx.guild).all()
+
+        channel_mention = None
+        if settings["channel"] and (c := ctx.guild.get_channel(settings["channel"])):
+            channel_mention = c.mention
+
+        role_mention = None
+        if settings["role"] and (r := ctx.guild.get_role(settings["role"])):
+            role_mention = r.mention
+
         desc = f"""
             **Toggle:** {settings["toggle"]}
-            **Channel:** {self.bot.get_channel(settings["channel"]).mention if settings["channel"] is not None else None}
+            **Channel:** {channel_mention}
             **Current #:** {settings["counter"]}
-            **Role:** {ctx.guild.get_role(settings["role"]).mention if settings["role"] is not None else None}
+            **Role:** {role_mention}
             **Allow Repeats:** {settings["allowrepeats"]}
             **Assign Role:** {settings["assignrole"]}
-            **Wrong Count Penalty:** {f'ChannelMute for {settings["penalty"][1]}s if {settings["penalty"][0]} wrong tries in a row' if settings["penalty"][0] and settings["penalty"][1] else "Not Set"}
+            **Wrong Count Penalty:** {f'ChannelMute for {settings["penalty"][1]}s if {settings["penalty"][0]} wrong tries in a row' if all(settings["penalty"]) else "Not Set"}
             """
+
         return await ctx.send(embed=discord.Embed(title="Counting Settings", color=await ctx.embed_color(), description=desc))
