@@ -100,6 +100,9 @@ class CreateChannels(commands.Cog):
     async def _createvoice(self, ctx: commands.Context, name: str, max_users: typing.Optional[int] = None):
         """Create a Voice Channel"""
 
+        if not ctx.guild.me.guild_permissions.manage_channels:
+            return await ctx.send("I don't have the permissions to create a channel!")
+
         if not await self.config.guild(ctx.guild).voice.toggle(): return
 
         role_req = await self.config.guild(ctx.guild).voice.roles()
@@ -157,7 +160,7 @@ class CreateChannels(commands.Cog):
         return
 
     @commands.guild_only()
-    @commands.admin()
+    @commands.admin_or_permissions(administrator=True)
     @commands.group()
     async def createvoiceset(self, ctx: commands.Context):
         """Settings for VoiceCreate"""
@@ -209,17 +212,26 @@ class CreateChannels(commands.Cog):
     async def _voice_view(self, ctx: commands.Context):
         """View the current CreateVoice settings."""
         settings = await self.config.guild(ctx.guild).voice()
-        e = discord.Embed(title="CreateVoice Settings", color=await ctx.embed_color(), description=f"""
+
+        roles = []
+        for role in settings["roles"]:
+            if r := ctx.guild.get_role(role):
+                roles.append(r.name)
+
+        return await ctx.send(embed=discord.Embed(
+            title="CreateVoice Settings",
+            color=await ctx.embed_color(),
+            description=f"""
             **Toggle:** {settings["toggle"]}
             **Timeout:** {settings["timeout"]} seconds
             **Category:** {"None" if settings["category"] is None else ctx.guild.get_channel(settings["category"]).name}
             **MaxChannels:** {settings["maximum"]} channels
-            **Roles:** {humanize_list([ctx.guild.get_role(r).name for r in settings["roles"]]) or "None"}
+            **Roles:** {humanize_list(roles) or None}
             **UserLimit:** {settings["userlimit"]} channels
-            **Active:** {humanize_list([ctx.guild.get_channel(c[0]) for c in settings["active"]]) or "None"}
+            **Active:** {humanize_list([ctx.guild.get_channel(c[0]) for c in settings["active"]]) or None}
             **Role Req Msg**: {settings["role_req_msg"]}
-            """)
-        return await ctx.send(embed=e)
+            """
+        ))
 
     @createvoiceset.command(name="clear")
     async def _voice_clear(self, ctx: commands.Context):
@@ -232,6 +244,10 @@ class CreateChannels(commands.Cog):
     @commands.command(name="createtext")
     async def _createtext(self, ctx: commands.Context, name: str):
         """Create a Text Channel"""
+
+        if not ctx.guild.me.guild_permissions.manage_channels:
+            return await ctx.send("I don't have the permissions to create a channel!")
+
         if not await self.config.guild(ctx.guild).text.toggle(): return
 
         role_req = await self.config.guild(ctx.guild).text.roles()
@@ -257,7 +273,7 @@ class CreateChannels(commands.Cog):
         return await ctx.tick()
 
     @commands.guild_only()
-    @commands.admin()
+    @commands.admin_or_permissions(administrator=True)
     @commands.group()
     async def createtextset(self, ctx: commands.Context):
         """Settings for CreateText"""
@@ -303,16 +319,25 @@ class CreateChannels(commands.Cog):
     async def _text_view(self, ctx: commands.Context):
         """View the current CreateText settings."""
         settings = await self.config.guild(ctx.guild).text()
-        e = discord.Embed(title="CreateText Settings", color=await ctx.embed_color(), description=f"""
-                **Toggle:** {settings["toggle"]}
-                **Category:** {"None" if settings["category"] is None else ctx.guild.get_channel(settings["category"]).name}
-                **MaxChannels:** {settings["maximum"]} channels
-                **Roles:** {humanize_list([ctx.guild.get_role(r).name for r in settings["roles"]]) or "None"}
-                **UserLimit:** {settings["userlimit"]} channels
-                **Active:** {humanize_list([ctx.guild.get_channel(c[0]) for c in settings["active"]]) or "None"}
-                **Role Req Msg**: {settings["role_req_msg"]}
-                """)
-        return await ctx.send(embed=e)
+
+        roles = []
+        for role in settings["roles"]:
+            if r := ctx.guild.get_role(role):
+                roles.append(r.name)
+
+        return await ctx.send(embed=discord.Embed(
+            title="CreateText Settings",
+            color=await ctx.embed_color(),
+            description=f"""
+            **Toggle:** {settings["toggle"]}
+            **Category:** {"None" if settings["category"] is None else ctx.guild.get_channel(settings["category"]).name}
+            **MaxChannels:** {settings["maximum"]} channels
+            **Roles:** {humanize_list(roles) or None}
+            **UserLimit:** {settings["userlimit"]} channels
+            **Active:** {humanize_list([ctx.guild.get_channel(c[0]) for c in settings["active"]]) or None}
+            **Role Req Msg**: {settings["role_req_msg"]}
+            """
+        ))
 
     @createtextset.command(name="clear")
     async def _text_clear(self, ctx: commands.Context):
