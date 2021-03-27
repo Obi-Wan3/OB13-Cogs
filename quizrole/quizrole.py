@@ -60,30 +60,29 @@ class QuizRole(commands.Cog):
     async def _quizrole(self, ctx: commands.Context, quiz_name):
         """Take a quiz to gain a role in this server!"""
 
-        await ctx.message.delete()
         try:
-            if ctx.author.dm_channel is None:
-                await ctx.author.create_dm()
-        except discord.Forbidden:
-            await ctx.send(f"User does not have DMs enabled.", delete_after=10)
+            await ctx.message.delete()
+        except discord.HTTPException:
+            pass
 
         if not await self.config.guild(ctx.guild).toggle():
-            return ctx.author.send("QuizRole is toggled off for this server.")
+            return ctx.send("QuizRole is toggled off for this server.", delete_after=15)
 
         quiz = (await self.config.guild(ctx.guild).quizzes()).get(quiz_name)
         if not quiz:
-            return await ctx.author.send(f"No quiz was found with this name. To see all available quizzes, run `{ctx.clean_prefix}quizroles`.")
+            return await ctx.send(f"No quiz was found with this name. To see all available quizzes, run `{ctx.clean_prefix}quizroles`.", delete_after=15)
 
         if quiz['role'] in [r.id for r in ctx.author.roles]:
-            return await ctx.author.send("You already have this role!")
+            return await ctx.send("You already have this role!", delete_after=15)
 
         if quiz['req'] and not (quiz['req'] in [r.id for r in ctx.author.roles]):
-            return await ctx.author.send("You do not have the required role to take this quiz!")
+            return await ctx.send("You do not have the required role to take this quiz!", delete_after=15)
 
         randomize = quiz['randomize']
-        if randomize == True:
-            questions = random.shuffle(quiz['questions'])
-        elif randomize == False:
+        if randomize is True:
+            questions = quiz['questions']
+            random.shuffle(questions)
+        elif randomize is False:
             questions = quiz['questions']
         else:
             questions = random.choices(quiz['questions'], k=randomize)
@@ -91,13 +90,22 @@ class QuizRole(commands.Cog):
         time_limit = quiz['timelimit']*60
         min_time = 2*time_limit//len(questions)
         role = ctx.guild.get_role(quiz['role'])
-        await ctx.author.send(f"You are about to take the quiz `{quiz_name}` to get {role.name}. Please type `start` to get started, or `cancel` to cancel. There will be {len(questions)} questions, and you will have {int(time_limit/60)} minutes to complete it (at most {min_time} seconds per question). Once you start, you cannot cancel.")
+        if not role:
+            return await ctx.send("Error: The role tied to this quiz no longer exists.", delete_after=15)
+
         try:
-            resp = await self.bot.wait_for("message", check=MessagePredicate.lower_contained_in(['cancel', 'start'], channel=ctx.author.dm_channel, user=ctx.author), timeout=60)
-            if resp.content == 'cancel':
-                return await ctx.author.send("Quiz cancelled.")
+            await ctx.author.send(f"You are about to take the quiz `{quiz_name}` to get {role.name}. Please type `start` to get started, or `cancel` to cancel. There will be {len(questions)} questions, and you will have {int(time_limit/60)} minutes to complete it (at most {min_time} seconds per question). Once you start, you cannot cancel.")
+        except discord.HTTPException:
+            return await ctx.send(f"{ctx.author.mention} I cannot DM you!", delete_after=30)
+
+        pred = MessagePredicate.lower_contained_in(['cancel', 'start'], channel=ctx.author.dm_channel, user=ctx.author)
+        try:
+            await self.bot.wait_for("message", check=pred, timeout=60)
         except asyncio.TimeoutError:
             return await ctx.author.send("The operation has timed out. Please try again.")
+
+        if pred.result == 0:
+            return await ctx.author.send("Quiz cancelled.")
 
         async with self.config.member(ctx.author).taken() as attempts:
             if quiz_name in attempts.keys():
@@ -122,13 +130,22 @@ class QuizRole(commands.Cog):
 
         logchannel = await self.config.guild(ctx.guild).logchannel()
         if score >= quiz['minscore']:
-            await ctx.author.add_roles(role, reason=f"QuizRole: Passed `{quiz_name}` with a score of {score}/{len(questions)}.")
+            try:
+                await ctx.author.add_roles(role, reason=f"QuizRole: Passed `{quiz_name}` with a score of {score}/{len(questions)}.")
+            except discord.HTTPException:
+                return await ctx.author.send("Something went wrong when assigning your role.")
             if logchannel:
-                await self.bot.get_channel(logchannel).send(f"{ctx.author.mention} has passed `{quiz_name}` with a score of {score}/{len(questions)}.")
+                try:
+                    await self.bot.get_channel(logchannel).send(f"{ctx.author.mention} has passed `{quiz_name}` with a score of {score}/{len(questions)}.")
+                except discord.HTTPException:
+                    pass
             return await ctx.author.send(f"Congratulations! You have passed the quiz `{quiz_name}` with a score of {score}/{len(questions)}, and have received the role {role.name}.")
         else:
             if logchannel:
-                await self.bot.get_channel(logchannel).send(f"{ctx.author.mention} did not pass `{quiz_name}` with a score of {score}/{len(questions)}.")
+                try:
+                    await self.bot.get_channel(logchannel).send(f"{ctx.author.mention} did not pass `{quiz_name}` with a score of {score}/{len(questions)}.")
+                except discord.HTTPException:
+                    pass
             return await ctx.author.send(f"Unfortunately, you did not pass the quiz `{quiz_name}`; the minimum score was {quiz['minscore']}/{len(questions)} and you received a score of {score}/{len(questions)}.")
 
     @commands.bot_has_permissions(embed_links=True)
@@ -144,8 +161,8 @@ class QuizRole(commands.Cog):
         for quiz_name, quiz in settings['quizzes'].items():
             if (quiz['req'] is None or quiz['req'] in [r.id for r in ctx.author.roles]) and quiz['enabled']:
                 val = f"""
-                        **Role:** {ctx.guild.get_role(quiz['role']).mention}
-                        **Requirement:** {ctx.guild.get_role(quiz['req']).mention if quiz['req'] else None}
+                        **Role:** {ctx.guild.get_role(quiz['role']).mention if ctx.guild.get_role(quiz['role']) else None}
+                        **Requirement:** {ctx.guild.get_role(quiz['req']).mention if quiz['req'] and ctx.guild.get_role(quiz['req']) else None}
                         **Min. Score:** {quiz['minscore']}/{len(quiz['questions']) if quiz['randomize'] in (True, False) else quiz['randomize']}
                         **Time Limit:** {quiz['timelimit']} minutes
                         **Cooldown:** {quiz['cooldown']} days
@@ -157,7 +174,7 @@ class QuizRole(commands.Cog):
         return await ctx.send(embed=embed)
 
     @commands.guild_only()
-    @commands.admin()
+    @commands.admin_or_permissions(administrator=True)
     @commands.group(name="quizroleset")
     async def _quizroleset(self, ctx: commands.Context):
         """QuizRole Settings"""
@@ -172,11 +189,14 @@ class QuizRole(commands.Cog):
     async def _log_channel(self, ctx: commands.Context, channel: discord.TextChannel = None):
         """Set the QuizRole logchannel on this server (leave blank for no logchannel)."""
         if channel:
+            if not channel.permissions_for(ctx.guild.me).send_messages:
+                return await ctx.send(f"I cannot send messages to {channel.mention}!")
             await self.config.guild(ctx.guild).logchannel.set(channel.id)
         else:
             await self.config.guild(ctx.guild).logchannel.set(channel)
         return await ctx.tick()
 
+    @commands.bot_has_permissions(manage_roles=True)
     @_quizroleset.command(name="newquiz")
     async def _new_quiz(
             self,
@@ -209,7 +229,7 @@ class QuizRole(commands.Cog):
         if type(randomize) == int and randomize > numquestions:
             return await ctx.send("The # of randomized questions to select cannot be greater than the # of questions!")
 
-        if role >= ctx.guild.me.top_role or role >= ctx.author.top_role:
+        if role >= ctx.guild.me.top_role or (role >= ctx.author.top_role and ctx.author != ctx.guild.owner):
             return await ctx.send("That role cannot be assigned due to the Discord role hierarchy.")
 
         await ctx.send("Alright, please enter the questions and answers as I ask you, one by one (type `cancel` at any time to cancel): ")
@@ -240,6 +260,7 @@ class QuizRole(commands.Cog):
 
         return await ctx.send(f"The quiz has been successfully added! View the quizzes with `{ctx.clean_prefix}quizroleset view`. To allow this quiz to be taken, enable it first with `{ctx.clean_prefix}quizroleset edit <quiz> enabled true`.")
 
+    @commands.bot_has_permissions(manage_roles=True)
     @_quizroleset.command(name="edit")
     async def _edit(self, ctx: commands.Context, quiz_name: str, field: str, *, new_value: str):
         """
@@ -399,8 +420,8 @@ class QuizRole(commands.Cog):
         for quiz_name, quiz in settings['quizzes'].items():
             val = f"""
             **Enabled:**: {quiz['enabled']}
-            **Role:** {ctx.guild.get_role(quiz['role']).mention}
-            **Requirement:** {ctx.guild.get_role(quiz['req']).mention if quiz['req'] else None}
+            **Role:** {ctx.guild.get_role(quiz['role']).mention if ctx.guild.get_role(quiz['role']) else None}
+            **Requirement:** {ctx.guild.get_role(quiz['req']).mention if quiz['req'] and ctx.guild.get_role(quiz['req']) else None}
             **Min. Score:** {quiz['minscore']}/{len(quiz['questions']) if quiz['randomize'] in (True, False) else quiz['randomize']}
             **Time Limit:** {quiz['timelimit']} minutes
             **Cooldown:** {quiz['cooldown']} days
