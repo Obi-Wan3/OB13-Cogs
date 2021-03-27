@@ -26,6 +26,7 @@ from datetime import datetime, timedelta
 
 import discord
 from redbot.core import commands, Config, bank
+from redbot.core.utils import AsyncIter
 
 
 class Referrals(commands.Cog):
@@ -58,11 +59,15 @@ class Referrals(commands.Cog):
             return
 
         log_channel = await self.config.guild(ctx.guild).log_channel()
+        if log_channel:
+            log_channel = await ctx.guild.get_channel(log_channel)
+            if not (log_channel and log_channel.permissions_for(ctx.guild.me).send_messages):
+                log_channel = None
 
         # User already ran command
         if ctx.author.id in await self.config.guild(ctx.guild).already_redeemed():
             if log_channel:
-                await self.bot.get_channel(log_channel).send(f"{ctx.author.mention} tried to run `{ctx.clean_prefix}referredby` but has already done so before.")
+                await log_channel.send(f"{ctx.author.mention} tried to run `{ctx.clean_prefix}referredby` but has already done so before.")
             return await ctx.send("You have already ran this command! You can only use this once.")
 
         # No credit set by admin yet
@@ -77,14 +82,14 @@ class Referrals(commands.Cog):
                 (ctx.author.joined_at > (datetime.now() - timedelta(hours=time_limit)))
         ):
             if log_channel:
-                await self.bot.get_channel(log_channel).send(f"{ctx.author.mention} tried to run `{ctx.clean_prefix}referredby` but has exceeded the time limit.")
+                await log_channel.send(f"{ctx.author.mention} tried to run `{ctx.clean_prefix}referredby` but has exceeded the time limit.")
             return await ctx.send("Unfortunately, you have exceeded the time given to run this command after you join.")
 
         # Check if user account is older than the minimum age
         account_age = await self.config.guild(ctx.guild).account_age()
         if account_age and not (ctx.author.created_at < (datetime.now() - timedelta(hours=time_limit))):
             if log_channel:
-                await self.bot.get_channel(log_channel).send(f"{ctx.author.mention} tried to run `{ctx.clean_prefix}referredby` but their account is too new.")
+                await log_channel.send(f"{ctx.author.mention} tried to run `{ctx.clean_prefix}referredby` but their account is too new.")
             return await ctx.send("Your account is too new!")
 
         new = await bank.deposit_credits(member, to_deposit)
@@ -95,12 +100,12 @@ class Referrals(commands.Cog):
 
         # Log into channel if log_channel set
         if log_channel:
-            await self.bot.get_channel(log_channel).send(f"{member.mention} has gained {to_deposit} {cname} for referring {ctx.author.mention}.")
+            await log_channel.send(f"{member.mention} has gained {to_deposit} {cname} for referring {ctx.author.mention}.")
 
         return await ctx.send(f"{member.mention} Thanks for referring another user! {to_deposit} {cname} have been deposited to your account. Your new balance is {new} {cname}.")
 
     @commands.guild_only()
-    @commands.admin()
+    @commands.admin_or_permissions(administrator=True)
     @commands.group(name="referset")
     async def _referset(self, ctx: commands.Context):
         """Settiings for Referrals"""
@@ -147,6 +152,8 @@ class Referrals(commands.Cog):
     async def _log_channel(self, ctx: commands.Context, channel: discord.TextChannel = None):
         """Set the channel for logs to go into (leave blank for none)."""
         if channel:
+            if not channel.permissions_for(ctx.guild.me).send_messages:
+                return await ctx.send(f"I cannot send messages to {channel.mention}!")
             await self.config.guild(ctx.guild).log_channel.set(channel.id)
         else:
             await self.config.guild(ctx.guild).log_channel.set(None)
@@ -166,7 +173,7 @@ class Referrals(commands.Cog):
                 return await ctx.send(f"Please set the time limit first using `{ctx.clean_prefix}referset timelimit`!")
 
             async with self.config.guild(ctx.guild).already_redeemed() as already_redeemed:
-                for m in ctx.guild.members:
+                async for m in AsyncIter(ctx.guild.members):
                     if (
                         m.joined_at and
                         (m.joined_at < (datetime.now() - timedelta(hours=time_limit))) and
@@ -201,11 +208,15 @@ class Referrals(commands.Cog):
         """View current Referrals settings."""
 
         settings = await self.config.guild(ctx.guild).all()
-        embed = discord.Embed(title="Referrals Settings", color=await ctx.embed_color(), description=f"""
-        **Toggle:** {settings['toggle']}
-        **Amount:** {settings['amount']} {await bank.get_currency_name(ctx.guild)}
-        **Log Channel:** {self.bot.get_channel(settings['log_channel']).mention if settings['log_channel'] else "None"}
-        **Min. Account Age:** {str(settings['account_age'])+' hours' if settings['account_age'] else None}
-        **Time Limit:** {f"{settings['time_limit']} hours within join" if settings['time_limit'] else "Not Set"}
-        """)
+        embed = discord.Embed(
+            title="Referrals Settings",
+            color=await ctx.embed_color(),
+            description=f"""
+            **Toggle:** {settings['toggle']}
+            **Amount:** {settings['amount']} {await bank.get_currency_name(ctx.guild)}
+            **Log Channel:** {ctx.guild.get_channel(settings['log_channel']).mention if settings['log_channel'] and ctx.guild.get_channel(settings['log_channel']) else "None"}
+            **Min. Account Age:** {str(settings['account_age'])+' hours' if settings['account_age'] else None}
+            **Time Limit:** {f"{settings['time_limit']} hours within join" if settings['time_limit'] else "Not Set"}
+            """
+        )
         return await ctx.send(embed=embed)
