@@ -82,10 +82,13 @@ class PublicRooms(commands.Cog):
 
                     # Member joined an active PublicRoom
                     if sys['log_channel'] and before.channel.id not in active and after.channel.id in active:
-                        await member.guild.get_channel(sys['log_channel']).send(
-                            f'{member.mention} joined `{after.channel.name}`',
-                            allowed_mentions=discord.AllowedMentions.none()
-                        )
+                        try:
+                            await member.guild.get_channel(sys['log_channel']).send(
+                                f'{member.mention} joined `{after.channel.name}`',
+                                allowed_mentions=discord.AllowedMentions.none()
+                            )
+                        except discord.HTTPException:
+                            pass
 
                     # Member left a PublicRoom
                     if before.channel.id in active and before.channel.id != after.channel.id:
@@ -113,12 +116,18 @@ class PublicRooms(commands.Cog):
                         # Everyone left channel
                         if not before.channel.members:
                             sys['active'].remove(a)
-                            await before.channel.delete(reason="PublicRooms: all users have left")
+                            if before.channel.permissions_for(member.guild.me).manage_channel:
+                                await before.channel.delete(reason="PublicRooms: all users have left")
+                            else:
+                                return
                             if sys['log_channel']:
-                                await member.guild.get_channel(sys['log_channel']).send(
-                                    f'{member.mention} left `{before.channel.name}`, channel removed',
-                                    allowed_mentions=discord.AllowedMentions.none()
-                                )
+                                try:
+                                    await member.guild.get_channel(sys['log_channel']).send(
+                                        f'{member.mention} left `{before.channel.name}`, channel removed',
+                                        allowed_mentions=discord.AllowedMentions.none()
+                                    )
+                                except discord.HTTPException:
+                                    pass
                             break
 
                         # Member with custom channel name left
@@ -140,34 +149,43 @@ class PublicRooms(commands.Cog):
                             except ValueError:
                                 no_created = True
 
-                            if no_created or no_missing:
-                                if no_created:
-                                    num = 1
-                                public_vc = await before.channel.edit(
-                                    name=sys['channel_name'].replace("{num}", str(num)),
-                                    reason=f"PublicRooms: {member.display_name} left room with custom name",
-                                )
+                            if before.channel.permissions_for(member.guild.me).manage_channel:
+                                if no_created or no_missing:
+                                    if no_created:
+                                        num = 1
+                                    public_vc = await before.channel.edit(
+                                        name=sys['channel_name'].replace("{num}", str(num)),
+                                        reason=f"PublicRooms: {member.display_name} left room with custom name",
+                                    )
+                                else:
+                                    public_vc = await before.channel.edit(
+                                        name=sys['channel_name'].replace("{num}", str(num)),
+                                        position=position,
+                                        reason=f"PublicRooms: {member.display_name} left room with custom name",
+                                    )
                             else:
-                                public_vc = await before.channel.edit(
-                                    name=sys['channel_name'].replace("{num}", str(num)),
-                                    position=position,
-                                    reason=f"PublicRooms: {member.display_name} left room with custom name",
-                                )
+                                return
 
                             if sys['log_channel']:
-                                await member.guild.get_channel(sys['log_channel']).send(
-                                    f'{member.mention} left `{before.channel.name}`, renamed to {public_vc.name}',
-                                    allowed_mentions=discord.AllowedMentions.none()
-                                )
+                                try:
+                                    await member.guild.get_channel(sys['log_channel']).send(
+                                        f'{member.mention} left `{before.channel.name}`, renamed to {public_vc.name}',
+                                        allowed_mentions=discord.AllowedMentions.none()
+                                    )
+                                except discord.HTTPException:
+                                    pass
 
                             break
 
                         # Log user leaving
                         if sys['log_channel']:
-                            await member.guild.get_channel(sys['log_channel']).send(
-                                f'{member.mention} left `{before.channel.name}`',
-                                allowed_mentions=discord.AllowedMentions.none()
-                            )
+                            try:
+                                await member.guild.get_channel(sys['log_channel']).send(
+                                    f'{member.mention} left `{before.channel.name}`',
+                                    allowed_mentions=discord.AllowedMentions.none()
+                                )
+                            except discord.HTTPException:
+                                pass
                             break
 
         # Joined a channel
@@ -182,13 +200,16 @@ class PublicRooms(commands.Cog):
                         channel_name = sys['overrides'].get(str(member.id))
                         if channel_name:
                             num = 0
-                            public_vc = await member.guild.create_voice_channel(
-                                name=channel_name,
-                                category=after.channel.category,
-                                position=after.channel.position+1,
-                                bitrate=min(sys['bitrate'] * 1000, member.guild.bitrate_limit),
-                                reason=f"PublicRooms: created by {member.display_name}",
-                            )
+                            try:
+                                public_vc = await member.guild.create_voice_channel(
+                                    name=channel_name,
+                                    category=after.channel.category,
+                                    position=after.channel.position+1,
+                                    bitrate=min(sys['bitrate'] * 1000, member.guild.bitrate_limit),
+                                    reason=f"PublicRooms: created by {member.display_name}",
+                                )
+                            except discord.HTTPException:
+                                return
                         else:
                             # Find correct position of new channel
                             no_created = False
@@ -207,33 +228,39 @@ class PublicRooms(commands.Cog):
                             except ValueError:
                                 no_created = True
 
-                            if no_created or no_missing:
-                                if no_created:
-                                    num = 1
-                                public_vc = await member.guild.create_voice_channel(
-                                    name=sys['channel_name'].replace("{num}", str(num)),
-                                    category=after.channel.category,
-                                    bitrate=min(sys['bitrate']*1000, member.guild.bitrate_limit),
-                                    reason=f"PublicRooms: created by {member.display_name}",
-                                )
-                            else:
-                                public_vc = await member.guild.create_voice_channel(
-                                    name=sys['channel_name'].replace("{num}", str(num)),
-                                    category=after.channel.category,
-                                    position=position,
-                                    bitrate=min(sys['bitrate'] * 1000, member.guild.bitrate_limit),
-                                    reason=f"PublicRooms: created by {member.display_name}",
-                                )
+                            try:
+                                if no_created or no_missing:
+                                    if no_created:
+                                        num = 1
+                                    public_vc = await member.guild.create_voice_channel(
+                                        name=sys['channel_name'].replace("{num}", str(num)),
+                                        category=after.channel.category,
+                                        bitrate=min(sys['bitrate']*1000, member.guild.bitrate_limit),
+                                        reason=f"PublicRooms: created by {member.display_name}",
+                                    )
+                                else:
+                                    public_vc = await member.guild.create_voice_channel(
+                                        name=sys['channel_name'].replace("{num}", str(num)),
+                                        category=after.channel.category,
+                                        position=position,
+                                        bitrate=min(sys['bitrate'] * 1000, member.guild.bitrate_limit),
+                                        reason=f"PublicRooms: created by {member.display_name}",
+                                    )
+                            except discord.HTTPException:
+                                return
 
                         # Move creator to their new room
                         await member.move_to(public_vc, reason="PublicRooms: is VC creator")
 
                         # If log channel set, then send logs
                         if sys['log_channel']:
-                            await member.guild.get_channel(sys['log_channel']).send(
-                                f'{member.mention} created `{public_vc.name}`',
-                                allowed_mentions=discord.AllowedMentions.none()
-                            )
+                            try:
+                                await member.guild.get_channel(sys['log_channel']).send(
+                                    f'{member.mention} created `{public_vc.name}`',
+                                    allowed_mentions=discord.AllowedMentions.none()
+                                )
+                            except discord.HTTPException:
+                                pass
 
                         # Add to active list
                         sys['active'].append((public_vc.id, num))
@@ -242,15 +269,16 @@ class PublicRooms(commands.Cog):
 
                     # Member joined an active PublicRoom
                     elif sys['toggle'] and sys['log_channel'] and after.channel.id in [x[0] for x in sys['active']]:
-                        await member.guild.get_channel(sys['log_channel']).send(
-                            f'{member.mention} joined `{after.channel.name}`',
-                            allowed_mentions=discord.AllowedMentions.none()
-                        )
-
-        return
+                        try:
+                            await member.guild.get_channel(sys['log_channel']).send(
+                                f'{member.mention} joined `{after.channel.name}`',
+                                allowed_mentions=discord.AllowedMentions.none()
+                            )
+                        except discord.HTTPException:
+                            pass
 
     @commands.guild_only()
-    @commands.admin()
+    @commands.admin_or_permissions(administrator=True)
     @commands.group(name="publicrooms")
     async def _publicrooms(self, ctx: commands.Context):
         """Set Up Public VC Systems"""
@@ -268,6 +296,11 @@ class PublicRooms(commands.Cog):
 
         For the `channel_name_template`, enter a string, with `{num}` contained if you want it to be replaced with the number of active VCs.
         """
+
+        if origin_channel.category and not origin_channel.category.permissions_for(ctx.guild.me).manage_channels:
+            return await ctx.send("I don't have the `Manage Channels` permission in that category!")
+        elif not origin_channel.category and not ctx.guild.me.guild_permissions.manage_channels:
+            return await ctx.send("I don't have the `Manage Channels` permission in this server!")
 
         async with self.config.guild(ctx.guild).systems() as systems:
             if system_name in systems.keys():
@@ -345,6 +378,8 @@ class PublicRooms(commands.Cog):
                 return await ctx.send("There was no PublicRooms system found with that name!")
 
             if channel:
+                if not channel.permissions_for(ctx.guild.me).send_messages:
+                    return await ctx.send(f"I cannot send messages to {channel.mention}!")
                 systems[system_name]["log_channel"] = channel.id
             else:
                 systems[system_name]["log_channel"] = None
@@ -434,12 +469,18 @@ class PublicRooms(commands.Cog):
         """)
 
         for name, system in settings['systems'].items():
+            origin, log = None, None
+            if ori := ctx.guild.get_channel(system['origin']):
+                origin = ori.name
+            if system['log_channel'] and (glo := ctx.guild.get_channel(system['log_channel'])):
+                log = glo.mention
+
             embed.add_field(name=f"System `{name}`", inline=False, value=f"""
             **Toggle:** {system['toggle']}
-            **Origin:** {ctx.guild.get_channel(system['origin']).name}
+            **Origin:** {origin}
             **BitRate:** {system['bitrate']} kbps
             **Name Template:** {system['channel_name']}
-            **Log Channel:** {ctx.guild.get_channel(system['log_channel']).mention if system['log_channel'] else None}
+            **Log Channel:** {log}
             """)
 
         return await ctx.send(embed=embed)
