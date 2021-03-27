@@ -169,7 +169,7 @@ class RestrictedRolePerms(commands.Cog):
 
         return await ctx.send(f"{role.mention} has been removed from {member.mention}.")
 
-    @commands.admin()
+    @commands.admin_or_permissions(administrator=True)
     @commands.guild_only()
     @commands.group(name="rrpset")
     async def _rrpset(self, ctx: commands.Context):
@@ -186,11 +186,20 @@ class RestrictedRolePerms(commands.Cog):
         rules = await self.config.guild(ctx.guild).mentionable()
 
         if not role:
+            rules_for_roles = []
+            async with self.config.guild(ctx.guild).mentionable.rules() as config_rules:
+                for r in config_rules.keys():
+                    ro = ctx.guild.get_role(int(r))
+                    if ro:
+                        rules_for_roles.append(ro.mention)
+                    else:
+                        del config_rules[r]
+
             desc = f"""
             **Toggle:** {rules["toggle"]}
             **Error Message:** {rules['message'] if rules['message'] else "Default"}
             **Success Message:** {f"{rules['success'][0]}, {rules['success'][1]}" if rules['success'] else "Default"}
-            **Rules:** {"None" if not rules['rules'] else humanize_list([ctx.guild.get_role(int(r)).mention for r in rules['rules'].keys()])}"""
+            **Rules:** {"None" if not rules['rules'] else humanize_list(rules_for_roles)}"""
 
             return await ctx.send(embed=discord.Embed(
                 title="RRP Mentionability Rules",
@@ -205,7 +214,16 @@ class RestrictedRolePerms(commands.Cog):
             if "all" in rules_for_role:
                 await ctx.send(f"**{role.mention}** can toggle mentionability for all roles below it.")
             else:
-                for p in pagify(f"**{role.mention}** can toggle mentionability for {humanize_list([ctx.guild.get_role(int(r)).mention for r in rules_for_role])}", delims=[", "]):
+                role_rules = []
+                async with self.config.guild(ctx.guild).mentionable.rules() as config_rules:
+                    for r in config_rules[str(role.id)]:
+                        ro = ctx.guild.get_role(int(r))
+                        if ro:
+                            role_rules.append(ro.mention)
+                        else:
+                            config_rules[str(role.id)].remove(r)
+
+                for p in pagify(f"**{role.mention}** can toggle mentionability for {humanize_list(role_rules)}", delims=[", "]):
                     await ctx.send(p)
 
     @_view.command(name="assignable")
@@ -214,11 +232,20 @@ class RestrictedRolePerms(commands.Cog):
         rules = await self.config.guild(ctx.guild).assignable()
 
         if not role:
+            rules_for_roles = []
+            async with self.config.guild(ctx.guild).assignable.rules() as config_rules:
+                for r in config_rules.keys():
+                    ro = ctx.guild.get_role(int(r))
+                    if ro:
+                        rules_for_roles.append(ro.mention)
+                    else:
+                        del config_rules[r]
+
             desc = f"""
                 **Toggle:** {rules["toggle"]}
                 **Error Message:** {rules['message'] if rules['message'] else "Default"}
                 **Success Message:** {f"{rules['success'][0]}, {rules['success'][1]}" if rules['success'] else "Default"}
-                **Rules:** {"None" if not rules['rules'] else humanize_list([ctx.guild.get_role(int(r)).mention for r in rules['rules'].keys()])}"""
+                **Rules:** {"None" if not rules['rules'] else humanize_list(rules_for_roles)}"""
 
             return await ctx.send(embed=discord.Embed(
                 title="RRP Assignability Rules",
@@ -233,7 +260,16 @@ class RestrictedRolePerms(commands.Cog):
             if "all" in rules_for_role:
                 await ctx.send(f"**{role.mention}** can assign all roles below it.")
             else:
-                for p in pagify(f"**{role.mention}** can assign {humanize_list([ctx.guild.get_role(int(r)).mention for r in rules_for_role])}", delims=[", "]):
+                role_rules = []
+                async with self.config.guild(ctx.guild).assignable.rules() as config_rules:
+                    for r in config_rules[str(role.id)]:
+                        ro = ctx.guild.get_role(int(r))
+                        if ro:
+                            role_rules.append(ro.mention)
+                        else:
+                            config_rules[str(role.id)].remove(r)
+
+                for p in pagify(f"**{role.mention}** can assign {humanize_list(role_rules)}", delims=[", "]):
                     await ctx.send(p)
 
     @_rrpset.group(name="addrule")
