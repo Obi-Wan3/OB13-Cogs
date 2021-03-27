@@ -66,7 +66,7 @@ class SiteStatus(commands.Cog):
             return await ctx.send("There was an error connecting to this site. Is the url valid?")
 
     @commands.guild_only()
-    @commands.admin()
+    @commands.admin_or_permissions(administrator=True)
     @commands.group(name="sitestatus")
     async def _site_status(self, ctx: commands.Context):
         """Monitor the Statuses of Websites"""
@@ -217,7 +217,6 @@ class SiteStatus(commands.Cog):
 
     @tasks.loop(minutes=5)
     async def _fetch_statuses(self):
-        await self.bot.wait_until_red_ready()
         all_guilds = await self.config.all_guilds()
         for guild in all_guilds:
             async with self.config.guild(self.bot.get_guild(guild)).sites() as sites:
@@ -241,7 +240,7 @@ class SiteStatus(commands.Cog):
                             offline = site['offline'] or "OFFLINE"
 
                             online_filled = await self._fill_template(online, code, latency)
-                            offline_filled = await self._fill_template(online, code, latency)
+                            offline_filled = await self._fill_template(offline, code, latency)
 
                             try:
                                 if code[0] == site["status"]:
@@ -318,6 +317,10 @@ class SiteStatus(commands.Cog):
                         site["last"] = None if code[0] == site["status"] else time.time()
                     elif code[0] == site["status"]:
                         site["last"] = None
+
+    @_fetch_statuses.before_loop
+    async def _before_fetch_statuses(self):
+        await self.bot.wait_until_red_ready()
 
     @staticmethod
     async def _fill_template(template, code, lat):
