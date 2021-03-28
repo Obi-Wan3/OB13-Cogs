@@ -27,6 +27,7 @@ import typing
 
 import discord
 from redbot.core import commands, Config
+from redbot.core.utils.chat_formatting import humanize_list
 
 
 class StatusRole(commands.Cog):
@@ -139,7 +140,8 @@ class StatusRole(commands.Cog):
                 if not s:
                     return False
                 try:
-                    return re.search(r, s)
+                    pattern = "|".join(rf"\b{re.escape(word)}\b" for word in r)
+                    return re.search(re.compile(pattern, flags=re.I), s)
                 except re.error:
                     return False
 
@@ -187,7 +189,7 @@ class StatusRole(commands.Cog):
             pass
 
     @commands.guild_only()
-    @commands.admin()
+    @commands.admin_or_permissions(administrator=True)
     @commands.group(name="statusrole")
     async def _status_role(self, ctx: commands.Context):
         """StatusRole Settings"""
@@ -199,25 +201,21 @@ class StatusRole(commands.Cog):
         return await ctx.tick()
 
     @_status_role.command(name="add")
-    async def _add(self, ctx: commands.Context, pair_name: str, role: discord.Role, *, custom_status_regex: str):
-        """Add a role to be assigned to users with a matching emoji (optional) and custom status (accepts regex)."""
+    async def _add(self, ctx: commands.Context, pair_name: str, role: discord.Role, *statuses_to_match: str):
+        """Add a role to be assigned to users with any of the input status(es) (list of words separated by spaces)."""
         if role >= ctx.author.top_role and ctx.author != ctx.guild.owner:
             return await ctx.send("That role is above you in the role hierarchy!")
 
         async with self.config.guild(ctx.guild).roles() as roles:
             if pair_name in roles.keys():
                 return await ctx.send("There is already a StatusRole with this name! Please edit/delete it or choose another name.")
-            try:
-                re.compile(custom_status_regex)
-            except re.error:
-                return await ctx.send("There was an error compiling that status regex. Is the regex valid?")
             roles[pair_name] = {
                 "role": role.id,
                 "emoji": None,
-                "status": custom_status_regex,
+                "status": statuses_to_match,
                 "toggle": True
             }
-        return await ctx.send(f"`{role.name}` will now be assigned to users with any emoji and status matching the regex `{custom_status_regex}`.")
+        return await ctx.send(f"`{role.name}` will now be assigned to users with any emoji and status matching any of the following words: {humanize_list([f'`{s}`' for s in statuses_to_match])}.")
 
     @_status_role.group(name="edit")
     async def _edit(self, ctx: commands.Context):
@@ -242,16 +240,12 @@ class StatusRole(commands.Cog):
         return await ctx.tick()
 
     @_edit.command(name="status")
-    async def _edit_status(self, ctx: commands.Context, pair_name: str, *, custom_status_regex: str = None):
-        """Edit a StatusRole's custom status regex to be matched (leave blank to remove)."""
+    async def _edit_status(self, ctx: commands.Context, pair_name: str, *statuses_to_match: str):
+        """Edit a StatusRole's status(es) to be matched (list of words separated by spaces, leave blank to remove text status matching)."""
         async with self.config.guild(ctx.guild).roles() as roles:
             if pair_name not in roles.keys():
                 return await ctx.send("There is no StatusRole with this name!")
-            try:
-                re.compile(custom_status_regex)
-            except re.error:
-                return await ctx.send("There was an error compiling that status regex. Is the regex valid?")
-            roles[pair_name]["status"] = custom_status_regex
+            roles[pair_name]["status"] = statuses_to_match
         return await ctx.tick()
 
     @_edit.command(name="toggle")
@@ -338,9 +332,9 @@ class StatusRole(commands.Cog):
             embed.add_field(
                 name=name,
                 value=f"""
-                **Role:** {ctx.guild.get_role(statusrole["role"]).mention}
+                **Role:** {ctx.guild.get_role(statusrole["role"]).mention if ctx.guild.get_role(statusrole["role"]) else None}
                 **Emoji:** {statusrole["emoji"][0] if statusrole["emoji"] else "Any"}
-                **Status:** {statusrole["status"]}
+                **Status:** {humanize_list([f'`{s}`' for s in statusrole["status"]]) if statusrole["status"] else None}
                 **Toggle:** {statusrole["toggle"]}
                 """
             )
