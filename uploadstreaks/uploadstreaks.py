@@ -377,12 +377,21 @@ class UploadStreaks(commands.Cog):
             embed.description = "No UploadStreaks Challenges Found"
         else:
             for name, challenge in settings.items():
-                embed.add_field(name=f"Challenge `{name}`", inline=False, value=f"""
-                        **Active:** {challenge['active']}
-                        **Streak Name:** {challenge['streak']}
-                        **Interval:** {challenge['interval'][0]} days (started on {datetime.utcfromtimestamp(challenge['interval'][1])})
-                        **Credits:** {challenge['streak']}
-                        **Role:** {ctx.guild.get_role(challenge['role']).mention if challenge['role'] else None }
-                        **Channels:** {humanize_list([ctx.guild.get_channel(c).mention for c in challenge['channels']])}
-                        """)
+                channels = []
+                for c in challenge['channels']:
+                    if ch := ctx.guild.get_channel(c):
+                        channels.append(ch.mention)
+
+                embed.add_field(
+                    name=f"Challenge `{name}`",
+                    inline=False,
+                    value=f"""
+                    **Active:** {challenge['active']}
+                    **Streak Name:** {challenge['streak']}
+                    **Interval:** {challenge['interval'][0]} days (started on {datetime.utcfromtimestamp(challenge['interval'][1])})
+                    **Credits:** {challenge['streak']}
+                    **Role:** {ctx.guild.get_role(challenge['role']).mention if challenge['role'] and ctx.guild.get_role(challenge['role']) else None }
+                    **Channels:** {humanize_list(channels)}
+                    """
+                )
         return await ctx.send(embed=embed)
