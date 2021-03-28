@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+import asyncio
 import googletrans
 
 import discord
@@ -45,19 +46,21 @@ class Translate(commands.Cog):
     async def _translate(self, ctx: commands.Context, language, *, message):
         """Translate some text."""
 
-        if language.lower() in googletrans.LANGUAGES:
-            language = googletrans.LANGUAGES[language.lower()]
-        elif language.lower() in ("zh", "ch", "chinese"):
-            language = "zh-cn"
+        async with ctx.typing():
 
-        try:
-            res = TRANSLATOR.translate(message, dest=language)
-        except (ValueError, AttributeError):
-            failed_embed = discord.Embed(description="Translation failed.", color=discord.Color.red())
-            return await ctx.channel.send(embed=failed_embed)
+            if language.lower() in googletrans.LANGUAGES:
+                language = googletrans.LANGUAGES[language.lower()]
+            elif language.lower() in ("zh", "ch", "chinese"):
+                language = "zh-cn"
 
-        translated_embed = discord.Embed(title='Translation', color=discord.Color.green())
-        translated_embed.add_field(name=googletrans.LANGUAGES[res.src.lower()].title(), value=res.origin, inline=True)
-        translated_embed.add_field(name=googletrans.LANGUAGES[res.dest.lower()].title(), value=res.text, inline=True)
+            try:
+                res = await asyncio.get_running_loop().run_in_executor(None, lambda: TRANSLATOR.translate(message, dest=language))
+            except (ValueError, AttributeError):
+                failed_embed = discord.Embed(description="Translation failed.", color=discord.Color.red())
+                return await ctx.channel.send(embed=failed_embed)
+
+            translated_embed = discord.Embed(title='Translation', color=discord.Color.green())
+            translated_embed.add_field(name=googletrans.LANGUAGES[res.src.lower()].title(), value=res.origin, inline=True)
+            translated_embed.add_field(name=googletrans.LANGUAGES[res.dest.lower()].title(), value=res.text, inline=True)
 
         return await ctx.channel.send(embed=translated_embed)
