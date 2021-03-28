@@ -81,8 +81,8 @@ class TempRole(commands.Cog):
         if role in user.roles:
             return await ctx.send(f"That user already has {role.mention}!")
 
-        if role >= ctx.author.top_role and ctx.author != ctx.guild.owner:
-            return await ctx.send("That role is above you in the role hierarchy!")
+        if role >= ctx.guild.me.top_role or (role >= ctx.author.top_role and ctx.author != ctx.guild.owner):
+            return await ctx.send("That role cannot be assigned due to the Discord role hierarchy!")
 
         async with self.config.member(user).temp_roles() as user_tr:
             if user_tr.get(str(role.id)):
@@ -153,14 +153,19 @@ class TempRole(commands.Cog):
             title = f"{ctx.guild.name} TempRoles"
             for member_id, temp_roles in (await self.config.all_members(ctx.guild)).items():
                 member: discord.Member = ctx.guild.get_member(int(member_id))
-                roles = [ctx.guild.get_role(int(r)) for r in temp_roles["temp_roles"].keys()]
-                desc += f"{member.mention}: {humanize_list([r.mention for r in roles])}\n"
+                if member:
+                    roles = [ctx.guild.get_role(int(r)) for r in temp_roles["temp_roles"].keys()]
+                    desc += f"{member.mention}: {humanize_list([r.mention for r in roles])}\n"
         else:
             title = f"{user.display_name} TempRoles"
-            for temp_role, end_ts in (await self.config.member(user).temp_roles()).items():
-                role: discord.Role = ctx.guild.get_role(int(temp_role))
-                r_time = datetime.fromtimestamp(end_ts) - datetime.now()
-                desc += f"{role.mention}: ends in {r_time.days}d {round(r_time.seconds/3600, 1)}h\n"
+            async with self.config.member(user).temp_roles() as member_temp_roles:
+                for temp_role, end_ts in member_temp_roles.items():
+                    role: discord.Role = ctx.guild.get_role(int(temp_role))
+                    if role:
+                        r_time = datetime.fromtimestamp(end_ts) - datetime.now()
+                        desc += f"{role.mention}: ends in {r_time.days}d {round(r_time.seconds/3600, 1)}h\n"
+                    else:
+                        del member_temp_roles[temp_role]
         return await ctx.send(embed=discord.Embed(
             title=title,
             description=desc,
@@ -171,16 +176,21 @@ class TempRole(commands.Cog):
     @_temp_role.command(name="logchannel")
     async def _log_channel(self, ctx: commands.Context, channel: discord.TextChannel = None):
         """Set the TempRole log channel for the server (leave blank to remove)."""
+        if channel and not channel.permissions_for(ctx.guild.me).send_message:
+            return await ctx.send(f"I cannot send messages to {channel.mention}!")
         await self.config.guild(ctx.guild).log.set(channel.id if channel else None)
         return await ctx.tick()
 
     async def _maybe_send_log(self, guild: discord.Guild, message: str):
         log_channel = await self.config.guild(guild).log()
         if log_channel:
-            await guild.get_channel(log_channel).send(
-                message,
-                allowed_mentions=discord.AllowedMentions.none()
-            )
+            try:
+                await guild.get_channel(log_channel).send(
+                    message,
+                    allowed_mentions=discord.AllowedMentions.none()
+                )
+            except discord.HTTPException:
+                pass
 
     async def _tr_handler(self):
         await self.bot.wait_until_red_ready()
