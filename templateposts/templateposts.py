@@ -82,7 +82,7 @@ class TemplatePosts(commands.Cog):
                     original = message.content
                     try:
                         await message.delete()
-                    except discord.Forbidden:
+                    except discord.HTTPException:
                         return
 
                     if template['message'] and await self.config.guild(message.guild).dm():
@@ -100,8 +100,11 @@ class TemplatePosts(commands.Cog):
                             if message.author.dm_channel is None:
                                 await message.author.create_dm()
                             await message.author.dm_channel.send(to_send)
-                        except discord.Forbidden:
-                            await message.channel.send(to_send, delete_after=60)
+                        except discord.HTTPException:
+                            try:
+                                await message.channel.send(to_send, delete_after=60)
+                            except discord.HTTPException:
+                                pass
 
                 return
 
@@ -263,17 +266,30 @@ class TemplatePosts(commands.Cog):
         """View TemplatePosts settings for this server."""
 
         settings = await self.config.guild(ctx.guild).all()
-        embed = discord.Embed(title="TemplatePosts Settings", color=await ctx.embed_color(), description=f"""
-        **Toggle:** {settings['toggle']}
-        **Send DM:** {settings['dm']}
-        **Ignored Roles:** {humanize_list([ctx.guild.get_role(r).mention for r in settings['ignore']['roles']]) if settings['ignore']['roles'] else None}
-        **Ignored Users:** {humanize_list([(await self.bot.get_or_fetch_member(ctx.guild, u)).mention for u in settings['ignore']['users']]) if settings['ignore']['users'] else None}
-        {"**Templates:** None" if not settings['templates'] else ""}
-        """)
+
+        ignored_roles = []
+        async with self.config.guild(ctx.guild).ignore.roles() as ignore_roles_config:
+            for r in ignore_roles_config:
+                if ro := ctx.guild.get_role(r):
+                    ignored_roles.append(ro.mention)
+                else:
+                    ignore_roles_config.remove(r)
+
+        embed = discord.Embed(
+            title="TemplatePosts Settings",
+            color=await ctx.embed_color(),
+            description=f"""
+            **Toggle:** {settings['toggle']}
+            **Send DM:** {settings['dm']}
+            **Ignored Roles:** {humanize_list(ignored_roles) if ignored_roles else None}
+            **Ignored Users:** {humanize_list([(await self.bot.get_or_fetch_member(ctx.guild, u)).mention for u in settings['ignore']['users']]) if settings['ignore']['users'] else None}
+            {"**Templates:** None" if not settings['templates'] else ""}
+            """
+        )
 
         for name, template in settings['templates'].items():
             embed.add_field(name=f"Template `{name}`", inline=False, value=f"""**Toggle:** {template['toggle']}
-            **Channel:** {ctx.guild.get_channel(template['channel']).mention}
+            **Channel:** {ctx.guild.get_channel(template['channel']).mention if ctx.guild.get_channel(template['channel']) else None}
             **DM Message:** {template['message'] if template['message'] else None}
             **Fields:** {humanize_list([f'`{f}`' for f in template['fields']])}
             """)
