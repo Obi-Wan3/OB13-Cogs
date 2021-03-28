@@ -88,7 +88,7 @@ class StreamRole(commands.Cog):
                         pass
 
     @commands.guild_only()
-    @commands.admin()
+    @commands.admin_or_permissions(administrator=True)
     @commands.group(name="streamrole")
     async def _stream_role(self, ctx: commands.Context):
         """StreamRole Settings"""
@@ -142,15 +142,21 @@ class StreamRole(commands.Cog):
         """View the server settings for StreamRole."""
         settings = await self.config.guild(ctx.guild).all()
 
+        logchannel = None
+        if settings['log'] and (lc := ctx.guild.get_channel(int(settings['log']))):
+            logchannel = lc.mention
+
         embed = discord.Embed(
             title="StreamRole Settings",
             color=await ctx.embed_color(),
-            description=f"**Toggle:** {settings['toggle']}\n**Log Channel:** {ctx.guild.get_channel(int(settings['log'])).mention if settings['log'] else None}"
+            description=f"**Toggle:** {settings['toggle']}\n**Log Channel:** {logchannel}"
         )
 
         roles = ""
         for r, c_list in settings['stream_roles'].items():
-            roles += f"**{ctx.guild.get_role(int(r)).mention}**: {humanize_list([ctx.guild.get_channel(int(c)).name for c in c_list])}\n"
+            if ro := ctx.guild.get_role(int(r)):
+                channels = [ctx.guild.get_channel(int(c)).name if ctx.guild.get_channel(int(c)) else "" for c in c_list]
+                roles += f"**{ro.mention}**: {humanize_list(list(filter(bool, channels)))}\n"
 
         embed.add_field(name="StreamRoles", value=roles or "None")
 
