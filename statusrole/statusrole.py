@@ -322,10 +322,15 @@ class StatusRole(commands.Cog):
     async def _view(self, ctx: commands.Context):
         """View the StatusRole settings for this server."""
         settings = await self.config.guild(ctx.guild).all()
+
+        logchannel = None
+        if settings['channel'] and (ch := ctx.guild.get_channel(settings['channel'])):
+            logchannel = ch.mention
+
         embed = discord.Embed(
             title="StatusRole Settings",
             color=await ctx.embed_color(),
-            description=f"Log Channel: {ctx.guild.get_channel(settings['channel']).mention if settings['channel'] else None}"
+            description=f"Log Channel: {logchannel}"
         )
 
         for name, statusrole in settings["roles"].items():
