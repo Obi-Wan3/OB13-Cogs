@@ -50,6 +50,27 @@ class Translate(commands.Cog):
         elif language.lower() in ("zh", "ch", "chinese"):
             language = "zh-cn"
 
+        # IF:
+        # - message is a string consisting solely of digits
+        # - message is a valid message id in the same channel
+        # - the message that the id points to has content
+        # THEN
+        # - replace message with the contents of that referenced message, and call translate on its contents
+        # OTHERWISE
+        # - continue like we used to
+        # eg
+        # JKohlman sent `this is a test message` with ID 1234
+        # JKohlman sent `[p]translate French 1234`
+        # Bot replies with the translation `this is a test message` -> `Ceci est un message test`
+        try:
+            if message.isdigit():
+                message_id = int(message)
+                ref_message = await ctx.fetch_message(message_id)
+                if ref_message.content:
+                    message = ref_message.content
+        except:
+            pass
+
         try:
             res = TRANSLATOR.translate(message, dest=language)
         except (ValueError, AttributeError):
