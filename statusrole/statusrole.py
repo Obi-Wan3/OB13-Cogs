@@ -141,7 +141,7 @@ class StatusRole(commands.Cog):
                     return False
                 try:
                     pattern = "|".join(rf"\b{re.escape(word)}\b" for word in r)
-                    return re.search(re.compile(pattern, flags=re.I), s)
+                    return re.search(pattern, s, flags=re.I)
                 except re.error:
                     return False
 
