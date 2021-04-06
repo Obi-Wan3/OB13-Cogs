@@ -173,7 +173,7 @@ class Referrals(commands.Cog):
                 return await ctx.send(f"Please set the time limit first using `{ctx.clean_prefix}referset timelimit`!")
 
             async with self.config.guild(ctx.guild).already_redeemed() as already_redeemed:
-                async for m in AsyncIter(ctx.guild.members):
+                async for m in AsyncIter(ctx.guild.members, steps=500):
                     if (
                         m.joined_at and
                         (m.joined_at < (datetime.now() - timedelta(hours=time_limit))) and
