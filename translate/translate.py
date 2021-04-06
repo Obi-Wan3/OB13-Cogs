@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+import typing
 import functools
 import googletrans
 
@@ -43,8 +44,11 @@ class Translate(commands.Cog):
 
     @commands.bot_has_permissions(embed_links=True)
     @commands.command(name="translate")
-    async def _translate(self, ctx: commands.Context, language, *, message):
-        """Translate some text."""
+    async def _translate(self, ctx: commands.Context, language, message: typing.Optional[discord.Message], *, text=None):
+        """Translate something (provide either a message ID/link or some text)."""
+
+        if not message and not text:
+            return await ctx.send("Please provide either a message ID/link or some text to translate.")
 
         async with ctx.typing():
 
@@ -53,7 +57,7 @@ class Translate(commands.Cog):
             elif language.lower() in ("zh", "ch", "chinese"):
                 language = "zh-cn"
 
-            task = functools.partial(TRANSLATOR.translate, text=message, dest=language)
+            task = functools.partial(TRANSLATOR.translate, text=message.content if message else text, dest=language)
 
             try:
                 res = await self.bot.loop.run_in_executor(None, task)
