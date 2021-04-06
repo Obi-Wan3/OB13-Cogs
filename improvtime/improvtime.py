@@ -47,6 +47,7 @@ class ImprovTime(commands.Cog):
         if not message.guild:
             return
         story_channel = await self.config.guild(message.guild).channel()
+        channel_perms: discord.Permissions = message.channel.permissions_for(message.guild.me)
 
         # Ignore these messages
         if (
@@ -54,31 +55,30 @@ class ImprovTime(commands.Cog):
             await self.bot.cog_disabled_in_guild(self, message.guild) or  # Cog disabled in guild
             not await self.config.guild(message.guild).toggle() or  # ImprovTime toggled off
             message.author.bot or  # Message author is a bot
-            story_channel is None  # Story channel not set
+            story_channel is None or  # Story channel not set
+            not channel_perms.read_message_history  # Cannot read channel history
         ):
             return
 
         # Delete these messages
-        try:
-            if (
-                len(message.content.strip().split()) > await self.config.guild(message.guild).word_limit() or  # Message too long
-                (
-                    not(await self.config.guild(message.guild).allow_repeats()) and
-                    (await message.channel.history(limit=1, before=message).flatten())[0].author.id == message.author.id
-                )  # Allow repeats is off and last message is also from same author
-            ):
-                try:
-                    return await message.delete()
-                except discord.Forbidden:
-                    return
-        except discord.Forbidden:
-            pass
+        if (
+            len(message.content.strip().split()) > await self.config.guild(message.guild).word_limit() or  # Message too long
+            (
+                not(await self.config.guild(message.guild).allow_repeats()) and
+                (await message.channel.history(limit=1, before=message).flatten())[0].author.id == message.author.id
+            )  # Allow repeats is off and last message is also from same author
+        ):
+            if channel_perms.manage_messages:
+                return await message.delete()
+            else:
+                return
 
         # These messages are sentence endings
         blocklist = await self.config.guild(message.guild).blocklist()
         if (
             message.content.strip().split()[-1][-1] in ["!", ".", "?"] and
-            message.author.id not in blocklist
+            message.author.id not in blocklist and
+            channel_perms.send_messages
         ):
             sentence = message.content
             async for m in message.channel.history(limit=None, before=message):
@@ -98,10 +98,7 @@ class ImprovTime(commands.Cog):
             if len(message.content) == 1:
                 sentence = sentence[:-2] + sentence[-1]
 
-            try:
-                return await message.channel.send(sentence)
-            except discord.Forbidden:
-                return
+            return await message.channel.send(sentence)
 
     @commands.guild_only()
     @commands.mod()
