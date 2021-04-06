@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-import asyncio
+import functools
 import googletrans
 
 import discord
@@ -53,8 +53,10 @@ class Translate(commands.Cog):
             elif language.lower() in ("zh", "ch", "chinese"):
                 language = "zh-cn"
 
+            task = functools.partial(TRANSLATOR.translate, text=message, dest=language)
+
             try:
-                res = await asyncio.get_running_loop().run_in_executor(None, lambda: TRANSLATOR.translate(message, dest=language))
+                res = await self.bot.loop.run_in_executor(None, task)
             except (ValueError, AttributeError):
                 failed_embed = discord.Embed(description="Translation failed.", color=discord.Color.red())
                 return await ctx.channel.send(embed=failed_embed)
