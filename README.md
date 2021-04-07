@@ -24,11 +24,14 @@ Cogs marked with a ✓ are ready for use, while those with a ✗ are still a Wor
 | FaH | ✓ | Various [Folding@Home](https://foldingathome.org/) Stats | Obi-Wan3, SaraCaterina#1015 (BC) |
 | GitHub | ✓ | Github RSS Commit Feeds | Obi-Wan3 |
 | ImprovTime | ✓ | One Word Story Channel | Obi-Wan3, Atmos#0101 (BC) |
+| LaTeX | ✗ | Convert LaTeX to Images | Obi-Wan3 |
+| Leveler | ✗ | Chat + VC Leveling System | Obi-Wan3 |
 | MentionHelp | ✓ | Customizable MentionHelp Message | Obi-Wan3 |
 | NoDMs | ✓ | Disallow DM Commands | Obi-Wan3 |
 | PrivateRooms | ✓ | Automatic Private VCs with Lobby | Obi-Wan3, Archetype (Bloib & Echospawn, BC) |
 | PublicRooms | ✓ | Automatic Public VC Creation | Obi-Wan3, Archetype (Bloib & Echospawn, BC) |
 | QuizRole | ✓ | Take a Quiz to Gain a Role | Obi-Wan3, Tetra#0001 (BC) |
+| ReactionPolls | ✗ | Poll Channels w/ Auto-Reactions | Obi-Wan3 |
 | Referrals | ✓ | Invite Referral -> Credits | Obi-Wan3, Vertyco#0117 (BC) |
 | Reply | ✓ | Bot Replies to Messages | Obi-Wan3 |
 | RestrictedRolePerms | ✓ | Give Certain Roles Restricted Permissions | Obi-Wan3, Mile High#7102 (BC) |
@@ -51,15 +54,16 @@ If you don't already have Downloader loaded, go ahead and do that first: `[p]loa
 ```
 
 # Contact
-Feel free to DM me on Discord at Obi-Wan3#0003. You can also find me in the [Red](https://discord.gg/red) & [Cog Support](https://discord.gg/GET4DVk) servers.
+For support with my cogs, please contact me in #support_othercogs in the [Red Cog Support](https://discord.gg/GET4DVk) server.
 
 
 ## Contributing
 If you have any suggestions, or found any bugs, please let me know or open an issue on my repo!
 
-If you would like to contribute, please talk to me about your ideas first before opening a PR.
+If you would like to contribute, please talk to me on Discord first about your ideas before opening a PR.
 
 
 ## Cog Requests & Bounties
 I am always open to any ideas or suggestions for new cogs! 
-If you would like to discuss a possible cog commission, please contact me through Discord.
+
+If you would like to discuss a possible cog commission, please contact me through Discord at Obi-Wan3#0003.
