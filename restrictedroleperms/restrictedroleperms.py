@@ -427,7 +427,7 @@ class RestrictedRolePerms(commands.Cog):
                     return await ctx.send(
                         f"{ra.mention} is above {role_to_give_perms_to.mention} in the role hierarchy!")
 
-        async with self.config.guild(ctx.guild).mentionable.rules() as rules:
+        async with self.config.guild(ctx.guild).assignable.rules() as rules:
             if not rules.get(str(role_to_give_perms_to.id)):
                 return await ctx.send(f"There no rule for that role!")
             for role_to_edit in roles_to_edit_assignability:
