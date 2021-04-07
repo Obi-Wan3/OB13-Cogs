@@ -361,7 +361,7 @@ class RestrictedRolePerms(commands.Cog):
         """Edit a rule to give certain roles restricted permissions."""
 
     @_edit_rule.command(name="mentionable")
-    async def _edit_mentionable(self, ctx: commands.Context, role_to_give_perms_to: discord.Role, true_or_false, *roles_to_edit_mentionability: typing.Union[discord.Role, ExplicitAll]):
+    async def _edit_mentionable(self, ctx: commands.Context, role_to_give_perms_to: discord.Role, true_or_false: bool, *roles_to_edit_mentionability: typing.Union[discord.Role, ExplicitAll]):
         """
         Edit a rule to allow a role to make a few other roles mentionable through RRP.
 
@@ -410,7 +410,7 @@ class RestrictedRolePerms(commands.Cog):
                         await ctx.send(f"{role_to_give_perms_to.mention} is no longer allowed to toggle mentionability for {role_to_edit.mention}")
 
     @_edit_rule.command(name="assignable")
-    async def _edit_assignable(self, ctx: commands.Context, role_to_give_perms_to: discord.Role, true_or_false, *roles_to_edit_assignability: typing.Union[discord.Role, ExplicitAll]):
+    async def _edit_assignable(self, ctx: commands.Context, role_to_give_perms_to: discord.Role, true_or_false: bool, *roles_to_edit_assignability: typing.Union[discord.Role, ExplicitAll]):
         """
         Edit a rule to allow a certain role to assign a few other roles through RRP.
 
