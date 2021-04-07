@@ -384,13 +384,13 @@ class RestrictedRolePerms(commands.Cog):
             for role_to_edit in roles_to_edit_mentionability:
                 if role_to_edit != "all":
                     if true_or_false:
-                        if role_to_edit in rules[str(role_to_give_perms_to.id)]:
+                        if role_to_edit.id in rules[str(role_to_give_perms_to.id)]:
                             await ctx.send(f"Cannot add {role_to_edit.mention} as it was already in the rule.")
                             continue
                         rules[str(role_to_give_perms_to.id)].append(role_to_edit.id)
                         await ctx.send(f"{role_to_give_perms_to.mention} is now allowed to toggle mentionability for {role_to_edit.mention}")
                     else:
-                        if role_to_edit not in rules[str(role_to_give_perms_to.id)]:
+                        if role_to_edit.id not in rules[str(role_to_give_perms_to.id)]:
                             await ctx.send(f"Cannot remove {role_to_edit.mention} as it was not in the rule.")
                             continue
                         rules[str(role_to_give_perms_to.id)].remove(role_to_edit.id)
@@ -433,14 +433,14 @@ class RestrictedRolePerms(commands.Cog):
             for role_to_edit in roles_to_edit_assignability:
                 if role_to_edit != "all":
                     if true_or_false:
-                        if role_to_edit in rules[str(role_to_give_perms_to.id)]:
+                        if role_to_edit.id in rules[str(role_to_give_perms_to.id)]:
                             await ctx.send(f"Cannot add {role_to_edit.mention} as it was already in the rule.")
                             continue
                         rules[str(role_to_give_perms_to.id)].append(role_to_edit.id)
                         await ctx.send(
                             f"{role_to_give_perms_to.mention} is now allowed to assign {role_to_edit.mention}")
                     else:
-                        if role_to_edit not in rules[str(role_to_give_perms_to.id)]:
+                        if role_to_edit.id not in rules[str(role_to_give_perms_to.id)]:
                             await ctx.send(f"Cannot remove {role_to_edit.mention} as it was not in the rule.")
                             continue
                         rules[str(role_to_give_perms_to.id)].remove(role_to_edit.id)
