@@ -1,0 +1,18 @@
+{
+    "author": [
+        "Obi-Wan3"
+    ],
+    "description": "Set up poll channels in which reactions with emojis contained in messages are automatically added.",
+    "disabled" : false,
+    "end_user_data_statement" : "This cog stores provided server settings (i.e. poll channels & respective default reactions).",
+    "hidden": false,
+    "install_msg": "Thank you for installing! Use `[p]help ReactionPolls` for more info.",
+    "min_bot_version" : "3.4.0",
+    "min_python_version" : [3, 8, 1],
+    "permissions" : ["add_reactions"],
+    "required_cogs" : {},
+    "requirements" : [],
+    "short": "Poll Channels w/ Auto-Reactions",
+    "tags" : ["reaction", "polls", "channel", "survey"],
+    "type": "COG"
+}
