@@ -126,9 +126,17 @@ class UploadStreaks(commands.Cog):
             embed.description = "No users have participated in this challenge yet."
         else:
             embed.description = "```Streak   Points   User\n"
-            ldb = sorted(settings[challenge]['users'].items(), key=lambda x: x[1][1])
+            ldb = sorted(settings[challenge]['users'].items(), key=lambda x: x[1][1], reverse=True)
             for i in range(min(num, len(ldb))):
-                embed.description += f"{(str(ldb[i][1][1])+settings[challenge]['streak']).center(6)}   {str(ldb[i][1][0]).center(6)}   {ctx.guild.get_member(int(ldb[i][0])).display_name}\n"
+                member = ctx.guild.get_member(int(ldb[i][0]))
+                if member:
+                    name = member.display_name
+                else:
+                    try:
+                        name = (await self.bot.fetch_user(int(ldb[i][0]))).name
+                    except discord.HTTPException:
+                        continue
+                embed.description += f"{(str(ldb[i][1][1])+settings[challenge]['streak']).center(6)}   {str(ldb[i][1][0]).center(6)}   {name}\n"
             embed.description += "```"
         return await ctx.send(embed=embed)
 
@@ -143,7 +151,7 @@ class UploadStreaks(commands.Cog):
             embed.description = "No UploadStreaks Challenges Found"
         else:
             for name, challenge in settings.items():
-                u = challenge['users'].get(str(ctx.author.id))
+                u = challenge['users'].get(str(user.id))
                 if u:
                     embed.add_field(name=f"Challenge `{name}`", inline=False, value=f"Points: {u[0]}\nStreak: {u[1]}{challenge['streak']}")
         if not embed.fields:
@@ -331,7 +339,7 @@ class UploadStreaks(commands.Cog):
         """Manually set a user's points in an UploadStreaks challenge."""
 
         if points < 1:
-            return ctx.send("The points must be at least `1`!")
+            return await ctx.send("The points must be at least `1`!")
 
         async with self.config.guild(ctx.guild).challenges() as challenges:
             if challenge_name not in challenges.keys():
@@ -351,7 +359,7 @@ class UploadStreaks(commands.Cog):
         """Manually set a user's streak in an UploadStreaks challenge."""
 
         if streak < 1:
-            return ctx.send("The streak must be at least `1`!")
+            return await ctx.send("The streak must be at least `1`!")
 
         async with self.config.guild(ctx.guild).challenges() as challenges:
             if challenge_name not in challenges.keys():
