@@ -50,42 +50,49 @@ class StreamRole(commands.Cog):
         if (
             not await self.config.guild(member.guild).toggle() or  # StreamRole toggled off
             member.bot or  # Member is a bot
-            await self.bot.cog_disabled_in_guild(self, member.guild)  # Cog disabled in guild
+            await self.bot.cog_disabled_in_guild(self, member.guild) or  # Cog disabled in guild
+            not member.guild.me.guild_permissions.manage_roles or  # Cannot manage roles
+            before.self_stream == after.self_stream  # No stream change
         ):
             return
 
         settings: dict = await self.config.guild(member.guild).stream_roles()
-        log = await self.config.guild(member.guild).log()
+        log_channel = await self.config.guild(member.guild).log()
+        if log_channel:
+            log_channel = member.guild.get_channel(log_channel)
+            perms = log_channel.permissions_for(member.guild.me)
+            if not perms.send_messages:
+                log_channel = None
 
         # User started streaming
         if not before.self_stream and after.self_stream:
             for role, channels in settings.items():
                 if after.channel.id in channels:
-                    try:
-                        if (r := member.guild.get_role(int(role))) not in member.roles:
-                            await member.add_roles(r, reason=f"StreamRole: {member.display_name} started streaming in {after.channel.name}")
-                            if log:
-                                await member.guild.get_channel(int(log)).send(
-                                    f"{member.mention} was given {r.mention} as they started streaming in {after.channel.name}.",
-                                    allowed_mentions=discord.AllowedMentions.none()
-                                )
-                    except discord.Forbidden:
-                        pass
+                    r = member.guild.get_role(int(role))
+                    if r in member.roles or r >= member.guild.me.top_role:
+                        continue
+
+                    await member.add_roles(r, reason=f"StreamRole: {member.display_name} started streaming in {after.channel.name}")
+                    if log_channel:
+                        await log_channel.send(
+                            f"{member.mention} was given {r.mention} as they started streaming in {after.channel.name}.",
+                            allowed_mentions=discord.AllowedMentions.none()
+                        )
 
         # User stopped streaming
         if before.self_stream and not after.self_stream:
             for role, channels in settings.items():
                 if after.channel.id in channels:
-                    try:
-                        if (r := member.guild.get_role(int(role))) in member.roles:
-                            await member.remove_roles(r, reason=f"StreamRole: {member.display_name} stopped streaming in {after.channel.name}")
-                            if log:
-                                await member.guild.get_channel(int(log)).send(
-                                    f"{r.mention} was removed from {member.mention} as they stopped streaming in {before.channel.name}.",
-                                    allowed_mentions=discord.AllowedMentions.none()
-                                )
-                    except (discord.Forbidden, discord.HTTPException):
-                        pass
+                    r = member.guild.get_role(int(role))
+                    if r not in member.roles or r >= member.guild.me.top_role:
+                        continue
+
+                    await member.remove_roles(r, reason=f"StreamRole: {member.display_name} stopped streaming in {after.channel.name}")
+                    if log_channel:
+                        await log_channel.send(
+                            f"{r.mention} was removed from {member.mention} as they stopped streaming in {before.channel.name}.",
+                            allowed_mentions=discord.AllowedMentions.none()
+                        )
 
     @commands.guild_only()
     @commands.admin_or_permissions(administrator=True)
