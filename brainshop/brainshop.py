@@ -55,23 +55,21 @@ class BrainShop(commands.Cog):
 
     @commands.Cog.listener("on_message_without_command")
     async def _message_listener(self, message: discord.Message):
-        in_auto_channel = False
-        if (
-                message.author.bot or  # Message author is a bot
-                not message.content.startswith((f"<@{self.bot.user.id}>", f"<@!{self.bot.user.id}>"))
-        ):
-            if not message.author.bot and message.guild and message.channel.id in await self.config.guild(message.guild).channels():
-                in_auto_channel = True
-            else:
-                return
 
-        if message.guild:
-            if (
-                    await self.bot.cog_disabled_in_guild(self, message.guild) or  # Cog disabled in guild
-                    (not await self.config.guild(message.guild).auto() and not in_auto_channel)  # Auto reply is off
-            ):
-                return
-        elif not await self.config.auto():  # Global auto reply turned off
+        if (
+                not message.guild or  # Not in a server
+                message.author.bot or  # Message author is a bot
+                await self.bot.cog_disabled_in_guild(self, message.guild) or  # Cog disabled in guild
+                not message.channel.permissions_for(message.guild.me).send_message or  # Cannot send message
+                (
+                        message.channel.id not in await self.config.guild(message.guild).channels() and  # Not in auto channel
+                        (
+                                not message.content.startswith((f"<@{self.bot.user.id}>", f"<@!{self.bot.user.id}>")) or  # Does not start with mention
+                                not await self.config.guild(message.guild).auto() or  # Guild auto toggled off
+                                not await self.config.auto()  # Global auto toggled off
+                        )
+                )
+        ):
             return
 
         async with message.channel.typing():
@@ -88,12 +86,9 @@ class BrainShop(commands.Cog):
 
             response = await self._get_response(bid=bid, key=key, uid=message.author.id, msg=filtered)
 
-        try:
-            if hasattr(message, "reply"):
-                return await message.reply(response, mention_author=False)
-            return await message.channel.send(response)
-        except (discord.HTTPException, discord.Forbidden, discord.InvalidArgument):
-            pass
+        if hasattr(message, "reply"):
+            return await message.reply(response, mention_author=False)
+        return await message.channel.send(response)
 
     @commands.command(name="brainshop")
     async def _brainshop(self, ctx: commands.Context, *, message: str):
