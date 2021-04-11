@@ -50,17 +50,22 @@ class StatusRole(commands.Cog):
     async def _member_update_listener(self, before: discord.Member, after: discord.Member):
         if (
             before.bot or  # Member is a bot
-            await self.bot.cog_disabled_in_guild(self, before.guild)  # Cog disabled in guild
+            await self.bot.cog_disabled_in_guild(self, before.guild) or  # Cog disabled in guild
+            not after.guild.me.guild_permissions.manage_roles or  # Cannot manage roles
+            before.activity == after.activity  # Activity did not change
         ):
             return
 
-        # Activity did not change
-        if before.activity == after.activity:
-            return
-
+        can_embed = False
         log_channel = await self.config.guild(before.guild).channel()
         if log_channel:
             log_channel = before.guild.get_channel(log_channel)
+            perms = log_channel.permissions_for(after.guild.me)
+            if not perms.send_messages:
+                log_channel = None
+            else:
+                if perms.embed_links:
+                    can_embed = True
 
         async with self.config.guild(before.guild).roles() as status_roles:
             for name, sr in status_roles.items():
@@ -71,25 +76,23 @@ class StatusRole(commands.Cog):
                 before_status = await self._custom_activity(before.activities)
                 after_status = await self._custom_activity(after.activities)
 
+                # Role hierarchy check
+                if role >= after.guild.me.top_role:
+                    continue
+
                 # Now have custom status (did not have before)
                 if not before_status and after_status:
                     if await self._status_matches(sr["status"], sr["emoji"], after_status):
-                        try:
-                            await after.add_roles(role, reason=f"StatusRole: new custom status matched {name}")
-                            if log_channel:
-                                await self._send_log(log_channel, True, after, role, after_status.name, after_status.emoji.name if after_status.emoji else "None")
-                        except discord.Forbidden:
-                            pass
+                        await after.add_roles(role, reason=f"StatusRole: new custom status matched {name}")
+                        if log_channel:
+                            await self._send_log(log_channel, True, after, role, after_status.name, after_status.emoji.name if after_status.emoji else "None", can_embed)
 
                 # Had custom status (does not anymore)
                 elif before_status and not after_status:
                     if await self._status_matches(sr["status"], sr["emoji"], before_status):
-                        try:
-                            await after.remove_roles(role, reason=f"StatusRole: custom status no longer matches {name}")
-                            if log_channel:
-                                await self._send_log(log_channel, False, after, role, "None", "None")
-                        except discord.Forbidden:
-                            pass
+                        await after.remove_roles(role, reason=f"StatusRole: custom status no longer matches {name}")
+                        if log_channel:
+                            await self._send_log(log_channel, False, after, role, "None", "None", can_embed)
 
                 # Custom status changed
                 elif before_status and after_status and before_status != after_status:
@@ -100,23 +103,17 @@ class StatusRole(commands.Cog):
                             not before_match and after_match and  # New status matches
                             sr["role"] not in [r.id for r in after.roles]  # Does not already have role
                     ):
-                        try:
-                            await after.add_roles(role, reason=f"StatusRole: new custom status matched {name}")
-                            if log_channel:
-                                await self._send_log(log_channel, True, after, role, after_status.name, after_status.emoji.name if after_status.emoji else "None")
-                        except discord.Forbidden:
-                            pass
+                        await after.add_roles(role, reason=f"StatusRole: new custom status matched {name}")
+                        if log_channel:
+                            await self._send_log(log_channel, True, after, role, after_status.name, after_status.emoji.name if after_status.emoji else "None", can_embed)
 
                     elif (
                             before_match and not after_match and  # No longer matches
                             sr["role"] in [r.id for r in after.roles]  # Has role
                     ):
-                        try:
-                            await after.remove_roles(role, reason=f"StatusRole: custom status no longer matches {name}")
-                            if log_channel:
-                                await self._send_log(log_channel, False, after, role, after_status.name, after_status.emoji.name if after_status.emoji else "None")
-                        except discord.Forbidden:
-                            pass
+                        await after.remove_roles(role, reason=f"StatusRole: custom status no longer matches {name}")
+                        if log_channel:
+                            await self._send_log(log_channel, False, after, role, after_status.name, after_status.emoji.name if after_status.emoji else "None", can_embed)
 
     @staticmethod
     async def _custom_activity(activities):
@@ -160,7 +157,7 @@ class StatusRole(commands.Cog):
         return (await _st_match(st, status)) and (await _em_match(em, emoji))
 
     @staticmethod
-    async def _send_log(channel: discord.TextChannel, assign: bool, user: discord.Member, role: discord.Role, status: str, emoji: str):
+    async def _send_log(channel: discord.TextChannel, assign: bool, user: discord.Member, role: discord.Role, status: str, emoji: str, can_embed: bool):
         embed = discord.Embed(title=f"StatusRole `{role.name}` ")
         embed.add_field(name="Member", value=user.mention)
         embed.add_field(name="New Status", value=f"`{status}`")
@@ -178,15 +175,10 @@ class StatusRole(commands.Cog):
             embed.color = discord.Color.red()
             plaintext = f"StatusRole: {user.mention} custom status changed to `{status}` with emoji `{emoji}`, {role.mention} removed"
 
-        try:
+        if can_embed:
             await channel.send(embed=embed)
-        except discord.Forbidden:
-            try:
-                await channel.send(plaintext)
-            except (discord.Forbidden, discord.HTTPException):
-                pass
-        except discord.HTTPException:
-            pass
+        else:
+            await channel.send(plaintext)
 
     @commands.guild_only()
     @commands.admin_or_permissions(administrator=True)
@@ -269,14 +261,23 @@ class StatusRole(commands.Cog):
             del roles[pair_name]
         return await ctx.tick()
 
+    @commands.bot_has_permissions(manage_roles=True)
     @_status_role.command(name="forcecheck")
     async def _force_update(self, ctx: commands.Context, *statusroles: str):
         """Force a manual check of every user on this server for the provided StatusRoles."""
 
         async with ctx.typing():
+
+            can_embed = False
             log_channel = await self.config.guild(ctx.guild).channel()
             if log_channel:
                 log_channel = ctx.guild.get_channel(log_channel)
+                perms = log_channel.permissions_for(ctx.guild.me)
+                if not perms.send_messages:
+                    log_channel = None
+                else:
+                    if perms.embed_links:
+                        can_embed = True
 
             async with self.config.guild(ctx.guild).roles() as roles:
                 for sr in statusroles:
@@ -295,25 +296,19 @@ class StatusRole(commands.Cog):
                                 continue
 
                             r = ctx.guild.get_role(roles[sr]["role"]) if roles[sr]["role"] else None
-                            if not r:
+                            if not r or r >= ctx.guild.me.top_role:
                                 continue
 
                             if await self._status_matches(roles[sr]["status"], roles[sr]["emoji"], m_status):
                                 if roles[sr]["role"] not in [r.id for r in m.roles]:  # Does not already have role
-                                    try:
-                                        await m.add_roles(r, reason=f"StatusRole ForceUpdate: custom status matched {sr}")
-                                        if log_channel:
-                                            await self._send_log(log_channel, True, m, r, m_status.name, m_status.emoji.name if m_status.emoji else "None")
-                                    except discord.Forbidden:
-                                        pass
+                                    await m.add_roles(r, reason=f"StatusRole ForceUpdate: custom status matched {sr}")
+                                    if log_channel:
+                                        await self._send_log(log_channel, True, m, r, m_status.name, m_status.emoji.name if m_status.emoji else "None", can_embed)
                             else:
                                 if roles[sr]["role"] in [r.id for r in m.roles]:  # Has role but status does not match
-                                    try:
-                                        await m.remove_roles(r, reason=f"StatusRole ForceUpdate: custom status does not match {sr}")
-                                        if log_channel:
-                                            await self._send_log(log_channel, False, m, r, m_status.name, m_status.emoji.name if m_status.emoji else "None")
-                                    except discord.Forbidden:
-                                        pass
+                                    await m.remove_roles(r, reason=f"StatusRole ForceUpdate: custom status does not match {sr}")
+                                    if log_channel:
+                                        await self._send_log(log_channel, False, m, r, m_status.name, m_status.emoji.name if m_status.emoji else "None", can_embed)
 
         return await ctx.send("Force update completed!")
 
