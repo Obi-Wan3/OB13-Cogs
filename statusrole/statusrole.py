@@ -83,14 +83,14 @@ class StatusRole(commands.Cog):
                 # Now have custom status (did not have before)
                 if not before_status and after_status:
                     if await self._status_matches(sr["status"], sr["emoji"], after_status):
-                        await after.add_roles(role, reason=f"StatusRole: new custom status matched {name}")
+                        await self._maybe_add_role(after, role, name)
                         if log_channel:
                             await self._send_log(log_channel, True, after, role, after_status.name, after_status.emoji.name if after_status.emoji else "None", can_embed)
 
                 # Had custom status (does not anymore)
                 elif before_status and not after_status:
                     if await self._status_matches(sr["status"], sr["emoji"], before_status):
-                        await after.remove_roles(role, reason=f"StatusRole: custom status no longer matches {name}")
+                        await self._maybe_remove_role(after, role, name)
                         if log_channel:
                             await self._send_log(log_channel, False, after, role, "None", "None", can_embed)
 
@@ -99,21 +99,25 @@ class StatusRole(commands.Cog):
                     before_match = await self._status_matches(sr["status"], sr["emoji"], before_status)
                     after_match = await self._status_matches(sr["status"], sr["emoji"], after_status)
 
-                    if (
-                            not before_match and after_match and  # New status matches
-                            sr["role"] not in [r.id for r in after.roles]  # Does not already have role
-                    ):
-                        await after.add_roles(role, reason=f"StatusRole: new custom status matched {name}")
+                    if not before_match and after_match:
+                        await self._maybe_add_role(after, role, name)
                         if log_channel:
                             await self._send_log(log_channel, True, after, role, after_status.name, after_status.emoji.name if after_status.emoji else "None", can_embed)
 
-                    elif (
-                            before_match and not after_match and  # No longer matches
-                            sr["role"] in [r.id for r in after.roles]  # Has role
-                    ):
-                        await after.remove_roles(role, reason=f"StatusRole: custom status no longer matches {name}")
+                    elif before_match and not after_match:
+                        await self._maybe_remove_role(after, role, name)
                         if log_channel:
                             await self._send_log(log_channel, False, after, role, after_status.name, after_status.emoji.name if after_status.emoji else "None", can_embed)
+
+    @staticmethod
+    async def _maybe_add_role(member: discord.Member, role: discord.Role, name: str):
+        if role not in member.roles:
+            await member.add_roles(role, reason=f"StatusRole: new custom status matched {name}")
+
+    @staticmethod
+    async def _maybe_remove_role(member: discord.Member, role: discord.Role, name: str):
+        if role in member.roles:
+            await member.remove_roles(role, reason=f"StatusRole: custom status no longer matches {name}")
 
     @staticmethod
     async def _custom_activity(activities):
@@ -300,15 +304,13 @@ class StatusRole(commands.Cog):
                                 continue
 
                             if await self._status_matches(roles[sr]["status"], roles[sr]["emoji"], m_status):
-                                if roles[sr]["role"] not in [r.id for r in m.roles]:  # Does not already have role
-                                    await m.add_roles(r, reason=f"StatusRole ForceUpdate: custom status matched {sr}")
-                                    if log_channel:
-                                        await self._send_log(log_channel, True, m, r, m_status.name, m_status.emoji.name if m_status.emoji else "None", can_embed)
+                                await self._maybe_add_role(m, r, sr)
+                                if log_channel:
+                                    await self._send_log(log_channel, True, m, r, m_status.name, m_status.emoji.name if m_status.emoji else "None", can_embed)
                             else:
-                                if roles[sr]["role"] in [r.id for r in m.roles]:  # Has role but status does not match
-                                    await m.remove_roles(r, reason=f"StatusRole ForceUpdate: custom status does not match {sr}")
-                                    if log_channel:
-                                        await self._send_log(log_channel, False, m, r, m_status.name, m_status.emoji.name if m_status.emoji else "None", can_embed)
+                                await self._maybe_remove_role(m, r, sr)
+                                if log_channel:
+                                    await self._send_log(log_channel, False, m, r, m_status.name, m_status.emoji.name if m_status.emoji else "None", can_embed)
 
         return await ctx.send("Force update completed!")
 
