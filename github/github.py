@@ -360,47 +360,47 @@ class GitHub(commands.Cog):
 
     @tasks.loop(minutes=3)
     async def _github_rss(self):
-        # start = time.time()
         all_guilds = await self.config.all_guilds()
         for guild in all_guilds:
             g = self.bot.get_guild(guild)
             ch = self.bot.get_channel(await self.config.guild(g).channel())
+
+            if not ch.permissions_for(g.me).embed_links:
+                continue
+
             async with self.config.guild(g).feeds() as feeds:
                 for u, fs0 in feeds.items():
                     for n, fs in fs0.items():
-                        try:
-                            url = fs["url"]
-                        except KeyError:
+                        if not (url := fs.get("url")):
                             continue
 
+                        # Fetch feed
                         async with aiohttp.ClientSession() as session:
                             async with session.get(url) as resp:
                                 html = await resp.read()
                                 if resp.status != 200:
                                     continue
 
+                        # Parse feed
                         entries = feedparser.parse(html).entries
                         new_entries, new_time = await self.new_entries(entries, float(fs["time"]))
+
+                        # Create embeds
+                        e = None
                         if len(new_entries) == 1:
                             e = await self.commit_embed(new_entries[0], feedparser.parse(html).feed.link)
-                            if fs.get("channel"):
-                                await self.bot.get_channel(fs["channel"]).send(embed=e)
-                            else:
-                                try:
-                                    await ch.send(embed=e)
-                                except discord.Forbidden:
-                                    pass
                         elif len(new_entries) > 1:
                             e = await self.commit_embeds(new_entries, feedparser.parse(html).feed.link, fs["url"])
+
+                        # Send embeds
+                        if e:
                             if fs.get("channel"):
-                                await self.bot.get_channel(fs["channel"]).send(embed=e)
+                                c = await self.bot.get_channel(fs["channel"])
+                                if c.permissions_for(g.me).embed_links:
+                                    c.send(embed=e)
                             else:
-                                try:
-                                    await ch.send(embed=e)
-                                except discord.Forbidden:
-                                    pass
+                                await ch.send(embed=e)
                         fs["time"] = new_time
-        # print(f"This loop took {round(int(time.time() - start) / 60, 2)} minutes.")
 
     @_github_rss.before_loop
     async def _before_github_rss(self):
