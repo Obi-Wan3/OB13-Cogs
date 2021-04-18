@@ -9,7 +9,7 @@
     "install_msg": "Thank you for installing! Use `[p]help embedreact` for more info.",
     "min_bot_version" : "3.4.0",
     "min_python_version" : [3, 8, 1],
-    "permissions" : ["add_reactions"],
+    "permissions" : ["embed_links", "add_reactions"],
     "required_cogs" : {},
     "requirements" : [],
     "short": "Auto-Reactions to Embeds",

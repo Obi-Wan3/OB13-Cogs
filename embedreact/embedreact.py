@@ -51,7 +51,7 @@ class EmbedReact(commands.Cog):
 
     @commands.Cog.listener("on_message_without_command")
     async def _message_listener(self, message: discord.Message):
-        if not message.guild:
+        if not message.guild or not message.channel.permissions_for(message.guild.me).add_reactions:
             return
 
         reactions = (await self.config.guild(message.guild).reactions()).get(str(message.channel.id))
@@ -75,7 +75,7 @@ class EmbedReact(commands.Cog):
             for r in reactions:
                 try:
                     await message.add_reaction(r)
-                except (discord.Forbidden, discord.HTTPException, discord.NotFound, discord.InvalidArgument):
+                except (discord.HTTPException, discord.InvalidArgument):
                     pass
 
         return
@@ -92,13 +92,14 @@ class EmbedReact(commands.Cog):
         await self.config.guild(ctx.guild).toggle.set(true_or_false)
         return await ctx.tick()
 
+    @commands.bot_has_permissions(add_reactions=True)
     @embedreact.command(name="reactions", aliases=["emojis"])
     async def _reactions(self, ctx: commands.Context, channel: discord.TextChannel, *emojis: str):
         """Set the emojis to automatically react with for a channel."""
         for e in emojis:
             try:
                 await ctx.message.add_reaction(e)
-            except (discord.Forbidden, discord.HTTPException, discord.NotFound, discord.InvalidArgument):
+            except (discord.HTTPException, discord.InvalidArgument):
                 return await ctx.send(f"Invalid emoji: {e}")
         async with self.config.guild(ctx.guild).reactions() as reactions:
             reactions[str(channel.id)] = emojis
