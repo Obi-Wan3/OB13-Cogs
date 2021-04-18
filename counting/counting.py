@@ -58,71 +58,61 @@ class Counting(commands.Cog):
         ):
             return
 
+        permissions: discord.Permissions = message.channel.permissions_for(message.guild.me)
         counter = await self.config.guild(message.guild).counter()
         to_delete = False
-        # Delete these messages
+
+        # Incorrect number (delete)
         try:
-            # Incorrect number
             if not (int(message.content.strip().split()[0])-1 == counter):
                 to_delete = True
-
-            # User repeated and allow repeats is off
-            if not await self.config.guild(message.guild).allowrepeats():
-                found = False
-                last = message
-                while not found:
-                    last_m = (await message.channel.history(limit=1, before=last).flatten())[0]
-                    if not last_m.author.bot:
-                        found = True
-                if last_m.author.id == message.author.id:
-                    to_delete = True
-
         except ValueError:  # No number as first word of message
             to_delete = True
+
+        # User repeated and allow repeats is off (delete)
+        if not await self.config.guild(message.guild).allowrepeats() and permissions.read_message_history:
+            last_m = (await message.channel.history(limit=1, before=message).flatten())[0]
+            if last_m.author.id == message.author.id:
+                to_delete = True
 
         if to_delete:
             self.deleted.append(message.id)
             msg_copy = copy(message)
-            try:
-                await message.delete()
-                penalty = await self.config.guild(message.guild).penalty()
-                async with self.config.guild(message.guild).wrong() as wrong:
+
+            if not permissions.manage_messages:
+                return
+
+            await message.delete()
+            penalty = await self.config.guild(message.guild).penalty()
+            async with self.config.guild(message.guild).wrong() as wrong:
+                wrong[str(message.author.id)] = wrong.get(str(message.author.id), 0) + 1
+                if wrong[str(message.author.id)] >= penalty[0] and message.author.id != message.guild.owner.id and not message.author.guild_permissions.administrator:
                     try:
-                        wrong[str(message.author.id)] += 1
-                    except KeyError:
-                        wrong[str(message.author.id)] = 1
-                    if wrong[str(message.author.id)] >= penalty[0] and message.author.id != message.guild.owner.id and not message.author.guild_permissions.administrator:
                         channel_mute = self.bot.get_command("channelmute")
                         msg_copy.author = message.guild.owner
                         ctx = await self.bot.get_context(msg_copy)
                         if channel_mute:
                             await channel_mute(ctx=ctx, users=[message.author], time_and_reason={"duration": datetime.timedelta(seconds=penalty[1]), "reason": "Counting: too many wrong counts"})
                         wrong[str(message.author.id)] = 0
-            except Exception:
-                pass
+                    except Exception:
+                        pass
             return
 
         await self.config.guild(message.guild).counter.set(counter+1)
 
-        # Assign a role the lastest user to count if toggled
+        # Assign a role the latest user to count if toggled
         role_id = await self.config.guild(message.guild).role()
-        if await self.config.guild(message.guild).assignrole() and role_id:
+        if await self.config.guild(message.guild).assignrole() and role_id and permissions.manage_roles:
             role = message.guild.get_role(role_id)
-            if role is not None:
+            if role and role < message.guild.me.top_role:
                 assigned = False
                 for m in role.members:
                     if m.id == message.author.id:
                         assigned = True
                     else:
-                        try:
-                            await m.remove_roles(role, reason="Counter: no longer the latest user to count")
-                        except discord.Forbidden:
-                            pass
+                        await m.remove_roles(role, reason="Counter: no longer the latest user to count")
                 if not assigned:
-                    try:
-                        await message.author.add_roles(role, reason="Counter: latest user to count")
-                    except discord.Forbidden:
-                        pass
+                    await message.author.add_roles(role, reason="Counter: latest user to count")
 
     @commands.Cog.listener("on_message_delete")
     async def _message_deletion_listener(self, message: discord.Message):
@@ -134,7 +124,8 @@ class Counting(commands.Cog):
                 message.channel.id != counting_channel or  # Message not in counting channel
                 await self.bot.cog_disabled_in_guild(self, message.guild) or  # Cog disabled in guild
                 not await self.config.guild(message.guild).toggle() or  # Counting toggled off
-                message.author.bot  # Message author is a bot
+                message.author.bot or  # Message author is a bot
+                not message.channel.permissions_for(message.guild.me).send_message  # Cannot send message
         ):
             return
 
@@ -146,11 +137,13 @@ class Counting(commands.Cog):
         except ValueError:  # Message contains non-numerical characters
             return
 
-        c = await self.bot.get_embed_colour(message.channel)
-        try:
-            return await message.channel.send(embed=discord.Embed(color=c, description=f"{message.author.mention} edited or deleted [their message]({message.jump_url}). Original message: ```{message.content}```"))
-        except discord.Forbidden:
-            return await message.channel.send(f"{message.author.mention} edited or deleted [their message]({message.jump_url}). Original message: ```{message.content}```")
+        if message.channel.permissions_for(message.guild.me).embed_links:
+            return await message.channel.send(embed=discord.Embed(
+                color=await self.bot.get_embed_colour(message.channel),
+                description=f"{message.author.mention} edited or deleted [their message]({message.jump_url}). Original message: ```{message.content}```"
+            ))
+        else:
+            return await message.channel.send(f"{message.author.mention} edited or deleted their message. Original message: ```{message.content}```")
 
     @commands.Cog.listener("on_message_edit")
     async def _message_edit_listener(self, before: discord.Message, after: discord.Message):

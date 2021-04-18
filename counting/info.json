@@ -9,7 +9,7 @@
     "install_msg": "Thank you for installing! Use `[p]help counting` for more info.",
     "min_bot_version" : "3.4.1",
     "min_python_version" : [3, 8, 1],
-    "permissions" : [],
+    "permissions" : ["embed_links", "manage_messages", "manage_roles"],
     "required_cogs" : {},
     "requirements" : [],
     "short": "Multifeatured Counting Channel",
