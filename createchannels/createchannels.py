@@ -63,18 +63,17 @@ class CreateChannels(commands.Cog):
     @commands.Cog.listener("on_voice_state_update")
     async def _voice_listener(self, member: discord.Member, before, after):
         if before.channel is not None and after.channel is None:
-            vc = self.bot.get_channel(before.channel.id)
+            vc = member.guild.get_channel(before.channel.id)
+            if not vc.permissions_for(member.guild.me).manage_channels:
+                return
             async with self.config.guild(member.guild).voice.active() as active:
                 timeout = await self.config.guild(member.guild).voice.timeout()
                 try:
                     ind = [a[0] for a in active].index(vc.id)
                     if not vc.members:
                         if time.time() > active[ind][2]+timeout:
-                            try:
-                                await vc.delete(reason="CreateVoice: inactive VC")
-                                active.pop(ind)
-                            except discord.Forbidden:
-                                pass
+                            await vc.delete(reason="CreateVoice: inactive VC")
+                            active.pop(ind)
                 except ValueError:
                     pass
         return
