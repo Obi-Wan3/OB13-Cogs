@@ -65,18 +65,15 @@ class MentionHelp(commands.Cog):
 
         mention = re.compile(rf"<@!?{self.bot.user.id}>")
         destination = message.channel if message.guild else message.author
+        if not destination.permissions_for(message.guild.me).send_messages:
+            return
+
         to_send = await self.config.message()
 
         if mention.fullmatch(message.content) and self.bot.user.id in [u.id for u in message.mentions] and to_send:
-            if await self.config.embed():
-                try:
-                    return await destination.send(embed=discord.Embed(description=to_send, color=await self.bot.get_embed_color(destination)))
-                except discord.Forbidden:
-                    pass
-            try:
-                return await destination.send(to_send)
-            except discord.Forbidden:
-                return
+            if await self.config.embed() and destination.permissions_for(message.guild.me).embed_links:
+                return await destination.send(embed=discord.Embed(description=to_send, color=await self.bot.get_embed_color(destination)))
+            return await destination.send(to_send)
 
     @commands.group(name="mentionhelp")
     async def _mention_help(self, ctx: commands.Context):
