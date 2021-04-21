@@ -116,7 +116,7 @@ class PublicRooms(commands.Cog):
                         # Everyone left channel
                         if not before.channel.members:
                             sys['active'].remove(a)
-                            if before.channel.permissions_for(member.guild.me).manage_channel:
+                            if before.channel.permissions_for(member.guild.me).manage_channels:
                                 await before.channel.delete(reason="PublicRooms: all users have left")
                             else:
                                 return
@@ -149,7 +149,7 @@ class PublicRooms(commands.Cog):
                             except ValueError:
                                 no_created = True
 
-                            if before.channel.permissions_for(member.guild.me).manage_channel:
+                            if before.channel.permissions_for(member.guild.me).manage_channels:
                                 if no_created or no_missing:
                                     if no_created:
                                         num = 1
