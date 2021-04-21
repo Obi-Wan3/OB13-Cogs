@@ -130,7 +130,7 @@ class PrivateRooms(commands.Cog):
                                 new_overwrites_before.pop(member)
                                 new_overwrites_before.update({remaining: discord.PermissionOverwrite(move_members=True, view_channel=True, connect=True)})
 
-                                if before.channel.permissions_for(member.guild.me).manage_channel:
+                                if before.channel.permissions_for(member.guild.me).manage_channels:
                                     await before.channel.edit(
                                         name=sys['channel_name'].replace("{creator}", remaining.display_name),
                                         overwrites=new_overwrites_before,
@@ -142,7 +142,7 @@ class PrivateRooms(commands.Cog):
                                 new_overwrites_lobby.pop(member)
                                 new_overwrites_lobby.update({remaining: discord.PermissionOverwrite(move_members=True)})
 
-                                if lobby.permissions_for(member.guild.me).manage_channel:
+                                if lobby.permissions_for(member.guild.me).manage_channels:
                                     await lobby.edit(
                                         overwrites=new_overwrites_lobby,
                                         reason=f"PrivateRooms: {member.display_name} has left their VC, ownership transferred to {remaining.id}"
@@ -162,13 +162,13 @@ class PrivateRooms(commands.Cog):
                             # Remove channel
                             else:
                                 sys['active'].remove(a)
-                                if before.channel.permissions_for(member.guild.me).manage_channel:
+                                if before.channel.permissions_for(member.guild.me).manage_channels:
                                     await before.channel.delete(reason="PrivateRooms: all users have left")
                                 else:
                                     return
                                 new_overwrites_lobby.pop(member)
 
-                                if lobby.permissions_for(member.guild.me).manage_channel:
+                                if lobby.permissions_for(member.guild.me).manage_channels:
                                     await lobby.edit(
                                         overwrites=new_overwrites_lobby,
                                         reason=f"PrivateRooms: {member.display_name}'s private VC has been deleted"
@@ -231,7 +231,7 @@ class PrivateRooms(commands.Cog):
                         lobby = member.guild.get_channel(sys['lobby'])
                         new_overwrites = lobby.overwrites
                         new_overwrites[member] = discord.PermissionOverwrite(move_members=True)
-                        if lobby.permissions_for(member.guild.me).manage_channel:
+                        if lobby.permissions_for(member.guild.me).manage_channels:
                             await lobby.edit(
                                 overwrites=new_overwrites,
                                 reason=f"PrivateRooms: {member.display_name} has created a new private VC"
