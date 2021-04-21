@@ -84,5 +84,5 @@ class Translate(commands.Cog):
             translated_embed.add_field(name=googletrans.LANGUAGES[res.dest.lower()].title(), value=res.text, inline=True)
 
         if hasattr(ctx, "reply"):
-            return await ctx.reply(embed=translated_embed, mention_author=False)
+            return await to_reply.reply(embed=translated_embed, mention_author=False)
         return await ctx.send(embed=translated_embed)
