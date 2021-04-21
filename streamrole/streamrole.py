@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+import typing
+
 import discord
 from redbot.core import commands, Config
 from redbot.core.utils.chat_formatting import humanize_list
@@ -51,8 +53,7 @@ class StreamRole(commands.Cog):
             not await self.config.guild(member.guild).toggle() or  # StreamRole toggled off
             member.bot or  # Member is a bot
             await self.bot.cog_disabled_in_guild(self, member.guild) or  # Cog disabled in guild
-            not member.guild.me.guild_permissions.manage_roles or  # Cannot manage roles
-            before.self_stream == after.self_stream  # No stream change
+            not member.guild.me.guild_permissions.manage_roles  # Cannot manage roles
         ):
             return
 
@@ -65,9 +66,9 @@ class StreamRole(commands.Cog):
                 log_channel = None
 
         # User started streaming
-        if not before.self_stream and after.self_stream:
+        if not (before.channel and before.self_stream) and after.self_stream:
             for role, channels in settings.items():
-                if after.channel.id in channels:
+                if after.channel.id in channels or (after.channel.category_id and after.channel.category_id in channels):
                     r = member.guild.get_role(int(role))
                     if r in member.roles or r >= member.guild.me.top_role:
                         continue
@@ -80,14 +81,14 @@ class StreamRole(commands.Cog):
                         )
 
         # User stopped streaming
-        if before.self_stream and not after.self_stream:
+        if before.self_stream and not (after.channel and after.self_stream):
             for role, channels in settings.items():
-                if after.channel.id in channels:
+                if before.channel.id in channels or (before.channel.category_id and before.channel.category_id in channels):
                     r = member.guild.get_role(int(role))
                     if r not in member.roles or r >= member.guild.me.top_role:
                         continue
 
-                    await member.remove_roles(r, reason=f"StreamRole: {member.display_name} stopped streaming in {after.channel.name}")
+                    await member.remove_roles(r, reason=f"StreamRole: {member.display_name} stopped streaming in {before.channel.name}")
                     if log_channel:
                         await log_channel.send(
                             f"{r.mention} was removed from {member.mention} as they stopped streaming in {before.channel.name}.",
@@ -113,8 +114,8 @@ class StreamRole(commands.Cog):
         return await ctx.tick()
 
     @_stream_role.command(name="add")
-    async def _add(self, ctx: commands.Context, role: discord.Role, *channels: discord.VoiceChannel):
-        """Add a new StreamRole to VCs."""
+    async def _add(self, ctx: commands.Context, role: discord.Role, *channels: typing.Union[discord.VoiceChannel, discord.CategoryChannel]):
+        """Add a new StreamRole to VCs and/or Categories."""
         if role >= ctx.author.top_role and ctx.author != ctx.guild.owner:
             return await ctx.send("That role is above you in the role hierarchy!")
 
@@ -129,18 +130,18 @@ class StreamRole(commands.Cog):
         return await ctx.tick()
 
     @_stream_role.command(name="remove", aliases=["delete"])
-    async def _remove(self, ctx: commands.Context, role: discord.Role, *channels: discord.VoiceChannel):
-        """Remove a StreamRole from VCs."""
+    async def _remove(self, ctx: commands.Context, role: discord.Role, *channels: typing.Union[discord.VoiceChannel, discord.CategoryChannel]):
+        """Remove a StreamRole from VCs and/or Categories."""
 
         async with self.config.guild(ctx.guild).stream_roles() as settings:
             if existing := settings.get(str(role.id)):
                 for c in channels:
                     if c.id in existing:
                         settings[str(role.id)].remove(c.id)
-                        if not settings[str(role.id)]:
-                            del settings[str(role.id)]
+                if not settings[str(role.id)]:
+                    del settings[str(role.id)]
             else:
-                return await ctx.send("There are no VCs with that StreamRole!")
+                return await ctx.send("There are no VCs or Categories with that StreamRole!")
 
         return await ctx.tick()
 
