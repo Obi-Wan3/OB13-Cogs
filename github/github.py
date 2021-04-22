@@ -395,9 +395,9 @@ class GitHub(commands.Cog):
                         # Send embeds
                         if e:
                             if fs.get("channel"):
-                                c = await self.bot.get_channel(fs["channel"])
+                                c = self.bot.get_channel(fs["channel"])
                                 if c.permissions_for(g.me).embed_links:
-                                    c.send(embed=e)
+                                    await c.send(embed=e)
                             else:
                                 await ch.send(embed=e)
                         fs["time"] = new_time
