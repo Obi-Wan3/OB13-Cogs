@@ -60,7 +60,7 @@ class Referrals(commands.Cog):
 
         log_channel = await self.config.guild(ctx.guild).log_channel()
         if log_channel:
-            log_channel = await ctx.guild.get_channel(log_channel)
+            log_channel = ctx.guild.get_channel(log_channel)
             if not (log_channel and log_channel.permissions_for(ctx.guild.me).send_messages):
                 log_channel = None
 
