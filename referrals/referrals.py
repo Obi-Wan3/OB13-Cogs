@@ -70,7 +70,7 @@ class Referrals(commands.Cog):
                 await log_channel.send(f"{ctx.author.mention} tried to run `{ctx.clean_prefix}referredby` but has already done so before.")
             return await ctx.send("You have already ran this command! You can only use this once.")
 
-        # User tagged themselves
+        # Self-referral
         if ctx.author == member:
             if log_channel:
                 await log_channel.send(f"{ctx.author.mention} tried to run `{ctx.clean_prefix}referredby` tagging themselves.")
