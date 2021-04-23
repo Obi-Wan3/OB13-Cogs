@@ -74,7 +74,7 @@ class Referrals(commands.Cog):
         if ctx.author == member:
             if log_channel:
                 await log_channel.send(f"{ctx.author.mention} tried to run `{ctx.clean_prefix}referredby` with a self-referral.")
-            return await ctx.send("You cannot tag yourself.")
+            return await ctx.send("You cannot refer yourself!")
 
         # No credit set by admin yet
         to_deposit = await self.config.guild(ctx.guild).amount()
