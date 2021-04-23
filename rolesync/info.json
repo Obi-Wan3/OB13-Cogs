@@ -1,0 +1,18 @@
+{
+    "author": [
+        "Obi-Wan3"
+    ],
+    "description": "Add roles to new members if they have a certain role in another server.",
+    "disabled" : false,
+    "end_user_data_statement" : "This cog stores provided settings (i.e. roles/servers to sync, toggles, etc.).",
+    "hidden": false,
+    "install_msg": "Thank you for installing! Use `[p]help rolesync` for more info.",
+    "min_bot_version" : "3.4.8",
+    "min_python_version" : [3, 8, 1],
+    "permissions" : ["embed_links", "manage_roles"],
+    "required_cogs" : {},
+    "requirements" : [],
+    "short": "Cross-Server Role Sync on Join",
+    "tags" : ["roles", "sync", "join", "cross-server"],
+    "type": "COG"
+}
