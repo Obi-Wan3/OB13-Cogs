@@ -70,6 +70,12 @@ class Referrals(commands.Cog):
                 await log_channel.send(f"{ctx.author.mention} tried to run `{ctx.clean_prefix}referredby` but has already done so before.")
             return await ctx.send("You have already ran this command! You can only use this once.")
 
+        # User tagged themselves
+        if ctx.author == member:
+            if log_channel:
+                await log_channel.send(f"{ctx.author.mention} tried to run `{ctx.clean_prefix}referredby` tagging themselves.")
+            return await ctx.send("You cannot tag yourself.")
+
         # No credit set by admin yet
         to_deposit = await self.config.guild(ctx.guild).amount()
         if not credits:
