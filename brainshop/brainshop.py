@@ -60,7 +60,7 @@ class BrainShop(commands.Cog):
                 not message.guild or  # Not in a server
                 message.author.bot or  # Message author is a bot
                 await self.bot.cog_disabled_in_guild(self, message.guild) or  # Cog disabled in guild
-                not message.channel.permissions_for(message.guild.me).send_message or  # Cannot send message
+                not message.channel.permissions_for(message.guild.me).send_messages or  # Cannot send message
                 (
                         message.channel.id not in await self.config.guild(message.guild).channels() and  # Not in auto channel
                         (
