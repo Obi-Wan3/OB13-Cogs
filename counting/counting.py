@@ -125,7 +125,7 @@ class Counting(commands.Cog):
                 await self.bot.cog_disabled_in_guild(self, message.guild) or  # Cog disabled in guild
                 not await self.config.guild(message.guild).toggle() or  # Counting toggled off
                 message.author.bot or  # Message author is a bot
-                not message.channel.permissions_for(message.guild.me).send_message  # Cannot send message
+                not message.channel.permissions_for(message.guild.me).send_messages  # Cannot send message
         ):
             return
 

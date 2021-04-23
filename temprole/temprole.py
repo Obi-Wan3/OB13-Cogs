@@ -176,7 +176,7 @@ class TempRole(commands.Cog):
     @_temp_role.command(name="logchannel")
     async def _log_channel(self, ctx: commands.Context, channel: discord.TextChannel = None):
         """Set the TempRole log channel for the server (leave blank to remove)."""
-        if channel and not channel.permissions_for(ctx.guild.me).send_message:
+        if channel and not channel.permissions_for(ctx.guild.me).send_messages:
             return await ctx.send(f"I cannot send messages to {channel.mention}!")
         await self.config.guild(ctx.guild).log.set(channel.id if channel else None)
         return await ctx.tick()
