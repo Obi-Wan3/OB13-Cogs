@@ -347,7 +347,7 @@ class StatusRole(commands.Cog):
                 name=name,
                 value=f"""
                 **Role:** {ctx.guild.get_role(statusrole["role"]).mention if ctx.guild.get_role(statusrole["role"]) else None}
-                **Emoji:** {statusrole["emoji"][0] if statusrole["emoji"] else "Any"}
+                **Emoji:** {("Any in Server" if statusrole["emoji"] is True else statusrole["emoji"][0]) if statusrole["emoji"] else "Any"}
                 **Status:** {humanize_list([f'`{s}`' for s in statusrole["status"]]) if statusrole["status"] else None}
                 **Toggle:** {statusrole["toggle"]}
                 """
