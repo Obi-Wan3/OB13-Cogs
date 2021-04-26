@@ -278,7 +278,7 @@ class StatusRole(commands.Cog):
         return await ctx.tick()
 
     @commands.bot_has_permissions(manage_roles=True)
-    @_status_role.command(name="forcecheck")
+    @_status_role.command(name="forcecheck", require_var_positional=True)
     async def _force_update(self, ctx: commands.Context, *statusroles: str):
         """Force a manual check of every user on this server for the provided StatusRoles."""
 
