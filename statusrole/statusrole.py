@@ -153,8 +153,9 @@ class StatusRole(commands.Cog):
                 if not e:
                     return False
                 else:
-                    if r is True and e.is_custom_emoji() and e.id in [emoji.id for emoji in guild.emojis]:  # Emoji in guild
-                        return True
+                    if r is True and e.is_custom_emoji():
+                        if e.id in [emoji.id for emoji in guild.emojis]:  # Emoji in guild
+                            return True
                     elif e.is_custom_emoji() and r[1] == e.id:  # Custom emoji matches
                         return True
                     elif e.is_unicode_emoji() and r[0] == e.name:  # Default emoji matches
