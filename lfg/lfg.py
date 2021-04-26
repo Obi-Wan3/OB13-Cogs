@@ -24,7 +24,7 @@ SOFTWARE.
 
 import discord
 from redbot.core import commands, Config
-from redbot.core.utils.chat_formatting import humanize_list
+from redbot.core.utils.chat_formatting import humanize_list, humanize_timedelta
 
 
 class LFG(commands.Cog):
@@ -46,6 +46,10 @@ class LFG(commands.Cog):
         }
         self.config.register_guild(**default_guild)
 
+        self.lfg_vc_bucket = commands.CooldownMapping.from_cooldown(
+            1, 600, lambda channel: channel.id
+        )
+
     @commands.Cog.listener("on_voice_state_update")
     async def _voice_listener(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
 
@@ -60,7 +64,7 @@ class LFG(commands.Cog):
                         await before.channel.edit(name=original_name, reason="LFG: all users left VC")
 
     @commands.guild_only()
-    @commands.command(name="lfg")
+    @commands.command(name="lfg", require_var_positional=True)
     async def _lfg(self, ctx: commands.Context, *inputs: str):
         """Looking for group."""
         if not ctx.author.voice or not (user_vc := ctx.author.voice.channel):
@@ -72,15 +76,22 @@ class LFG(commands.Cog):
         if not user_vc.permissions_for(ctx.guild.me).manage_channels:
             return await ctx.send("I do not have permission to manage the VC!")
 
+        # Thanks PCX for the cooldown bucket example
+        retry = self.lfg_vc_bucket.get_bucket(user_vc).update_rate_limit()
+        if retry:
+            return await ctx.send(f"Due to Discord ratelimits, you can only run this command once every 10 minutes for the same VC. Please try again in {humanize_timedelta(seconds=max(retry, 1))}.")
+
         invite: discord.Invite = await user_vc.create_invite()
         settings: dict = await self.config.guild(ctx.guild).all()
 
         to_rename = []
         categories = {}
-        for word in inputs:
-            for c, v in settings["categories"].items():
-                if not categories.get(c) and str(word) in v:
-                    categories[c] = word
+        for c, v in settings["categories"].items():
+            v_lowered = [s.lower() for s in v]
+            if not categories.get(c):
+                for word in inputs:
+                    if str(word).lower() in v_lowered:
+                        categories[c] = v[v_lowered.index(str(word).lower())]
         for cat in settings["vc_name"]:
             if v := categories.get(cat):
                 to_rename.append(v)
