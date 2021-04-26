@@ -82,22 +82,22 @@ class StatusRole(commands.Cog):
 
                 # Now have custom status (did not have before)
                 if not before_status and after_status:
-                    if await self._status_matches(sr["status"], sr["emoji"], after_status):
+                    if await self._status_matches(sr["status"], sr["emoji"], after_status, after.guild):
                         await self._maybe_add_role(after, role, name)
                         if log_channel:
                             await self._send_log(log_channel, True, after, role, after_status.name, after_status.emoji.name if after_status.emoji else "None", can_embed)
 
                 # Had custom status (does not anymore)
                 elif before_status and not after_status:
-                    if await self._status_matches(sr["status"], sr["emoji"], before_status):
+                    if await self._status_matches(sr["status"], sr["emoji"], before_status, after.guild):
                         await self._maybe_remove_role(after, role, name)
                         if log_channel:
                             await self._send_log(log_channel, False, after, role, "None", "None", can_embed)
 
                 # Custom status changed
                 elif before_status and after_status and before_status != after_status:
-                    before_match = await self._status_matches(sr["status"], sr["emoji"], before_status)
-                    after_match = await self._status_matches(sr["status"], sr["emoji"], after_status)
+                    before_match = await self._status_matches(sr["status"], sr["emoji"], before_status, after.guild)
+                    after_match = await self._status_matches(sr["status"], sr["emoji"], after_status, after.guild)
 
                     if not before_match and after_match:
                         await self._maybe_add_role(after, role, name)
@@ -127,7 +127,7 @@ class StatusRole(commands.Cog):
         return None
 
     @staticmethod
-    async def _status_matches(st, em, user_status):
+    async def _status_matches(st, em, user_status, guild: discord.Guild):
         status = user_status.name
         emoji = user_status.emoji
 
@@ -156,6 +156,8 @@ class StatusRole(commands.Cog):
                     if e.is_custom_emoji() and r[1] == e.id:  # Custom emoji matches
                         return True
                     elif e.is_unicode_emoji() and r[0] == e.name:  # Default emoji matches
+                        return True
+                    elif r is True and e.is_custom_emoji() and e.guild_id == guild.id:  # Emoji in guild
                         return True
 
         return (await _st_match(st, status)) and (await _em_match(em, emoji))
@@ -227,12 +229,22 @@ class StatusRole(commands.Cog):
         return await ctx.tick()
 
     @_edit.command(name="emoji")
-    async def _edit_emoji(self, ctx: commands.Context, pair_name: str, emoji: typing.Union[discord.PartialEmoji, str] = None):
-        """Edit a StatusRole's required emoji (leave blank to remove)."""
+    async def _edit_emoji(self, ctx: commands.Context, pair_name: str, emoji: typing.Union[discord.PartialEmoji, bool, str] = None):
+        """Edit a StatusRole's required emoji (you can also enter True for any emoji in this server, or leave blank to remove)."""
         async with self.config.guild(ctx.guild).roles() as roles:
             if pair_name not in roles.keys():
                 return await ctx.send("There is no StatusRole with this name!")
-            roles[pair_name]["emoji"] = ((emoji.name, emoji.id) if isinstance(emoji, discord.PartialEmoji) else (emoji, None)) if emoji else None
+            if type(emoji) == bool:
+                if emoji:
+                    roles[pair_name]["emoji"] = True
+                else:
+                    return await ctx.send("Please enter `True` if you would like the StatusRole to match any emoji in this server. Otherwise, leave this field blank or input a specific emoji.")
+            elif isinstance(emoji, discord.PartialEmoji):
+                roles[pair_name]["emoji"] = (emoji.name, emoji.id)
+            elif emoji:
+                roles[pair_name]["emoji"] = (emoji, None)
+            else:
+                roles[pair_name]["emoji"] = None
         return await ctx.tick()
 
     @_edit.command(name="status")
@@ -303,7 +315,7 @@ class StatusRole(commands.Cog):
                             if not r or r >= ctx.guild.me.top_role:
                                 continue
 
-                            if await self._status_matches(roles[sr]["status"], roles[sr]["emoji"], m_status):
+                            if await self._status_matches(roles[sr]["status"], roles[sr]["emoji"], m_status, ctx.guild):
                                 await self._maybe_add_role(m, r, sr)
                                 if log_channel:
                                     await self._send_log(log_channel, True, m, r, m_status.name, m_status.emoji.name if m_status.emoji else "None", can_embed)
