@@ -27,6 +27,7 @@ import copy
 import discord
 from redbot.core import commands, Config
 from redbot.core.utils import AsyncIter
+from redbot.core.utils.chat_formatting import pagify
 
 
 class RoleSync(commands.Cog):
@@ -171,18 +172,19 @@ class RoleSync(commands.Cog):
         """View RoleSync settings."""
 
         async with self.config.guild(ctx.guild).roles() as settings:
-            desc = ""
+            role_sync_settings = ""
             for k, v in settings.items():
                 to_add = ctx.guild.get_role(v["to_add"])
                 other_server = self.bot.get_guild(v["other_server"])
                 to_check = other_server.get_role(v["to_check"]) if other_server else None
                 if to_add and other_server and to_check:
-                    desc += f"**{k}:** assign {to_add.mention} if users have {to_check.name} in {other_server.name}\n"
+                    role_sync_settings += f"**{k}:** assign {to_add.mention} if users have {to_check.name} in {other_server.name}\n"
                 else:
                     del settings[k]
 
-        return await ctx.send(embed=discord.Embed(
-            title="RoleSync Settings",
-            description=desc,
-            color=await ctx.embed_color()
-        ))
+        for page in pagify(role_sync_settings):
+            await ctx.send(embed=discord.Embed(
+                title="RoleSync Settings",
+                description=page,
+                color=await ctx.embed_color()
+            ))
