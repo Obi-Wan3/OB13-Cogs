@@ -71,6 +71,9 @@ class Translate(commands.Cog):
             if not (to_translate and to_reply):
                 return await ctx.send("Nothing to translate.")
 
+            if to_reply.channel.id != ctx.channel.id:
+                to_reply = None
+
             task = functools.partial(TRANSLATOR.translate, text=to_translate, dest=language)
 
             try:
@@ -83,6 +86,6 @@ class Translate(commands.Cog):
             translated_embed.add_field(name=googletrans.LANGUAGES[res.src.lower()].title(), value=res.origin, inline=True)
             translated_embed.add_field(name=googletrans.LANGUAGES[res.dest.lower()].title(), value=res.text, inline=True)
 
-        if hasattr(ctx, "reply"):
+        if hasattr(to_reply, "reply"):
             return await to_reply.reply(embed=translated_embed, mention_author=False)
         return await ctx.send(embed=translated_embed)
