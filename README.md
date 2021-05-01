@@ -13,7 +13,7 @@ Cogs marked with a ✓ are ready for use, while those with a ✗ are still a Wor
 | Cog | Status | Description | Authors & Credits |
 | --- | :---: | --- | --- |
 | Announcements | ✓ | Announcement w/ Role Ping | Obi-Wan3 |
-| BotAccess | ✗ | Allow Special Roles Access to Bot | Obi-Wan3, Vertyco#0117 (BC) |
+| BotAccess | ✓ | Allow Special Roles Access to Bot | Obi-Wan3, Vertyco#0117 (BC) |
 | BrainShop | ✓ | AI Chatbot using [BrainShop](https://brainshop.ai/) | Obi-Wan3, SaraCaterina#1015 (BC) |
 | Conditions | ✗ | Weather Conditions & AQI | Obi-Wan3 |
 | Counting | ✓ | Multifeatured Counting Channel | Obi-Wan3, Atmos#0101 (BC) |

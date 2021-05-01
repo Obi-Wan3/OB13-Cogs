@@ -7,7 +7,6 @@ venv/
 cogtemplate/
 
 # Pre-Alpha WIP Cogs
-botaccess/
 conditions/
 dailyxkcd/
 latex/
