@@ -39,6 +39,7 @@ class LFG(commands.Cog):
         self.config = Config.get_conf(self, identifier=14000605, force_registration=True)
         default_guild = {
             "message": "",
+            "rename": True,
             "vc_name": [],
             "categories": {},
             "mention_limit": 3,
@@ -55,13 +56,15 @@ class LFG(commands.Cog):
 
         if await self.bot.cog_disabled_in_guild(self, member.guild):
             return
+        to_rename = await self.config.guild(member.guild).rename()
 
         if before.channel and (not after.channel or before.channel.id != after.channel.id) and not before.channel.members:
             async with self.config.guild(member.guild).active() as active:
                 if original_name := active.get(str(before.channel.id)):
                     del active[str(before.channel.id)]
                     if before.channel.permissions_for(member.guild.me).manage_channels and before.channel.name != original_name:
-                        await before.channel.edit(name=original_name, reason="LFG: all users left VC")
+                        if to_rename:
+                            await before.channel.edit(name=original_name, reason="LFG: all users left VC")
 
     @commands.guild_only()
     @commands.command(name="lfg", require_var_positional=True)
@@ -160,6 +163,12 @@ class LFG(commands.Cog):
         await self.config.guild(ctx.guild).mention_limit.set(limit)
         return await ctx.tick()
 
+    @_lfg_set.command(name="rename")
+    async def _rename(self, ctx: commands.Context, true_or_false: bool):
+        """Set whether to rename the VC to its original state once empty."""
+        await self.config.guild(ctx.guild).rename.set(true_or_false)
+        return await ctx.tick()
+
     @_lfg_set.group(name="categories", invoke_without_command=True)
     async def _categories(self, ctx: commands.Context):
         """View and set the LFG categories and accepted values."""
@@ -196,6 +205,6 @@ class LFG(commands.Cog):
         settings = await self.config.guild(ctx.guild).all()
         return await ctx.send(embed=discord.Embed(
             title="LFG Settings",
-            description=f"**Post:** {settings['message'] or None}\n**VC Name:** {', '.join(settings['vc_name']) or None}\n**Mention Limit:** {settings['mention_limit']}\n**Categories:** see `{ctx.clean_prefix}lfgset categories`",
+            description=f"**Post:** {settings['message'] or None}\n**VC Name:** {', '.join(settings['vc_name']) or None}\n**Rename on Empty:** {settings['rename']}\n**Mention Limit:** {settings['mention_limit']}\n**Categories:** see `{ctx.clean_prefix}lfgset categories`",
             color=await ctx.embed_color()
         ))
