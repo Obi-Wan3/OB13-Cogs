@@ -57,7 +57,7 @@ If you don't already have Downloader loaded, go ahead and do that first: `[p]loa
 ```
 
 # Contact
-For support with my cogs, please contact me in #support_othercogs in the [Red Cog Support](https://discord.gg/GET4DVk) server.
+For support with my cogs, please contact me in #support_ob13-cogs in the [Red Cog Support](https://discord.gg/GET4DVk) server.
 
 
 ## Contributing
