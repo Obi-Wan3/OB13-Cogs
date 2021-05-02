@@ -114,13 +114,13 @@ class BotAccess(commands.Cog):
         # DM inviter
         if inviter:
             try:
-                await inviter.send(f"Unfortunately, I cannot be added to {guild.name} due to BotAccess restrictions. Please contact the owner for support.")
+                await inviter.send(await self.config.not_supporting() or NOT_SUPPORTING)
             except discord.HTTPException:
                 pass
         else:
             for channel in guild.text_channels:
                 if channel.permissions_for(guild.me).send_messages:
-                    await channel.send(f"Unfortunately, I cannot be added to {guild.name} due to BotAccess restrictions. Please contact the owner for support.")
+                    await channel.send(await self.config.not_supporting() or NOT_SUPPORTING)
                     break
 
         # Leave guild
