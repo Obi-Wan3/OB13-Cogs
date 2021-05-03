@@ -164,6 +164,25 @@ class MessageNotifier(commands.Cog):
         await self.config.minutes.set(minutes)
         return await ctx.tick()
 
+    @_message_notifier.command(name="read")
+    async def _read(self, ctx: commands.Context, channel: discord.TextChannel):
+        """Mark a MessageNotifier channel as read."""
+        async with self.config.guild(ctx.guild).channels() as settings:
+            if str(channel.id) not in settings.keys():
+                return await ctx.send("That is not a MessageNotifier channel!")
+            settings[str(channel.id)]["last_activity"] = datetime.now().timestamp()
+            settings[str(channel.id)]["alerted"] = False
+        return await ctx.tick()
+
+    @_message_notifier.command(name="unread")
+    async def _unread(self, ctx: commands.Context, channel: discord.TextChannel):
+        """Mark a MessageNotifier channel as unread."""
+        async with self.config.guild(ctx.guild).channels() as settings:
+            if str(channel.id) not in settings.keys():
+                return await ctx.send("That is not a MessageNotifier channel!")
+            settings[str(channel.id)]["alerted"] = True
+        return await ctx.tick()
+
     @commands.bot_has_permissions(embed_links=True)
     @_message_notifier.command(name="view")
     async def _view(self, ctx: commands.Context):
