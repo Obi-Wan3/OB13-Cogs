@@ -29,7 +29,7 @@ Cogs marked with a ✓ are ready for use, while those with a ✗ are still a Wor
 | Leveler | ✗ | Customizable Chat + VC Leveling System | Obi-Wan3 |
 | LFG | ✓ | VC LFG System w/ Custom Fields | Obi-Wan3, Eternalll#6100 (BC) |
 | MentionHelp | ✓ | Customizable MentionHelp Message | Obi-Wan3 |
-| MessageNotifier | ✗ | Notify You of Messages in Certain Channels | Obi-Wan3 |
+| MessageNotifier | ✓ | Notify You of Messages in Certain Channels | Obi-Wan3 |
 | NoDMs | ✓ | Disallow DM Commands | Obi-Wan3 |
 | PrivateRooms | ✓ | Automatic Private VCs with Lobby | Obi-Wan3, Archetype (Bloib & Echospawn, BC) |
 | PublicRooms | ✓ | Automatic Public VC Creation | Obi-Wan3, Archetype (Bloib & Echospawn, BC) |
