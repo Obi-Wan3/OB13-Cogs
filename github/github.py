@@ -25,8 +25,8 @@ SOFTWARE.
 import re
 import time
 import aiohttp
-import datetime
 import feedparser
+from datetime import datetime
 
 import discord
 from discord.ext import tasks
@@ -64,7 +64,7 @@ class GitHub(commands.Cog):
         desc_regex = r"https://github.com/.*?/.*?/commit/(.*)"
         desc = re.fullmatch(desc_regex, entry.link).group(1)[:7]
         desc = f"[`{desc}`]({entry.link}) {entry.title} – {entry.author}"
-        t = datetime.datetime.fromtimestamp(time.mktime(entry.updated_parsed))
+        t = datetime.fromtimestamp(time.mktime(entry.updated_parsed))
         e = discord.Embed(title=title, color=0x7289da, description=desc, url=entry.link, timestamp=t)
         e.set_author(name=entry.author, url=entry.href, icon_url=entry.media_thumbnail[0]["url"])
         return e
@@ -86,7 +86,7 @@ class GitHub(commands.Cog):
             desc += f"[`{desc0}`]({e.link}) {e.title} – {e.author}\n"
             num += 1
         title = f"[{title.group(1)}:{title.group(2)}] {num} new commits"
-        t = datetime.datetime.fromtimestamp(time.mktime(entries[0].updated_parsed))
+        t = datetime.fromtimestamp(time.mktime(entries[0].updated_parsed))
         e = discord.Embed(title=title, color=0x7289da, description=desc, url=commits_link, timestamp=t)
 
         e.set_author(name=entries[0].author, url=entries[0].href, icon_url=entries[0].media_thumbnail[0]["url"])
@@ -94,10 +94,10 @@ class GitHub(commands.Cog):
 
     @staticmethod
     async def new_entries(entries, last_time):
-        new_time = time.time()
+        new_time = datetime.utcnow()
         new_entries = []
         for e in entries:
-            e_time = time.mktime(e.updated_parsed)
+            e_time = datetime.fromtimestamp(time.mktime(e.updated_parsed))
             if e_time > last_time:
                 new_entries.insert(0, e)
             else:
@@ -184,7 +184,8 @@ class GitHub(commands.Cog):
     @_github.command(name="forceall")
     async def _force_all(self, ctx: commands.context):
         """Force a run of the RSS feed fetching coro."""
-        await self._github_rss.coro(self)
+        async with ctx.typing():
+            await self._github_rss.coro(self)
         return await ctx.tick()
 
     @_github.command(name="whatlinks")
@@ -244,9 +245,9 @@ class GitHub(commands.Cog):
                     return await ctx.send("There is already a feed with that link!")
                 elif len(feeds[str(ctx.author.id)].items()) > guild_limit:
                     return await ctx.send(f"You already have {guild_limit} feeds in this server!")
-                feeds[str(ctx.author.id)][name] = {"url": url, "time": time.time()}
+                feeds[str(ctx.author.id)][name] = {"url": url, "time": datetime.utcnow().timestamp()}
             except KeyError:
-                feeds[str(ctx.author.id)] = {name: {"url": url, "time": time.time()}}
+                feeds[str(ctx.author.id)] = {name: {"url": url, "time": datetime.utcnow().timestamp()}}
 
         ch = self.bot.get_channel(ch)
         name_regex = r"https://github.com/.*?/(.*?)/commits/(.*)"
@@ -383,7 +384,7 @@ class GitHub(commands.Cog):
 
                         # Parse feed
                         entries = feedparser.parse(html).entries
-                        new_entries, new_time = await self.new_entries(entries, float(fs["time"]))
+                        new_entries, new_time = await self.new_entries(entries, datetime.fromtimestamp(float(fs["time"])))
 
                         # Create embeds
                         e = None
@@ -400,7 +401,7 @@ class GitHub(commands.Cog):
                                     await c.send(embed=e)
                             else:
                                 await ch.send(embed=e)
-                        fs["time"] = new_time
+                        fs["time"] = new_time.timestamp()
 
     @_github_rss.before_loop
     async def _before_github_rss(self):
