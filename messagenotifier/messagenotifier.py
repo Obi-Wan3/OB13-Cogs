@@ -84,22 +84,27 @@ class MessageNotifier(commands.Cog):
                 return
 
             time_passed: timedelta = datetime.now() - datetime.fromtimestamp(channel_settings["last_activity"])
-            if time_passed < timedelta(minutes=await self.config.minutes()):
-                await asyncio.sleep((timedelta(minutes=3) - time_passed).total_seconds())
+            interval = await self.config.minutes()
+            if time_passed < timedelta(minutes=interval):
+                await asyncio.sleep((timedelta(minutes=interval) - time_passed).total_seconds())
 
-            if not channel_settings["alerted"] and datetime.fromtimestamp(channel_settings["last_activity"]) < message.created_at:
+            async with self.config.guild(message.guild).channels() as settings:
 
-                embed = discord.Embed(
-                    description=f"New [message]({message.jump_url}) in {message.channel.mention} from {message.author.name}#{message.author.discriminator}",
-                    color=await self.bot.get_embed_color(message.channel)
-                )
+                if not (channel_settings := guild_settings.get(str(message.channel.id))):
+                    return
 
-                if await self.config.mention():
-                    await alert_channel.send(f"{m.mention}", embed=embed)
-                else:
-                    await alert_channel.send(embed=embed)
+                if not channel_settings["alerted"] and datetime.fromtimestamp(channel_settings["last_activity"]) < message.created_at:
 
-                async with self.config.guild(message.guild).channels() as settings:
+                    embed = discord.Embed(
+                        description=f"New [message]({message.jump_url}) in {message.channel.mention} from {message.author.name}#{message.author.discriminator}",
+                        color=await self.bot.get_embed_color(message.channel)
+                    )
+
+                    if await self.config.mention():
+                        await alert_channel.send(f"{m.mention}", embed=embed)
+                    else:
+                        await alert_channel.send(embed=embed)
+
                     settings[str(message.channel.id)]["alerted"] = True
 
     @commands.Cog.listener("on_raw_reaction_add")
