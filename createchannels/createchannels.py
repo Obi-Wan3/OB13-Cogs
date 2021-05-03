@@ -130,8 +130,9 @@ class CreateChannels(commands.Cog):
         if len(active_author) >= userlimit:
             return await ctx.send(f"You already have {userlimit} active VCs!")
 
-        overwrite = {ctx.author: discord.PermissionOverwrite(manage_channels=True)}
         category = self.bot.get_channel(await self.config.guild(ctx.guild).voice.category())
+        overwrite = category.overwrites
+        overwrite[ctx.author] = overwrite.get(ctx.author, discord.PermissionOverwrite()).update(manage_channels=True)
         if max_users is not None:
             if not(99 >= max_users >= 1):
                 return await ctx.send("The user limit should be between 1 and 99 users!")
@@ -263,8 +264,9 @@ class CreateChannels(commands.Cog):
         if len(active_author) >= userlimit:
             return await ctx.send(f"You already have {userlimit} active text channels!")
 
-        overwrite = {ctx.author: discord.PermissionOverwrite(manage_channels=True)}
         category = self.bot.get_channel(await self.config.guild(ctx.guild).text.category())
+        overwrite = category.overwrites
+        overwrite[ctx.author] = overwrite.get(ctx.author, discord.PermissionOverwrite()).update(manage_channels=True)
         new = await ctx.guild.create_text_channel(name=name, category=category, overwrites=overwrite)
         async with self.config.guild(ctx.guild).text.active() as a:
             a.append((new.id, ctx.author.id, time.time()))
