@@ -132,7 +132,7 @@ class MessageNotifier(commands.Cog):
         if not ((m := alert_in_server.get_member(user_to_alert.id)) and (c := alert_in_server.get_channel(alert_in_channel)) and (c.permissions_for(m).read_message_history)):
             return await ctx.send("That user is not in the alert server, the channel doesn't exist, or they don't have permission to view messages in that channel!")
 
-        async with self.config.guild(ctx.guild).channels() as settings:
+        async with self.config.guild(listen_in.guild).channels() as settings:
             if str(listen_in.id) in settings.keys():
                 return await ctx.send("There is already a MessageNotifier for that channel!")
 
@@ -149,7 +149,7 @@ class MessageNotifier(commands.Cog):
     @_message_notifier.command(name="remove")
     async def _remove(self, ctx: commands.Context, listen_in: discord.TextChannel):
         """Remove a MessageNotifier alert on a channel's messages."""
-        async with self.config.guild(ctx.guild).channels() as settings:
+        async with self.config.guild(listen_in.guild).channels() as settings:
             if str(listen_in.id) not in settings.keys():
                 return await ctx.send("There is no MessageNotifier for that channel!")
             del settings[str(listen_in.id)]
@@ -172,7 +172,7 @@ class MessageNotifier(commands.Cog):
     @_message_notifier.command(name="read")
     async def _read(self, ctx: commands.Context, channel: discord.TextChannel):
         """Mark a MessageNotifier channel as read."""
-        async with self.config.guild(ctx.guild).channels() as settings:
+        async with self.config.guild(channel.guild).channels() as settings:
             if str(channel.id) not in settings.keys():
                 return await ctx.send("That is not a MessageNotifier channel!")
             settings[str(channel.id)]["last_activity"] = datetime.now().timestamp()
@@ -182,7 +182,7 @@ class MessageNotifier(commands.Cog):
     @_message_notifier.command(name="unread")
     async def _unread(self, ctx: commands.Context, channel: discord.TextChannel):
         """Mark a MessageNotifier channel as unread."""
-        async with self.config.guild(ctx.guild).channels() as settings:
+        async with self.config.guild(channel.guild).channels() as settings:
             if str(channel.id) not in settings.keys():
                 return await ctx.send("That is not a MessageNotifier channel!")
             settings[str(channel.id)]["alerted"] = True
@@ -190,10 +190,12 @@ class MessageNotifier(commands.Cog):
 
     @commands.bot_has_permissions(embed_links=True)
     @_message_notifier.command(name="view")
-    async def _view(self, ctx: commands.Context):
+    async def _view(self, ctx: commands.Context, server: discord.Guild = None):
         """View the MessageNotifiers in this server."""
         global_config = await self.config.all()
-        settings = await self.config.guild(ctx.guild).channels()
+        if not (server or ctx.guild):
+            return await ctx.send("Please run this command in a server or specify one as the `server` parameter!")
+        settings = await self.config.guild(server or ctx.guild).channels()
         channels = []
         for c in settings.keys():
             if ch := ctx.guild.get_channel(int(c)):
