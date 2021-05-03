@@ -112,7 +112,7 @@ class GitHub(commands.Cog):
     async def _github(self, ctx: commands.Context):
         """GitHub RSS Feeds"""
 
-    @commands.admin()
+    @commands.admin_or_permissions(administrator=True)
     @_github.command(name="setchannel")
     async def _set_channel(self, ctx: commands.Context, channel: discord.TextChannel):
         """Set the GitHub RSS feed channel."""
@@ -123,7 +123,7 @@ class GitHub(commands.Cog):
         await self.config.guild(ctx.guild).channel.set(channel.id)
         return await ctx.send(f"The GitHub RSS feed channel has been set to {channel.mention}.")
 
-    @commands.admin()
+    @commands.admin_or_permissions(administrator=True)
     @_github.command(name="setrole")
     async def _set_role(self, ctx: commands.Context, role: discord.Role = None):
         """Set the GitHub RSS feed role."""
@@ -134,14 +134,14 @@ class GitHub(commands.Cog):
             await self.config.guild(ctx.guild).role.set(role.id)
             return await ctx.send(f"The GitHub RSS feed role has been set to {role.mention}.")
 
-    @commands.admin()
+    @commands.admin_or_permissions(administrator=True)
     @_github.command(name="setlimit")
     async def _set_limit(self, ctx: commands.Context, num: int = 5):
         """Set the GitHub RSS feed limit per user."""
         await self.config.guild(ctx.guild).limit.set(num)
         return await ctx.send(f"The GitHub RSS feed limit per user has been set to {num}.")
 
-    @commands.admin()
+    @commands.admin_or_permissions(administrator=True)
     @_github.command(name="get")
     async def _get(self, ctx: commands.Context, url: str, private=False):
         """Test out a GitHub url."""
@@ -161,7 +161,7 @@ class GitHub(commands.Cog):
         e = await self.commit_embed(entry, feedparser.parse(html).feed.link)
         await ctx.send(embed=e)
 
-    @commands.admin()
+    @commands.admin_or_permissions(administrator=True)
     @_github.command(name="force")
     async def _force(self, ctx: commands.Context, user: discord.Member, name: str):
         """Force a specific RSS feed to post."""
@@ -182,12 +182,12 @@ class GitHub(commands.Cog):
         ch = self.bot.get_channel(await self.config.guild(ctx.guild).channel())
         return await ch.send(embed=e)
 
-    @commands.admin()
+    @commands.admin_or_permissions(administrator=True)
     @_github.command(name="forceall")
     async def _force_all(self, ctx: commands.context):
         """Force a run of the RSS feed fetching coro."""
         async with ctx.typing():
-            await self._github_rss.coro(self)
+            await self._github_rss.coro(self, guild_to_check=ctx.guild.id)
         return await ctx.tick()
 
     @_github.command(name="whatlinks")
@@ -266,7 +266,7 @@ class GitHub(commands.Cog):
 
         return await ctx.send("Feed successfully added.")
 
-    @commands.admin()
+    @commands.admin_or_permissions(administrator=True)
     @_github.command(name="rename")
     async def _rename(self, ctx: commands.Context, user: discord.Member, old_name: str, new_name: str):
         """Rename a feed."""
@@ -279,7 +279,7 @@ class GitHub(commands.Cog):
 
         return await ctx.send("Feed successfully renamed.")
 
-    @commands.admin()
+    @commands.admin_or_permissions(administrator=True)
     @_github.command(name="channel")
     async def _channel(self, ctx: commands.Context, user: discord.Member, feed_name: str, channel: discord.TextChannel = None):
         """Set a channel override for a feed (leave empty to reset)."""
@@ -344,7 +344,7 @@ class GitHub(commands.Cog):
         if feeds_string == "": return await ctx.send(f"No feeds found. Try adding one with `{ctx.clean_prefix}github add`!")
         return await ctx.send(embed=discord.Embed(title="Your GitHub RSS Feeds", description=feeds_string, color=color))
 
-    @commands.admin()
+    @commands.admin_or_permissions(administrator=True)
     @_github.command(name="listall")
     async def _list_all(self, ctx: commands.Context):
         """List all GitHub RSS feeds in the server."""
@@ -362,9 +362,12 @@ class GitHub(commands.Cog):
         return await ctx.send(embed=discord.Embed(title="Server GitHub RSS Feeds", description=feeds_string, color=color))
 
     @tasks.loop(minutes=3)
-    async def _github_rss(self):
+    async def _github_rss(self, guild_to_check=None):
         all_guilds = await self.config.all_guilds()
         for guild in all_guilds:
+            if guild_to_check and guild != guild_to_check:
+                continue
+
             g = self.bot.get_guild(guild)
             ch = self.bot.get_channel(await self.config.guild(g).channel())
 
