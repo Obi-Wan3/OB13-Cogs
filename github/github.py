@@ -23,16 +23,16 @@ SOFTWARE.
 """
 
 import re
-import time
 import aiohttp
 import feedparser
-from dateutil import parser
-from datetime import datetime
+from datetime import datetime, timezone
 
 import discord
 from discord.ext import tasks
 from redbot.core import commands, Config
 from redbot.core.utils.chat_formatting import escape
+
+TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
 
 class GitHub(commands.Cog):
@@ -65,7 +65,7 @@ class GitHub(commands.Cog):
         desc_regex = r"https://github.com/.*?/.*?/commit/(.*)"
         desc = re.fullmatch(desc_regex, entry.link).group(1)[:7]
         desc = f"[`{desc}`]({entry.link}) {entry.title} – {entry.author}"
-        t = parser.isoparse(entry.updated)
+        t = datetime.strptime(entry.updated, TIME_FORMAT).replace(tzinfo=timezone.utc)
         e = discord.Embed(title=title, color=0x7289da, description=desc, url=entry.link, timestamp=t)
         e.set_author(name=entry.author, url=entry.href, icon_url=entry.media_thumbnail[0]["url"])
         return e
@@ -87,7 +87,7 @@ class GitHub(commands.Cog):
             desc += f"[`{desc0}`]({e.link}) {e.title} – {e.author}\n"
             num += 1
         title = f"[{title.group(1)}:{title.group(2)}] {num} new commits"
-        t = parser.isoparse(entries[0].updated)
+        t = datetime.strptime(entries[0].updated, TIME_FORMAT).replace(tzinfo=timezone.utc)
         e = discord.Embed(title=title, color=0x7289da, description=desc, url=commits_link, timestamp=t)
 
         e.set_author(name=entries[0].author, url=entries[0].href, icon_url=entries[0].media_thumbnail[0]["url"])
@@ -98,8 +98,7 @@ class GitHub(commands.Cog):
         new_time = datetime.utcnow()
         new_entries = []
         for e in entries:
-            e_time = parser.isoparse(e.updated)
-            last_time = last_time.replace(tzinfo=e_time.tzinfo)
+            e_time = datetime.strptime(e.updated, TIME_FORMAT)
             if e_time > last_time:
                 new_entries.insert(0, e)
             else:
@@ -406,7 +405,7 @@ class GitHub(commands.Cog):
                                     await c.send(embed=e)
                             else:
                                 await ch.send(embed=e)
-                        fs["time"] = new_time.timestamp()
+                        fs["time"] = new_time.replace(tzinfo=timezone.utc).timestamp()
 
     @_github_rss.before_loop
     async def _before_github_rss(self):
