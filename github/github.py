@@ -30,7 +30,7 @@ from datetime import datetime, timezone
 import discord
 from discord.ext import tasks
 from redbot.core import commands, Config
-from redbot.core.utils.chat_formatting import escape
+from redbot.core.utils.chat_formatting import escape, pagify
 
 TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
@@ -340,8 +340,17 @@ class GitHub(commands.Cog):
                     feeds_string += f"`{name}`: <{re.fullmatch(repo_regex, feed['url']).group(1)}>\n"
             except KeyError:
                 return await ctx.send("No feeds found.")
-        if feeds_string == "": return await ctx.send(f"No feeds found. Try adding one with `{ctx.clean_prefix}github add`!")
-        return await ctx.send(embed=discord.Embed(title="Your GitHub RSS Feeds", description=feeds_string, color=color))
+
+        if not feeds_string:
+            return await ctx.send(f"No feeds found. Try adding one with `{ctx.clean_prefix}github add`!")
+
+        embeds: list[discord.Embed] = []
+        for page in pagify(feeds_string):
+            embeds.append(discord.Embed(description=page, color=color))
+
+        embeds[0].title = "Your GitHub RSS Feeds"
+        for embed in embeds:
+            await ctx.send(embed=embed)
 
     @commands.admin_or_permissions(administrator=True)
     @_github.command(name="listall")
@@ -353,12 +362,19 @@ class GitHub(commands.Cog):
         async with ctx.typing():
             async with self.config.guild(ctx.guild).feeds() as feeds:
                 repo_regex = r"(https://github.com/.*?/.*?)/.*"
-                for id, fs in feeds.items():
-                    feeds_string += f"{(await self.bot.get_or_fetch_user(int(id))).mention}: `{len(fs)}` feed(s) \n"
+                for i, fs in feeds.items():
+                    feeds_string += f"{(await self.bot.get_or_fetch_user(int(i))).mention}: `{len(fs)}` feed(s) \n"
                     for n, f in fs.items():
                         feeds_string += f"- `{n}`: <{re.fullmatch(repo_regex, f['url']).group(1)}>\n"
+                    feeds_string += "\n"
 
-        return await ctx.send(embed=discord.Embed(title="Server GitHub RSS Feeds", description=feeds_string, color=color))
+        embeds: list[discord.Embed] = []
+        for page in pagify(feeds_string, delims=["\n\n"]):
+            embeds.append(discord.Embed(description=page, color=color))
+
+        embeds[0].title = "Server GitHub RSS Feeds"
+        for embed in embeds:
+            await ctx.send(embed=embed)
 
     @tasks.loop(minutes=3)
     async def _github_rss(self, guild_to_check=None):
