@@ -389,7 +389,7 @@ class GitHub(commands.Cog):
 
                         # Parse feed
                         entries = feedparser.parse(html).entries
-                        new_entries, new_time = await self.new_entries(entries, datetime.fromtimestamp(float(fs["time"])))
+                        new_entries, new_time = await self.new_entries(entries, datetime.utcfromtimestamp(float(fs["time"])))
 
                         # Create embeds
                         e = None
