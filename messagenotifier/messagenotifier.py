@@ -193,12 +193,13 @@ class MessageNotifier(commands.Cog):
     async def _view(self, ctx: commands.Context, server: discord.Guild = None):
         """View the MessageNotifiers in this server."""
         global_config = await self.config.all()
-        if not (server or ctx.guild):
+        settings_server = server or ctx.guild
+        if not settings_server:
             return await ctx.send("Please run this command in a server or specify one as the `server` parameter!")
-        settings = await self.config.guild(server or ctx.guild).channels()
+        settings = await self.config.guild(settings_server).channels()
         channels = []
         for c in settings.keys():
-            if ch := ctx.guild.get_channel(int(c)):
+            if ch := settings_server.get_channel(int(c)):
                 channels.append(ch.mention)
         return await ctx.send(embed=discord.Embed(
             title="MessageNotifier Settings",
