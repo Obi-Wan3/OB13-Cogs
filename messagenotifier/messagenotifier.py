@@ -65,7 +65,7 @@ class MessageNotifier(commands.Cog):
 
         if message.author.id == channel_settings["user"]:
             async with self.config.guild(message.guild).channels() as settings:
-                settings[str(message.channel_id)]["last_activity"] = datetime.now().timestamp()
+                settings[str(message.channel.id)]["last_activity"] = datetime.now().timestamp()
                 settings[str(message.channel.id)]["alerted"] = False
         else:
             if not (member := message.guild.get_member(channel_settings["user"])):
