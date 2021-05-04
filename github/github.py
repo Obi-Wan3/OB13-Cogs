@@ -66,7 +66,6 @@ class GitHub(commands.Cog):
         desc = re.fullmatch(desc_regex, entry.link).group(1)[:7]
         desc = f"[`{desc}`]({entry.link}) {entry.title} – {entry.author}"
         t = parser.isoparse(entry.updated)
-        t.replace(tzinfo=None)
         e = discord.Embed(title=title, color=0x7289da, description=desc, url=entry.link, timestamp=t)
         e.set_author(name=entry.author, url=entry.href, icon_url=entry.media_thumbnail[0]["url"])
         return e
@@ -88,7 +87,7 @@ class GitHub(commands.Cog):
             desc += f"[`{desc0}`]({e.link}) {e.title} – {e.author}\n"
             num += 1
         title = f"[{title.group(1)}:{title.group(2)}] {num} new commits"
-        t = parser.isoparse(entries[0].updated).replace(tzinfo=None)
+        t = parser.isoparse(entries[0].updated)
         e = discord.Embed(title=title, color=0x7289da, description=desc, url=commits_link, timestamp=t)
 
         e.set_author(name=entries[0].author, url=entries[0].href, icon_url=entries[0].media_thumbnail[0]["url"])
@@ -99,7 +98,8 @@ class GitHub(commands.Cog):
         new_time = datetime.utcnow()
         new_entries = []
         for e in entries:
-            e_time = parser.isoparse(e.updated).replace(tzinfo=None)
+            e_time = parser.isoparse(e.updated)
+            last_time = last_time.replace(tzinfo=e_time.tzinfo)
             if e_time > last_time:
                 new_entries.insert(0, e)
             else:
