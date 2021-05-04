@@ -90,7 +90,7 @@ class MessageNotifier(commands.Cog):
 
             async with self.config.guild(message.guild).channels() as settings:
 
-                if not (channel_settings := guild_settings.get(str(message.channel.id))):
+                if not (channel_settings := settings.get(str(message.channel.id))):
                     return
 
                 if not channel_settings["alerted"] and datetime.fromtimestamp(channel_settings["last_activity"]) < message.created_at:
