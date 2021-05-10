@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from datetime import datetime
+
 import discord
 from redbot.core import commands, Config
 
@@ -47,16 +49,15 @@ class PrivateRooms(commands.Cog):
         await self.bot.wait_until_red_ready()
         all_guilds = await self.config.all_guilds()
         for g in all_guilds.keys():
-            async with self.config.guild_from_id(g).all() as guild:
-                for sys in guild['systems'].values():
-                    for a in sys['active']:
-                        try:
-                            vc = self.bot.get_channel(a[0])
-                            if not vc.members:
-                                await vc.delete(reason="PrivateRooms: unused VC after cog load")
+            if guild := self.bot.get_guild(g):
+                async with self.config.guild(guild).all() as guild_settings:
+                    for sys in guild_settings['systems'].values():
+                        for a in sys['active']:
+                            vc = guild.get_channel(a[0])
+                            if not vc or not vc.members:
                                 sys['active'].remove(a)
-                        except (AttributeError, discord.HTTPException, discord.InvalidData):
-                            sys['active'].remove(a)
+                            if vc and not vc.members and vc.permissions_for(guild.me).manage_channels:
+                                await vc.delete(reason="PrivateRooms: unused VC found on cog load")
 
     @commands.Cog.listener("on_voice_state_update")
     async def _voice_listener(self, member: discord.Member, before, after):
@@ -81,14 +82,14 @@ class PrivateRooms(commands.Cog):
                     active_vcs = [x[0] for x in sys['active']]
 
                     # Member joined an active PrivateRoom
-                    if sys['log_channel'] and sys['lobby'] == before.channel.id and after.channel.id in active_vcs:
-                        try:
-                            await member.guild.get_channel(sys['log_channel']).send(
-                                f'{member.mention} joined `{after.channel.name}`',
-                                allowed_mentions=discord.AllowedMentions.none()
-                            )
-                        except discord.HTTPException:
-                            pass
+                    log_channel, embed_links = await self._get_log(sys['log_channel'], member.guild)
+                    if log_channel and sys['lobby'] == before.channel.id and after.channel.id in active_vcs:
+                        await self._send_log(
+                            channel=log_channel,
+                            text=f"{member.mention} joined `{after.channel.name}`",
+                            color=discord.Color.magenta(),
+                            embed_links=embed_links,
+                        )
 
                     # Member left a PrivateRoom
                     if before.channel.id in active_vcs and before.channel.id != after.channel.id:
@@ -134,7 +135,7 @@ class PrivateRooms(commands.Cog):
                                     await before.channel.edit(
                                         name=sys['channel_name'].replace("{creator}", remaining.display_name),
                                         overwrites=new_overwrites_before,
-                                        reason=f"PrivateRooms: {member.display_name} left their VC, ownership transferred to {remaining.id}"
+                                        reason=f"PrivateRooms: {member.display_name} left their VC, channel reassigned to {remaining.display_name}"
                                     )
                                 else:
                                     return
@@ -145,19 +146,19 @@ class PrivateRooms(commands.Cog):
                                 if lobby.permissions_for(member.guild.me).manage_channels:
                                     await lobby.edit(
                                         overwrites=new_overwrites_lobby,
-                                        reason=f"PrivateRooms: {member.display_name} has left their VC, ownership transferred to {remaining.id}"
+                                        reason=f"PrivateRooms: {member.display_name} has left their VC, channel reassigned to {remaining.display_name}"
                                     )
                                 else:
                                     return
 
-                                if sys['log_channel']:
-                                    try:
-                                        await member.guild.get_channel(sys['log_channel']).send(
-                                            f'{member.mention} left `{before.channel.name}`, channel reassigned to {remaining.mention}',
-                                            allowed_mentions=discord.AllowedMentions.none()
-                                        )
-                                    except discord.HTTPException:
-                                        pass
+                                log_channel, embed_links = await self._get_log(sys['log_channel'], member.guild)
+                                if log_channel:
+                                    await self._send_log(
+                                        channel=log_channel,
+                                        text=f"{member.mention} left `{before.channel.name}`, channel reassigned to {remaining.mention}",
+                                        color=discord.Color.teal(),
+                                        embed_links=embed_links,
+                                    )
 
                             # Remove channel
                             else:
@@ -176,27 +177,16 @@ class PrivateRooms(commands.Cog):
                                 else:
                                     return
 
-                                if sys['log_channel']:
-                                    try:
-                                        await member.guild.get_channel(sys['log_channel']).send(
-                                            f'{member.mention} left `{before.channel.name}`, channel removed',
-                                            allowed_mentions=discord.AllowedMentions.none()
-                                        )
-                                    except discord.HTTPException:
-                                        pass
+                                log_channel, embed_links = await self._get_log(sys['log_channel'], member.guild)
+                                if log_channel:
+                                    await self._send_log(
+                                        channel=log_channel,
+                                        text=f"{member.mention} left `{before.channel.name}`, channel removed",
+                                        color=discord.Color.dark_teal(),
+                                        embed_links=embed_links,
+                                    )
 
-                            break
-
-                        # Other user left channel
-                        elif sys['log_channel']:
-                            try:
-                                await member.guild.get_channel(sys['log_channel']).send(
-                                    f'{member.mention} left `{before.channel.name}`',
-                                    allowed_mentions=discord.AllowedMentions.none()
-                                )
-                            except discord.HTTPException:
-                                pass
-                            break
+                        break
 
         # Joined a channel
         if (not before.channel and after.channel) or joinedroom:
@@ -206,53 +196,75 @@ class PrivateRooms(commands.Cog):
                     # Joined an Origin channel of a system that is toggled on
                     if sys['toggle'] and sys['origin'] == after.channel.id:
                         # Create their private VC
-                        try:
-                            private_vc = await member.guild.create_voice_channel(
-                                name=sys['channel_name'].replace("{creator}", member.display_name),
-                                category=after.channel.category,
-                                bitrate=min(sys['bitrate']*1000, member.guild.bitrate_limit),
-                                reason=f"PrivateRooms: created by {member.display_name}",
-                                overwrites={
-                                    member: discord.PermissionOverwrite(move_members=True, view_channel=True, connect=True),
-                                    member.guild.default_role: discord.PermissionOverwrite(connect=False),
-                                    member.guild.me: discord.PermissionOverwrite(connect=True)
-                                }
-                            )
-                        except discord.HTTPException:
+                        if not after.channel.category.permissions_for(member.guild.me).manage_channels:
                             return
+                        private_vc = await member.guild.create_voice_channel(
+                            name=sys['channel_name'].replace("{creator}", member.display_name),
+                            category=after.channel.category,
+                            bitrate=min(sys['bitrate']*1000, member.guild.bitrate_limit),
+                            reason=f"PrivateRooms: created by {member.display_name}",
+                            overwrites={
+                                member: discord.PermissionOverwrite(move_members=True, view_channel=True, connect=True),
+                                member.guild.default_role: discord.PermissionOverwrite(connect=False),
+                                member.guild.me: discord.PermissionOverwrite(connect=True)
+                            }
+                        )
 
                         # Move creator to their private room
-                        try:
-                            await member.move_to(private_vc, reason="PrivateRooms: is VC creator")
-                        except discord.HTTPException:
+                        if not (after.channel.permissions_for(member.guild.me).move_members and private_vc.permissions_for(member.guild.me).move_members):
                             return
+                        await member.move_to(private_vc, reason="PrivateRooms: is VC creator")
 
                         # Edit Lobby channel to have permission overwrite
                         lobby = member.guild.get_channel(sys['lobby'])
                         new_overwrites = lobby.overwrites
                         new_overwrites[member] = discord.PermissionOverwrite(move_members=True)
-                        if lobby.permissions_for(member.guild.me).manage_channels:
-                            await lobby.edit(
-                                overwrites=new_overwrites,
-                                reason=f"PrivateRooms: {member.display_name} has created a new private VC"
-                            )
-                        else:
+                        if not lobby.permissions_for(member.guild.me).manage_channels:
                             return
+                        await lobby.edit(
+                            overwrites=new_overwrites,
+                            reason=f"PrivateRooms: {member.display_name} has created a new private VC"
+                        )
 
                         # If log channel set, then send logs
-                        if sys['log_channel']:
-                            try:
-                                await member.guild.get_channel(sys['log_channel']).send(
-                                    f'{member.mention} created `{private_vc.name}`',
-                                    allowed_mentions=discord.AllowedMentions.none()
-                                )
-                            except discord.HTTPException:
-                                pass
+                        log_channel, embed_links = await self._get_log(sys['log_channel'], member.guild)
+                        if log_channel:
+                            await self._send_log(
+                                channel=log_channel,
+                                text=f"{member.mention} joined {before.channel.mention} and created `{private_vc.name}`",
+                                color=discord.Color.teal(),
+                                embed_links=embed_links,
+                            )
 
                         # Add to active list
                         sys['active'].append((private_vc.id, member.id))
 
                         break
+
+    @staticmethod
+    async def _get_log(channel_id, guild: discord.Guild):
+        log_channel, embed_links = None, False
+        if channel_id:
+            log_channel = guild.get_channel(channel_id)
+            if not log_channel or not log_channel.permissions_for(guild.me).send_messages:
+                log_channel = None
+            if log_channel and log_channel.permissions_for(guild.me).embed_links:
+                embed_links = True
+        return log_channel, embed_links
+
+    @staticmethod
+    async def _send_log(channel: discord.TextChannel, text: str, color: discord.Color, embed_links: bool):
+        if embed_links:
+            return await channel.send(embed=discord.Embed(
+                timestamp=datetime.utcnow(),
+                color=color,
+                description=text
+            ))
+        else:
+            return await channel.send(
+                text,
+                allowed_mentions=discord.AllowedMentions.none()
+            )
 
     @commands.guild_only()
     @commands.admin_or_permissions(administrator=True)
