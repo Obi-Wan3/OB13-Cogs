@@ -368,6 +368,9 @@ class GitHub(commands.Cog):
                         feeds_string += f"- `{n}`: <{re.fullmatch(repo_regex, f['url']).group(1)}>\n"
                     feeds_string += "\n"
 
+        if not feeds_string:
+            return await ctx.send("No GitHub RSS feeds have been set up in this server yet.")
+
         embeds: list[discord.Embed] = []
         for page in pagify(feeds_string, delims=["\n\n"]):
             embeds.append(discord.Embed(description=page, color=color))
