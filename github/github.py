@@ -95,15 +95,14 @@ class GitHub(commands.Cog):
 
     @staticmethod
     async def new_entries(entries, last_time):
-        new_time = datetime.utcnow()
-        new_entries = []
+        entries_new = []
         for e in entries:
-            e_time = datetime.strptime(e.updated, TIME_FORMAT)
+            e_time = datetime.strptime(e.updated, TIME_FORMAT).replace(tzinfo=timezone.utc).timestamp()
             if e_time > last_time:
-                new_entries.insert(0, e)
+                entries_new.insert(0, e)
             else:
                 break
-        return new_entries, new_time
+        return entries_new, datetime.now(tz=timezone.utc)
 
     @commands.bot_has_permissions(embed_links=True)
     @commands.group(name="github")
@@ -246,9 +245,9 @@ class GitHub(commands.Cog):
                     return await ctx.send("There is already a feed with that link!")
                 elif len(feeds[str(ctx.author.id)].items()) > guild_limit:
                     return await ctx.send(f"You already have {guild_limit} feeds in this server!")
-                feeds[str(ctx.author.id)][name] = {"url": url, "time": datetime.utcnow().timestamp()}
+                feeds[str(ctx.author.id)][name] = {"url": url, "time": datetime.now(tz=timezone.utc).timestamp()}
             except KeyError:
-                feeds[str(ctx.author.id)] = {name: {"url": url, "time": datetime.utcnow().timestamp()}}
+                feeds[str(ctx.author.id)] = {name: {"url": url, "time": datetime.now(tz=timezone.utc).timestamp()}}
 
         ch = self.bot.get_channel(ch)
         name_regex = r"https://github.com/.*?/(.*?)/commits/(.*)"
@@ -407,7 +406,7 @@ class GitHub(commands.Cog):
 
                         # Parse feed
                         entries = feedparser.parse(html).entries
-                        new_entries, new_time = await self.new_entries(entries, datetime.utcfromtimestamp(float(fs["time"])))
+                        new_entries, new_time = await self.new_entries(entries, fs["time"])
 
                         # Create embeds
                         e = None
@@ -424,7 +423,7 @@ class GitHub(commands.Cog):
                                     await c.send(embed=e)
                             else:
                                 await ch.send(embed=e)
-                        fs["time"] = new_time.replace(tzinfo=timezone.utc).timestamp()
+                        fs["time"] = new_time.timestamp()
 
     @_github_rss.before_loop
     async def _before_github_rss(self):
