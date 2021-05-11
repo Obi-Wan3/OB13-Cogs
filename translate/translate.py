@@ -24,12 +24,15 @@ SOFTWARE.
 
 import typing
 import functools
-import googletrans
+import googletrans, googletrans.models
 
 import discord
 from redbot.core import commands
 
 TRANSLATOR = googletrans.Translator()
+MISSING_INPUTS = "Please provide a message ID/link, some text to translate, or reply to the original message."
+LANGUAGE_NOT_FOUND = "An invalid language code was provided."
+TRANSLATION_FAILED = "Something went wrong while translating."
 
 
 class Translate(commands.Cog):
@@ -42,50 +45,131 @@ class Translate(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    @staticmethod
+    async def _convert_language(language: str):
+        language = googletrans.LANGUAGES.get(language, language).lower()
+        if language in ("zh", "ch", "chinese"):
+            language = "chinese (simplified)"
+        if language not in googletrans.LANGUAGES.values():
+            language = None
+        return language
+
+    @staticmethod
+    async def _convert_input(context: commands.Context, user_input: str):
+        to_translate, to_reply = None, None
+
+        try:
+            if not user_input:
+                raise commands.BadArgument
+
+            converted_message: discord.Message = await commands.MessageConverter().convert(ctx=context, argument=user_input)
+
+            to_translate = converted_message.content
+            to_reply = converted_message
+
+        except commands.BadArgument:
+
+            if user_input:
+                to_translate = user_input
+                to_reply = context.message
+
+            elif context.message.reference and isinstance(context.message.reference.resolved, discord.Message):
+                to_translate = context.message.reference.resolved.content
+                to_reply = context.message.reference.resolved
+
+        if to_reply and to_reply.channel.id != context.channel.id:
+            to_reply = context.message
+
+        return to_translate, to_reply
+
+    @staticmethod
+    async def _result_embed(res: googletrans.models.Translated, color: discord.Color):
+        embed = discord.Embed(color=color)
+        embed.add_field(name=googletrans.LANGUAGES[res.src.lower()].title(), value=res.origin, inline=True)
+        embed.add_field(name=googletrans.LANGUAGES[res.dest.lower()].title(), value=res.text, inline=True)
+        return embed
+
     @commands.bot_has_permissions(embed_links=True)
     @commands.command(name="translate")
-    async def _translate(self, ctx: commands.Context, language, message: typing.Optional[discord.Message], *, text: typing.Optional[str]):
-        """Translate something by providing a message ID/link, some text, or just replying to the original message."""
+    async def _translate(self, ctx: commands.Context, to_language: str, *, optional_input: str):
+        """
+        Translate the given text to another language (auto-detect source language).
 
-        if not message and not text and not (ctx.message.reference and isinstance(ctx.message.reference.resolved, discord.Message)):
-            return await ctx.send("Please provide a message ID/link, some text to translate, or reply to the original message.")
+        You can provide a message ID/link, some text, or just reply to the original message.
+        """
 
         async with ctx.typing():
+            if not (to_language := await self._convert_language(to_language)):
+                return await ctx.send(LANGUAGE_NOT_FOUND)
 
-            if language.lower() in googletrans.LANGUAGES:
-                language = googletrans.LANGUAGES[language.lower()]
-            elif language.lower() in ("zh", "ch", "chinese"):
-                language = "zh-cn"
-
-            to_translate, to_reply = None, None
-            if message:
-                to_translate = message.content
-                to_reply = message
-            if text:
-                to_translate = text
-                to_reply = ctx.message
-            if ctx.message.reference:
-                to_translate = ctx.message.reference.resolved.content
-                to_reply = ctx.message.reference.resolved
+            to_translate, to_reply = await self._convert_input(ctx, optional_input)
 
             if not (to_translate and to_reply):
-                return await ctx.send("Nothing to translate.")
+                return await ctx.send(MISSING_INPUTS)
 
-            if to_reply.channel.id != ctx.channel.id:
-                to_reply = None
-
-            task = functools.partial(TRANSLATOR.translate, text=to_translate, dest=language)
+            task = functools.partial(TRANSLATOR.translate, text=to_translate, dest=to_language)
 
             try:
-                res = await self.bot.loop.run_in_executor(None, task)
-            except (ValueError, AttributeError):
-                failed_embed = discord.Embed(description="Translation failed.", color=discord.Color.red())
-                return await ctx.channel.send(embed=failed_embed)
+                result: googletrans.models.Translated = await self.bot.loop.run_in_executor(None, task)
+            except Exception:
+                return await ctx.channel.send(embed=discord.Embed(description=TRANSLATION_FAILED, color=discord.Color.red()))
 
-            translated_embed = discord.Embed(title='Translation', color=discord.Color.green())
-            translated_embed.add_field(name=googletrans.LANGUAGES[res.src.lower()].title(), value=res.origin, inline=True)
-            translated_embed.add_field(name=googletrans.LANGUAGES[res.dest.lower()].title(), value=res.text, inline=True)
+            result_embed = await self._result_embed(result, await ctx.embed_color())
 
-        if hasattr(to_reply, "reply"):
-            return await to_reply.reply(embed=translated_embed, mention_author=False)
-        return await ctx.send(embed=translated_embed)
+        return await to_reply.reply(embed=result_embed, mention_author=False)
+
+    @commands.bot_has_permissions(embed_links=True)
+    @commands.command(name="translatefrom")
+    async def _translate_from(self, ctx: commands.Context, source_language: str, to_language: str, *, optional_input: str):
+        """
+        Translate the given text from a specified origin language to another language.
+
+        You can by provide a message ID/link, some text, or just reply to the original message.
+        """
+
+        async with ctx.typing():
+            if not (source_language := await self._convert_language(source_language)) or not (to_language := await self._convert_language(to_language)):
+                return await ctx.send(LANGUAGE_NOT_FOUND)
+
+            to_translate, to_reply = await self._convert_input(ctx, optional_input)
+
+            if not (to_translate and to_reply):
+                return await ctx.send(MISSING_INPUTS)
+
+            task = functools.partial(TRANSLATOR.translate, text=to_translate, src=source_language, dest=to_language)
+
+            try:
+                result: googletrans.models.Translated = await self.bot.loop.run_in_executor(None, task)
+            except Exception:
+                return await ctx.channel.send(embed=discord.Embed(description=TRANSLATION_FAILED, color=discord.Color.red()))
+
+            result_embed = await self._result_embed(result, await ctx.embed_color())
+
+        return await to_reply.reply(embed=result_embed, mention_author=False)
+
+    @commands.bot_has_permissions(embed_links=True)
+    @commands.command(name="language")
+    async def _language(self, ctx: commands.Context, *, optional_input: str):
+        """
+        Find out what language the given text is in.
+
+        You can by provide a message ID/link, some text, or just reply to the original message.
+        """
+        async with ctx.typing():
+            to_translate, to_reply = await self._convert_input(ctx, optional_input)
+
+            if not (to_translate and to_reply):
+                return await ctx.send(MISSING_INPUTS)
+
+            task = functools.partial(TRANSLATOR.detect, text=to_translate)
+
+            try:
+                result: googletrans.models.Detected = await self.bot.loop.run_in_executor(None, task)
+            except Exception:
+                return await ctx.channel.send(embed=discord.Embed(description=TRANSLATION_FAILED, color=discord.Color.red()))
+
+            result_embed = discord.Embed(color=await ctx.embed_color())
+            result_embed.add_field(name="Language", value=googletrans.LANGUAGES[result.lang.lower()].title(), inline=True)
+            result_embed.add_field(name="Confidence", value=f"{int(result.confidence*100)}%", inline=True)
+
+        return await to_reply.reply(embed=result_embed, mention_author=False)
