@@ -23,7 +23,7 @@ SOFTWARE.
 """
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime, timezone
 
 import discord
 from redbot.core import commands, Config
@@ -65,7 +65,7 @@ class MessageNotifier(commands.Cog):
 
         if message.author.id == channel_settings["user"]:
             async with self.config.guild(message.guild).channels() as settings:
-                settings[str(message.channel.id)]["last_activity"] = datetime.utcnow().timestamp()
+                settings[str(message.channel.id)]["last_activity"] = datetime.now(tz=timezone.utc).timestamp()
                 settings[str(message.channel.id)]["alerted"] = False
         else:
             if not (member := message.guild.get_member(channel_settings["user"])):
@@ -83,17 +83,17 @@ class MessageNotifier(commands.Cog):
             if not (alert_channel.permissions_for(alert_guild.me).send_messages and alert_channel.permissions_for(alert_guild.me).embed_links):
                 return
 
-            time_passed: timedelta = datetime.utcnow() - datetime.utcfromtimestamp(channel_settings["last_activity"])
-            interval = await self.config.minutes()
-            if time_passed < timedelta(minutes=interval):
-                await asyncio.sleep((timedelta(minutes=interval) - time_passed).total_seconds())
+            time_passed: int = int(datetime.now(tz=timezone.utc).timestamp() - channel_settings["last_activity"])
+            minutes = await self.config.minutes()
+            if time_passed < 60*minutes:
+                await asyncio.sleep(60*minutes - time_passed)
 
             async with self.config.guild(message.guild).channels() as settings:
 
                 if not (channel_settings := settings.get(str(message.channel.id))):
                     return
 
-                if not channel_settings["alerted"] and datetime.utcfromtimestamp(channel_settings["last_activity"]) < message.created_at:
+                if not channel_settings["alerted"] and channel_settings["last_activity"] < message.created_at.replace(tzinfo=timezone.utc).timestamp():
 
                     embed = discord.Embed(
                         description=f"New [message]({message.jump_url}) in {message.channel.mention} from {message.author.name}#{message.author.discriminator}",
@@ -118,7 +118,7 @@ class MessageNotifier(commands.Cog):
 
         if payload.member.id == channel_settings["user"]:
             async with self.config.guild_from_id(payload.guild_id).channels() as settings:
-                settings[str(payload.channel_id)]["last_activity"] = datetime.utcnow().timestamp()
+                settings[str(payload.channel_id)]["last_activity"] = datetime.now(tz=timezone.utc).timestamp()
                 settings[str(payload.channel_id)]["alerted"] = False
 
     @commands.is_owner()
@@ -140,7 +140,7 @@ class MessageNotifier(commands.Cog):
                 "user": user_to_alert.id,
                 "alert_guild": alert_in_server.id,
                 "alert_channel": alert_in_channel,
-                "last_activity": datetime.utcnow().timestamp(),
+                "last_activity": datetime.now(tz=timezone.utc).timestamp(),
                 "alerted": False
             }
 
@@ -175,7 +175,7 @@ class MessageNotifier(commands.Cog):
         async with self.config.guild(channel.guild).channels() as settings:
             if str(channel.id) not in settings.keys():
                 return await ctx.send("That is not a MessageNotifier channel!")
-            settings[str(channel.id)]["last_activity"] = datetime.utcnow().timestamp()
+            settings[str(channel.id)]["last_activity"] = datetime.now(tz=timezone.utc).timestamp()
             settings[str(channel.id)]["alerted"] = False
         return await ctx.tick()
 
