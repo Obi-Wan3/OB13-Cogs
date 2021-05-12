@@ -91,7 +91,7 @@ class Translate(commands.Cog):
 
     @commands.bot_has_permissions(embed_links=True)
     @commands.command(name="translate")
-    async def _translate(self, ctx: commands.Context, to_language: str, *, optional_input: str):
+    async def _translate(self, ctx: commands.Context, to_language: str, *, optional_input: str = ""):
         """
         Translate the given text to another language (auto-detect source language).
 
@@ -120,7 +120,7 @@ class Translate(commands.Cog):
 
     @commands.bot_has_permissions(embed_links=True)
     @commands.command(name="translatefrom")
-    async def _translate_from(self, ctx: commands.Context, source_language: str, to_language: str, *, optional_input: str):
+    async def _translate_from(self, ctx: commands.Context, source_language: str, to_language: str, *, optional_input: str = ""):
         """
         Translate the given text from a specified origin language to another language.
 
@@ -149,7 +149,7 @@ class Translate(commands.Cog):
 
     @commands.bot_has_permissions(embed_links=True)
     @commands.command(name="language")
-    async def _language(self, ctx: commands.Context, *, optional_input: str):
+    async def _language(self, ctx: commands.Context, *, optional_input: str = ""):
         """
         Find out what language the given text is in.
 
