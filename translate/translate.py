@@ -85,8 +85,7 @@ class Translate(commands.Cog):
     @staticmethod
     async def _result_embed(res: googletrans.models.Translated, color: discord.Color):
         embed = discord.Embed(color=color)
-        embed.add_field(name=googletrans.LANGUAGES[res.src.lower()].title(), value=res.origin, inline=True)
-        embed.add_field(name=googletrans.LANGUAGES[res.dest.lower()].title(), value=res.text, inline=True)
+        embed.add_field(name=f"{googletrans.LANGUAGES[res.src.lower()].title()} → {googletrans.LANGUAGES[res.dest.lower()].title()}", value=res.text, inline=True)
         return embed
 
     @commands.bot_has_permissions(embed_links=True)
