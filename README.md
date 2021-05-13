@@ -15,6 +15,7 @@ Cogs marked with a ✓ are ready for use, while those with a ✗ are still a Wor
 | Announcements | ✓ | Announcement w/ Role Ping | Obi-Wan3 |
 | BotAccess | ✓ | Allow Special Roles Access to Bot | Obi-Wan3, Vertyco#0117 (BC) |
 | BrainShop | ✓ | AI Chatbot using [BrainShop](https://brainshop.ai/) | Obi-Wan3, SaraCaterina#1015 (BC) |
+| CloudConvert | ✗ | Convert Files w/ CloudConvert API | Obi-Wan3 |
 | Conditions | ✗ | Weather Conditions & AQI | Obi-Wan3 |
 | Counting | ✓ | Multifeatured Counting Channel | Obi-Wan3, Atmos#0101 (BC) |
 | CreateChannels | ✓ | Create Text & Voice Channels Using Commands | Obi-Wan3, Mile High#7102 (BC) |
