@@ -9,10 +9,10 @@
     "install_msg": "Thank you for installing! Use `[p]help mentionhelp` for more info.",
     "min_bot_version" : "3.4.0",
     "min_python_version" : [3, 8, 1],
-    "permissions" : [],
+    "permissions" : ["embed_links"],
     "required_cogs" : {},
     "requirements" : [],
     "short": "Customizable MentionHelp Message",
-    "tags" : ["mentionhelp", "custom", "message"],
+    "tags" : ["utility", "mentionhelp", "custom", "message"],
     "type": "COG"
 }

@@ -13,6 +13,7 @@
     "required_cogs" : {},
     "requirements": ["feedparser"],
     "short": "GitHub RSS Commit Feeds",
-    "tags": ["github", "rss", "feed", "commits"],
+    "tags": ["utility", "github", "rss", "feed", "commits"],
     "type": "COG"
 }
+

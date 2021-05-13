@@ -13,6 +13,6 @@
     "required_cogs" : {},
     "requirements" : [],
     "short": "Notify You of Messages in Certain Channels",
-    "tags" : ["message", "notify", "channels"],
+    "tags" : ["utility", "message", "notify", "channels"],
     "type": "COG"
 }

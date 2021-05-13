@@ -9,10 +9,10 @@
     "install_msg": "Thank you for installing! Use `[p]help templateposts` for more info.",
     "min_bot_version" : "3.4.0",
     "min_python_version" : [3, 8, 1],
-    "permissions" : ["manage_messages"],
+    "permissions" : ["manage_messages", "embed_links"],
     "required_cogs" : {},
     "requirements" : [],
     "short": "Posts w/ Template Requirements",
-    "tags" : ["required", "template", "message", "channel"],
+    "tags" : ["utility", "required", "template", "message", "channel"],
     "type": "COG"
 }

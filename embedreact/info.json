@@ -13,6 +13,6 @@
     "required_cogs" : {},
     "requirements" : [],
     "short": "Auto-Reactions to Embeds",
-    "tags" : ["embeds", "reactions", "automatic"],
+    "tags" : ["utility", "embeds", "reactions", "automatic"],
     "type": "COG"
 }

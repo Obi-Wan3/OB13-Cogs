@@ -13,6 +13,6 @@
     "required_cogs" : {},
     "requirements" : [],
     "short": "Bot Replies to Messages",
-    "tags" : ["replies"],
+    "tags" : ["utility", "reply"],
     "type": "COG"
 }

@@ -9,10 +9,10 @@
     "install_msg": "Thank you for installing! Use `[p]help improvtime` for more info.",
     "min_bot_version" : "3.4.0",
     "min_python_version" : [3, 8, 1],
-    "permissions" : [],
+    "permissions" : ["manage_messages"],
     "required_cogs" : {},
     "requirements" : [],
     "short": "One Word Story Channel",
-    "tags" : ["improv", "story", "channel"],
+    "tags" : ["fun", "improv", "story", "channel"],
     "type": "COG"
 }

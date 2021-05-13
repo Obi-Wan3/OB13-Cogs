@@ -6,13 +6,13 @@
     "disabled" : false,
     "end_user_data_statement" : "This cog uses the BrainShop API (https://brainshop.ai/), sending the contents of a message and its author's user ID to BrainShop in order to receive a response. Please see BrainShop's ToS at https://brainshop.ai/terms. The cog itself only stores settings data (i.e. global/guild toggles and guild auto-reply channels).",
     "hidden": false,
-    "install_msg": "Thank you for installing! **Instructions:** Before being able to use this cog, you must do the following steps:\n1. Create a free account at https://brainshop.ai/\n2. Follow the instructions to set up your account (for domain name, use anything random, e.g. `example.com`)\n3. After creating the account, at https://brainshop.ai/user click on `Add Brain` at the left.\n4. Give the brain a title, keep all defaults and click `Save`.\n5. In the `Settings` tab for the brain, you will find the `Brain ID` and `API Key`. Copy those and use them in the following command:```[p]set api brainshop key,[API Key] bid,[Brain ID] ``` 6. You're all set! If you would like, toggle whether BrainShop should automatically reply to messages starting with a mention.",
+    "install_msg": "Thank you for installing! Use `[p]help BrainShop` for more info.\n**Instructions:** Before being able to use this cog, you must do the following steps:\n1. Create a free account at https://brainshop.ai/\n2. Follow the instructions to set up your account (for domain name, use anything random, e.g. `example.com`)\n3. After creating the account, at https://brainshop.ai/user click on `Add Brain` at the left.\n4. Give the brain a title, keep all defaults and click `Save`.\n5. In the `Settings` tab for the brain, you will find the `Brain ID` and `API Key`. Copy those and use them in the following command:```[p]set api brainshop key,[API Key] bid,[Brain ID] ``` 6. You're all set! If you would like, toggle whether BrainShop should automatically reply to messages starting with a mention.",
     "min_bot_version" : "3.4.0",
     "min_python_version" : [3, 8, 1],
     "permissions" : [],
     "required_cogs" : {},
     "requirements" : [],
     "short": "AI Chatbot Using BrainShop (https://brainshop.ai/)",
-    "tags" : ["brainshop", "ai", "chatbot"],
+    "tags" : ["fun", "brainshop", "ai", "chatbot"],
     "type": "COG"
 }

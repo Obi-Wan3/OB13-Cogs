@@ -6,13 +6,13 @@
     "disabled" : false,
     "end_user_data_statement" : "This cog stores provided server settings, as well as the last time a member (identified by UserID) has taken a quiz.",
     "hidden": false,
-    "install_msg": "Thank you for installing! Use `[p]help quizrole` for more info.",
+    "install_msg": "Thank you for installing! Use `[p]help QuizRole` for more info.",
     "min_bot_version" : "3.4.0",
     "min_python_version" : [3, 8, 1],
-    "permissions" : [],
+    "permissions" : ["manage_roles", "embed_links"],
     "required_cogs" : {},
     "requirements" : [],
     "short": "Take a Quiz to Gain a Role",
-    "tags" : ["quiz", "role", "auto"],
+    "tags" : ["utility", "quiz", "role", "auto", "DM"],
     "type": "COG"
 }

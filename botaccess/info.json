@@ -13,6 +13,6 @@
     "required_cogs" : {},
     "requirements" : [],
     "short": "Allow Special Roles Access to Bot",
-    "tags" : ["bot", "invite", "access", "boost", "patron"],
+    "tags" : ["bot", "invite", "access", "boost", "supporter", "servers"],
     "type": "COG"
 }

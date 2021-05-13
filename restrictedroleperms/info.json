@@ -13,6 +13,6 @@
     "required_cogs" : {},
     "requirements" : [],
     "short": "Give Certain Roles Restricted Permissions",
-    "tags" : ["restricted", "role", "permissions", "assign", "mention"],
+    "tags" : ["utility", "restricted", "role", "permissions", "assign", "mention"],
     "type": "COG"
 }

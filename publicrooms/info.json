@@ -13,6 +13,6 @@
     "required_cogs" : {},
     "requirements" : [],
     "short": "Automatic Public VC Creation",
-    "tags" : ["publicrooms", "voice channels", "automatic", "creation"],
+    "tags" : ["utility", "publicrooms", "voice channels", "automatic", "creation", "templates"],
     "type": "COG"
 }

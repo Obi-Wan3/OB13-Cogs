@@ -13,6 +13,6 @@
     "required_cogs" : {},
     "requirements" : [],
     "short": "Streaks & Points for Uploads",
-    "tags" : ["upload", "streak", "points", "leaderboard"],
+    "tags" : ["fun", "upload", "economy", "streak", "points", "leaderboard"],
     "type": "COG"
 }

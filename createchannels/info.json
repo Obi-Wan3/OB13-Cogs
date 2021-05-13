@@ -2,7 +2,7 @@
     "author": [
         "Obi-Wan3"
     ],
-    "description": "Create voice and text channels via a command.",
+    "description": "Allow users to create voice and text channels via commands.",
     "disabled" : false,
     "end_user_data_statement" : "This cog stores provided server settings, as well as the current channels created through the cog.",
     "hidden": false,
@@ -13,6 +13,6 @@
     "required_cogs" : {},
     "requirements" : [],
     "short": "Create Text & Voice Channels Using Commands",
-    "tags" : ["create", "channels", "text", "voice"],
+    "tags" : ["utility", "create", "channels", "text", "voice"],
     "type": "COG"
 }

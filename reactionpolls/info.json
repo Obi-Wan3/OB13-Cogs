@@ -13,6 +13,6 @@
     "required_cogs" : {},
     "requirements" : [],
     "short": "Poll Channels w/ Auto-Reactions",
-    "tags" : ["reaction", "polls", "channel", "survey"],
+    "tags" : ["utility", "reaction", "polls", "channel", "survey"],
     "type": "COG"
 }

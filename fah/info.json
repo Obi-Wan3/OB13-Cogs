@@ -13,6 +13,6 @@
     "required_cogs" : {},
     "requirements" : [],
     "short": "Various Folding@Home Stats (https://foldingathome.org/).",
-    "tags" : ["Folding@Home", "stats"],
+    "tags" : ["fun", "Folding@Home", "stats"],
     "type": "COG"
 }

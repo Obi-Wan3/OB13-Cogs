@@ -13,6 +13,6 @@
     "required_cogs" : {},
     "requirements" : [],
     "short": "Automatic Private VCs with Lobby",
-    "tags" : ["privaterooms", "voice channels", "automatic", "creation"],
+    "tags" : ["utility", "privaterooms", "voice channels", "automatic", "creation", "lobby"],
     "type": "COG"
 }

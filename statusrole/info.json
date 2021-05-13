@@ -13,6 +13,6 @@
     "required_cogs" : {},
     "requirements" : [],
     "short": "Roles for Certain Custom Statuses",
-    "tags" : ["custom status", "roles"],
+    "tags" : ["utility", "custom status", "roles"],
     "type": "COG"
 }

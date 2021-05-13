@@ -9,10 +9,10 @@
     "install_msg": "Thank you for installing! Use `[p]help nodms` for more info.",
     "min_bot_version" : "3.4.0",
     "min_python_version" : [3, 8, 1],
-    "permissions" : [],
+    "permissions" : ["embed_links"],
     "required_cogs" : {},
     "requirements" : [],
     "short": "Disallow DM Commands",
-    "tags" : ["disallow", "commands", "DMs"],
+    "tags" : ["utility", "disallow", "commands", "DMs"],
     "type": "COG"
 }

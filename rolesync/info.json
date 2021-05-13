@@ -13,6 +13,6 @@
     "required_cogs" : {},
     "requirements" : [],
     "short": "Cross-Server Role Sync on Join",
-    "tags" : ["roles", "sync", "join", "cross-server"],
+    "tags" : ["utility", "roles", "sync", "join", "cross-server"],
     "type": "COG"
 }

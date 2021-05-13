@@ -13,6 +13,6 @@
     "required_cogs" : {},
     "requirements" : [],
     "short": "Invite Referral -> Credits",
-    "tags" : ["referrals", "reward", "invite"],
+    "tags" : ["fun", "referrals", "reward", "invite", "credits", "economy"],
     "type": "COG"
 }

@@ -13,6 +13,6 @@
     "required_cogs" : {},
     "requirements" : [],
     "short": "Assign Temporary Roles",
-    "tags" : ["temporary", "role", "timed"],
+    "tags" : ["utility", "temporary", "role", "timed", "expire"],
     "type": "COG"
 }

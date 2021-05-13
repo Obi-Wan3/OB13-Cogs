@@ -13,6 +13,6 @@
     "required_cogs" : {},
     "requirements" : [],
     "short": "Multifeatured Counting Channel",
-    "tags" : ["counting", "channel", "role", "mute"],
+    "tags" : ["fun", "counting", "channel", "role", "mute"],
     "type": "COG"
 }

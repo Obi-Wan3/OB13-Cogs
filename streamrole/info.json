@@ -13,6 +13,6 @@
     "required_cogs" : {},
     "requirements" : [],
     "short": "Roles for Discord Streamers",
-    "tags" : ["stream", "role", "discord", "live"],
+    "tags" : ["utility", "stream", "role", "discord", "live", "screenshare"],
     "type": "COG"
 }
