@@ -423,7 +423,7 @@ class GitHub(commands.Cog):
                                     await c.send(embed=e)
                             else:
                                 await ch.send(embed=e)
-                        fs["time"] = new_time.timestamp()
+                            fs["time"] = new_time.timestamp()
 
     @_github_rss.before_loop
     async def _before_github_rss(self):
