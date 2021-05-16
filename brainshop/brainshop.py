@@ -27,6 +27,7 @@ import aiohttp
 
 import discord
 from redbot.core import commands, Config
+from redbot.core.utils.chat_formatting import humanize_list
 
 
 class BrainShop(commands.Cog):
@@ -39,8 +40,15 @@ class BrainShop(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.config = Config.get_conf(self, identifier=14000605)
-        default_global = {"auto": True}
-        default_guild = {"auto": True, "channels": []}
+        default_global = {
+            "auto": True
+        }
+        default_guild = {
+            "auto": True,
+            "channels": [],
+            "allowlist": [],
+            "blocklist": []
+        }
         self.config.register_global(**default_global)
         self.config.register_guild(**default_guild)
 
@@ -57,20 +65,33 @@ class BrainShop(commands.Cog):
     async def _message_listener(self, message: discord.Message):
 
         if (
-                not message.guild or  # Not in a server
                 message.author.bot or  # Message author is a bot
-                await self.bot.cog_disabled_in_guild(self, message.guild) or  # Cog disabled in guild
-                not message.channel.permissions_for(message.guild.me).send_messages or  # Cannot send message
-                (
-                        message.channel.id not in await self.config.guild(message.guild).channels() and  # Not in auto channel
-                        (
-                                not message.content.startswith((f"<@{self.bot.user.id}>", f"<@!{self.bot.user.id}>")) or  # Does not start with mention
-                                not await self.config.guild(message.guild).auto() or  # Guild auto toggled off
-                                not await self.config.auto()  # Global auto toggled off
-                        )
-                )
+                not message.channel.permissions_for(message.guild.me).send_messages  # Cannot send message
         ):
             return
+
+        global_auto = await self.config.auto()
+        if not message.guild:
+            if not global_auto:
+                return
+        else:
+            if await self.bot.cog_disabled_in_guild(self, message.guild):
+                return
+
+            guild_settings = await self.config.guild(message.guild).all()
+            if message.channel.id not in guild_settings["channels"]:  # Not in auto-channel
+                if (
+                        not message.content.startswith((f"<@{self.bot.user.id}>", f"<@!{self.bot.user.id}>")) or  # Does not start with mention
+                        not guild_settings["auto"] or  # Guild auto toggled off
+                        not global_auto  # Global auto toggled off
+                ):
+                    return
+
+            if (
+                    (guild_settings["allowlist"] and message.channel.id not in guild_settings["allowlist"]) or  # Channel not in allowlist
+                    (guild_settings["blocklist"] and message.channel.id in guild_settings["blocklist"])  # Channel in blocklist
+            ):
+                return
 
         async with message.channel.typing():
             brainshop_api = await self.bot.get_shared_api_tokens("brainshop")
@@ -113,7 +134,7 @@ class BrainShop(commands.Cog):
         """BrainShop Settings"""
 
     @commands.guild_only()
-    @commands.admin()
+    @commands.admin_or_permissions(administrator=True)
     @_brainshopset.command(name="auto")
     async def _auto(self, ctx: commands.Context, true_or_false: bool):
         """Toggle whether BrainShop should automatically reply to all messages in the server starting with the bot mention."""
@@ -121,15 +142,66 @@ class BrainShop(commands.Cog):
         return await ctx.tick()
 
     @commands.guild_only()
-    @commands.admin()
-    @_brainshopset.command(name="channels")
-    async def _channels(self, ctx: commands.Context, *channels: discord.TextChannel):
-        """Set automatic reply channels for BrainShop (leave blank to remove all)."""
+    @commands.admin_or_permissions(administrator=True)
+    @_brainshopset.command(name="autochannels")
+    async def _auto_channels(self, ctx: commands.Context, *channels: discord.TextChannel):
+        """Set the automatic reply channels for BrainShop (leave blank to remove all)."""
         if channels:
             await self.config.guild(ctx.guild).channels.set([c.id for c in channels])
         else:
             await self.config.guild(ctx.guild).channels.set([])
         return await ctx.tick()
+
+    @commands.guild_only()
+    @commands.admin_or_permissions(administrator=True)
+    @_brainshopset.command(name="allowlist")
+    async def _allowlist(self, ctx: commands.Context, *channels: discord.TextChannel):
+        """Set the BrainShop channel allowlist (leave blank to remove all)."""
+        if channels:
+            await self.config.guild(ctx.guild).allowlist.set([c.id for c in channels])
+        else:
+            await self.config.guild(ctx.guild).allowlist.set([])
+        return await ctx.tick()
+
+    @commands.guild_only()
+    @commands.admin_or_permissions(administrator=True)
+    @_brainshopset.command(name="blocklist")
+    async def _blocklist(self, ctx: commands.Context, *channels: discord.TextChannel):
+        """Set the BrainShop channel blocklist (leave blank to remove all)."""
+        if channels:
+            await self.config.guild(ctx.guild).blocklist.set([c.id for c in channels])
+        else:
+            await self.config.guild(ctx.guild).blocklist.set([])
+        return await ctx.tick()
+
+    @commands.bot_has_permissions(embed_links=True)
+    @commands.guild_only()
+    @commands.admin_or_permissions(administrator=True)
+    @_brainshopset.command(name="view")
+    async def _view(self, ctx: commands.Context):
+        """View the server settings for BrainShop."""
+        async with self.config.guild(ctx.guild).all() as guild_settings:
+            setting_channels = {"channels": [], "blocklist": [], "allowlist": []}
+            for ch_type in setting_channels.keys():
+                for c in guild_settings[ch_type]:
+                    if ch := ctx.guild.get_channel(c):
+                        setting_channels[ch_type].append(ch)
+                    else:
+                        guild_settings[ch_type].remove(c)
+
+            settings = f"**Mention Reply:** {guild_settings['auto']}\n"
+            settings += f"**Auto-Channels:** {humanize_list(setting_channels['channels']) or None}\n"
+            settings += f"**Allowlist:** {humanize_list(setting_channels['allowlist']) or None}\n"
+            settings += f"**Blocklist:** {humanize_list(setting_channels['blocklist']) or None}"
+
+        embed = discord.Embed(
+            title="BrainShop Settings",
+            color=await ctx.embed_color(),
+            description=settings
+        )
+        embed.set_footer(text="Powered by BrainShop | https://brainshop.ai/")
+
+        return await ctx.send(embed=embed)
 
     @commands.is_owner()
     @_brainshopset.command(name="globalauto")
@@ -139,10 +211,10 @@ class BrainShop(commands.Cog):
         return await ctx.tick()
 
     @commands.is_owner()
-    @_brainshopset.command(name="view")
-    async def _view(self, ctx: commands.Context, show_api_key: bool = False):
+    @_brainshopset.command(name="viewglobal")
+    async def _view_global(self, ctx: commands.Context, show_api_key: bool = False):
         """
-        View the settings for BrainShop.
+        View the global settings for BrainShop.
 
         **Instructions:** Before being able to use this cog, you must do the following steps:
         1. Create a free account at https://brainshop.ai/
@@ -172,4 +244,5 @@ class BrainShop(commands.Cog):
 
         embed.set_footer(text="Powered by BrainShop | https://brainshop.ai/")
 
+        await ctx.tick()
         return await ctx.author.send(embed=embed)
