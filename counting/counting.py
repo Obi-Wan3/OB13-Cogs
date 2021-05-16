@@ -39,8 +39,21 @@ class Counting(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.config = Config.get_conf(self, identifier=14000605, force_registration=True)
-        default_guild = {"toggle": True, "channel": None, "counter": 0, "role": None, "assignrole": False, "allowrepeats": False, "penalty": (None, None), "wrong": {}}
+        default_guild = {
+            "toggle": True,
+            "channel": None,
+            "counter": 0,
+            "role": None,
+            "assignrole": False,
+            "allowrepeats": False,
+            "penalty": (None, None),
+            "wrong": {}
+        }
+        default_member = {
+            "counts": 0
+        }
         self.config.register_guild(**default_guild)
+        self.config.register_member(**default_member)
         self.deleted = []
 
     @commands.Cog.listener("on_message")
@@ -99,6 +112,8 @@ class Counting(commands.Cog):
             return
 
         await self.config.guild(message.guild).counter.set(counter+1)
+        async with self.config.member(message.author).all() as member_settings:
+            member_settings["counts"] += 1
 
         # Assign a role the latest user to count if toggled
         role_id = await self.config.guild(message.guild).role()
@@ -146,8 +161,26 @@ class Counting(commands.Cog):
             return await message.channel.send(f"{message.author.mention} edited or deleted their message. Original message: ```{message.content}```")
 
     @commands.Cog.listener("on_message_edit")
-    async def _message_edit_listener(self, before: discord.Message, after: discord.Message):
+    async def _message_edit_listener(self, before: discord.Message, _):
         await self._message_deletion_listener(before)
+
+    @commands.guild_only()
+    @commands.bot_has_permissions(embed_links=True)
+    @commands.command(name="topcounters")
+    async def _top_counters(self, ctx: commands.Context):
+        """Show the Counting leaderboard in this server."""
+        members = await self.config.all_members(ctx.guild)
+        member_counts = sorted([(k, v["counts"]) for k, v in members.items()], key=lambda m: m[1], reverse=True)
+
+        embed = discord.Embed(title="Counting Leaderboard", color=await ctx.embed_color())
+        if not member_counts or member_counts[0][1] == 0:
+            embed.description = "No users have counted yet."
+        else:
+            embed.description = "```py\nCounts | User\n"
+            for member, counts in member_counts[:10]:
+                embed.description += f"{str(counts).rjust(6)}   {ctx.guild.get_member(member).display_name}\n"
+            embed.description += "```"
+        return await ctx.send(embed=embed)
 
     @commands.guild_only()
     @commands.mod_or_permissions(manage_messages=True)
@@ -206,10 +239,17 @@ class Counting(commands.Cog):
         await self.config.guild(ctx.guild).penalty.set((wrong, mute_time_in_seconds))
         return await ctx.tick()
 
+    @counting.command(name="resetcounts")
+    async def _reset_counts(self, ctx: commands.Context):
+        """Reset the current Counting scores for all server members."""
+        await self.config.clear_all_members(ctx.guild)
+        return await ctx.tick()
+
     @counting.command(name="clear")
     async def _clear(self, ctx: commands.Context):
         """Clear & reset the current Counting settings."""
         await self.config.guild(ctx.guild).clear()
+        await self.config.clear_all_members(ctx.guild)
         return await ctx.tick()
 
     @commands.bot_has_permissions(embed_links=True)
