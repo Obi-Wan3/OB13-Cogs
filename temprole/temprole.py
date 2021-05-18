@@ -93,22 +93,23 @@ class TempRole(commands.Cog):
             end_time = datetime.now() + time
             user_tr[str(role.id)] = end_time.timestamp()
 
-        try:
-            await user.add_roles(
-                role,
-                reason=f"TempRole: added by {ctx.author}, expires in {time.days}d {time.seconds//3600}h"
-            )
+        if role < ctx.guild.me.top_role:
+            if role not in user.roles:
+                await user.add_roles(
+                    role,
+                    reason=f"TempRole: added by {ctx.author}, expires in {time.days}d {time.seconds//3600}h"
+                )
+        else:
+            return await ctx.send("I cannot assign this role!")
 
-            message = f"TempRole {role.mention} for {user.mention} has been added. Expires in {time.days} days {time.seconds//3600} hours."
-            await ctx.send(
-                message,
-                allowed_mentions=discord.AllowedMentions.none()
-            )
+        message = f"TempRole {role.mention} for {user.mention} has been added. Expires in {time.days} days {time.seconds//3600} hours."
+        await ctx.send(
+            message,
+            allowed_mentions=discord.AllowedMentions.none()
+        )
 
-            await self._maybe_send_log(ctx.guild, message)
-            await self._tr_timer(user, role, end_time.timestamp())
-        except (discord.Forbidden, discord.HTTPException):
-            return await ctx.send("Something went wrong while assigning this role.")
+        await self._maybe_send_log(ctx.guild, message)
+        await self._tr_timer(user, role, end_time.timestamp())
 
     @commands.bot_has_permissions(manage_roles=True)
     @commands.admin_or_permissions(manage_roles=True)
@@ -154,8 +155,10 @@ class TempRole(commands.Cog):
             for member_id, temp_roles in (await self.config.all_members(ctx.guild)).items():
                 member: discord.Member = ctx.guild.get_member(int(member_id))
                 if member:
-                    roles = [ctx.guild.get_role(int(r)) for r in temp_roles["temp_roles"].keys()]
-                    desc += f"{member.mention}: {humanize_list([r.mention for r in roles])}\n"
+                    if roles := [ctx.guild.get_role(int(r)) for r in temp_roles["temp_roles"].keys()]:
+                        desc += f"{member.mention}: {humanize_list([r.mention for r in roles])}\n"
+                    else:
+                        await self.config.member(member).clear()
         else:
             title = f"{user.display_name} TempRoles"
             async with self.config.member(user).temp_roles() as member_temp_roles:
@@ -183,14 +186,11 @@ class TempRole(commands.Cog):
 
     async def _maybe_send_log(self, guild: discord.Guild, message: str):
         log_channel = await self.config.guild(guild).log()
-        if log_channel:
-            try:
-                await guild.get_channel(log_channel).send(
-                    message,
-                    allowed_mentions=discord.AllowedMentions.none()
-                )
-            except discord.HTTPException:
-                pass
+        if log_channel and (log_channel := guild.get_channel(log_channel)) and log_channel.permissions_for(guild.me).send_messages:
+            await log_channel.send(
+                message,
+                allowed_mentions=discord.AllowedMentions.none()
+            )
 
     async def _tr_handler(self):
         await self.bot.wait_until_red_ready()
@@ -218,19 +218,20 @@ class TempRole(commands.Cog):
             if tr_entries.get(str(role.id)):
                 del tr_entries[str(role.id)]
                 reason = "TempRole: timer ended" if not admin else f"TempRole: timer ended early by {admin}"
-                try:
-                    await member.remove_roles(role, reason=reason)
-                    await self._maybe_send_log(
-                        member.guild,
-                        f"TempRole {role.mention} for {member.mention} has been removed."
-                    )
-                except discord.Forbidden:
+                if member.guild.me.guild_permissions.manage_roles and role < member.guild.me.top_role:
+                    if role in member.roles:
+                        await member.remove_roles(role, reason=reason)
+                        await self._maybe_send_log(
+                            member.guild,
+                            f"TempRole {role.mention} for {member.mention} has been removed."
+                        )
+                    else:
+                        await self._maybe_send_log(
+                            member.guild,
+                            f"TempRole {role.mention} for {member.mention} ended, but the role had already been removed."
+                        )
+                else:
                     await self._maybe_send_log(
                         member.guild,
                         f"TempRole {role.mention} for {member.mention} was unable to be removed due to a lack of permissions."
-                    )
-                except discord.HTTPException:
-                    await self._maybe_send_log(
-                        member.guild,
-                        f"TempRole {role.mention} for {member.mention} was unable to be removed due an error."
                     )
