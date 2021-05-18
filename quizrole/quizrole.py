@@ -56,14 +56,13 @@ class QuizRole(commands.Cog):
         self.config.register_member(**default_member)
 
     @commands.guild_only()
+    @commands.bot_has_permissions(manage_roles=True)
     @commands.command(name="quizrole")
     async def _quizrole(self, ctx: commands.Context, quiz_name):
         """Take a quiz to gain a role in this server!"""
 
-        try:
+        if ctx.channel.permissions_for(ctx.guild.me).manage_messages:
             await ctx.message.delete()
-        except discord.HTTPException:
-            pass
 
         if not await self.config.guild(ctx.guild).toggle():
             return ctx.send("QuizRole is toggled off for this server.", delete_after=15)
@@ -129,23 +128,19 @@ class QuizRole(commands.Cog):
                 return await ctx.author.send(f"Unfortunately, you have exceeded the time limit for this question. Please try again in {quiz['cooldown']} days.")
 
         logchannel = await self.config.guild(ctx.guild).logchannel()
+        if logchannel:
+            if not (logchannel := ctx.guild.get_channel(logchannel)):
+                logchannel = None
+
         if score >= quiz['minscore']:
-            try:
+            if ctx.guild.me.guild_permissions.manage_roles and role < ctx.guild.me.top_role and role not in ctx.author.roles:
                 await ctx.author.add_roles(role, reason=f"QuizRole: Passed `{quiz_name}` with a score of {score}/{len(questions)}.")
-            except discord.HTTPException:
-                return await ctx.author.send("Something went wrong when assigning your role.")
             if logchannel:
-                try:
-                    await self.bot.get_channel(logchannel).send(f"{ctx.author.mention} has passed `{quiz_name}` with a score of {score}/{len(questions)}.")
-                except discord.HTTPException:
-                    pass
+                await logchannel.send(f"{ctx.author.mention} has passed `{quiz_name}` with a score of {score}/{len(questions)}.")
             return await ctx.author.send(f"Congratulations! You have passed the quiz `{quiz_name}` with a score of {score}/{len(questions)}, and have received the role {role.name}.")
         else:
             if logchannel:
-                try:
-                    await self.bot.get_channel(logchannel).send(f"{ctx.author.mention} did not pass `{quiz_name}` with a score of {score}/{len(questions)}.")
-                except discord.HTTPException:
-                    pass
+                await logchannel.send(f"{ctx.author.mention} did not pass `{quiz_name}` with a score of {score}/{len(questions)}.")
             return await ctx.author.send(f"Unfortunately, you did not pass the quiz `{quiz_name}`; the minimum score was {quiz['minscore']}/{len(questions)} and you received a score of {score}/{len(questions)}.")
 
     @commands.bot_has_permissions(embed_links=True)
