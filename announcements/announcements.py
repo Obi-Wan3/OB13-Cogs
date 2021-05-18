@@ -32,7 +32,7 @@ class Announcements(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.admin()
+    @commands.admin_or_permissions(mention_everyone=True)
     @commands.command(name="announcement")
     async def _announcement(self, ctx: commands.Context, channel: discord.TextChannel, role: discord.Role, *, message=""):
         """Send an announcement message to a specific channel with a role ping."""

@@ -109,7 +109,7 @@ class TemplatePosts(commands.Cog):
                 return
 
     @commands.guild_only()
-    @commands.admin()
+    @commands.admin_or_permissions(administrator=True)
     @commands.group(name="templateposts")
     async def _template_posts(self, ctx: commands.Context):
         """

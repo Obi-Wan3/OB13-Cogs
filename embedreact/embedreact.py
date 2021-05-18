@@ -81,7 +81,7 @@ class EmbedReact(commands.Cog):
         return
 
     @commands.guild_only()
-    @commands.mod()
+    @commands.mod_or_permissions(manage_messages=True)
     @commands.group()
     async def embedreact(self, ctx: commands.Context):
         """EmbedReact Settings"""

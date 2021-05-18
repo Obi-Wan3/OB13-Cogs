@@ -106,7 +106,7 @@ class MentionHelp(commands.Cog):
         """View the MentionHelp settings."""
         return await ctx.send(f"**Global Toggle:** {await self.config.toggle()}\n**Use Embeds:**{await self.config.embed()}\n**Message:** {await self.config.message()}")
 
-    @commands.admin()
+    @commands.admin_or_permissions(administrator=True)
     @commands.guild_only()
     @_mention_help.command(name="toggle")
     async def _toggle(self, ctx: commands.Context, true_or_false: bool):

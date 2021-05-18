@@ -34,7 +34,7 @@ class Reply(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.admin()
+    @commands.admin_or_permissions(administrator=True)
     @commands.command(name="reply")
     async def _reply(self, ctx: commands.Context, to_mention: typing.Optional[bool], message: discord.Message, *, content: str):
         """Reply to a message using the Discord reply feature."""

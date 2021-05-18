@@ -101,7 +101,7 @@ class ImprovTime(commands.Cog):
             return await message.channel.send(sentence)
 
     @commands.guild_only()
-    @commands.mod()
+    @commands.mod_or_permissions(manage_messages=True)
     @commands.group(name="improvtime")
     async def _improvtime(self, ctx: commands.Context):
         """Settings for ImprovTime"""

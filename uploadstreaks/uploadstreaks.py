@@ -158,7 +158,7 @@ class UploadStreaks(commands.Cog):
             embed.description = "This user has not participated in any UploadStreaks challenges."
         return await ctx.send(embed=embed)
 
-    @commands.admin()
+    @commands.admin_or_permissions(administrator=True)
     @_upload_streaks.group(name="settings")
     async def _settings(self, ctx: commands.Context):
         """UploadStreaks Settings"""
