@@ -235,7 +235,7 @@ class SiteStatus(commands.Cog):
                     # If monitoring channel set up, then update name if necessary
                     if site["channel"]:
                         channel = self.bot.get_channel(site["channel"])
-                        if channel:
+                        if channel and channel.permissions_for(channel.guild.me).manage_channels:
                             online = site['online'] or "ONLINE"
                             offline = site['offline'] or "OFFLINE"
 
@@ -261,7 +261,7 @@ class SiteStatus(commands.Cog):
                                             ),
                                             timeout=5
                                         )
-                            except (discord.Forbidden, discord.InvalidArgument, discord.HTTPException, asyncio.TimeoutError):
+                            except asyncio.TimeoutError:
                                 pass
 
                     # If notifications set up, then send message if necessary
@@ -270,47 +270,22 @@ class SiteStatus(commands.Cog):
                         notify_role = self.bot.get_guild(guild).get_role(site["notify_role"])
                         if notify_channel and notify_role:
                             if code[0] != site["status"] and not site.get("last"):
-                                try:
-                                    await notify_channel.send(
-                                        f"{notify_role.mention}",
-                                        allowed_mentions=discord.AllowedMentions(roles=True),
-                                        embed=discord.Embed(
-                                            title="SiteStatus Alert",
-                                            description=f"[{name}]({site['url']}) is currently offline with status code `{code[0]} {code[1]}`!",
-                                            color=discord.Color.red(),
-                                            timestamp=datetime.utcnow()
-                                        )
-                                    )
-                                except discord.Forbidden:
-                                    try:
-                                        await notify_channel.send(
-                                            f"{notify_role.mention} <{site['url']}> is currently offline with status code `{code[0]} {code[1]}`!",
-                                            allowed_mentions=discord.AllowedMentions(roles=True)
-                                        )
-                                    except (discord.Forbidden, discord.HTTPException):
-                                        pass
-                                except discord.HTTPException:
-                                    pass
+                                await self._maybe_send_embed(
+                                    channel=notify_channel,
+                                    role=notify_role,
+                                    site=(name, site['url']),
+                                    message=f"is currently offline with status code `{code[0]} {code[1]}`!",
+                                    color=discord.Color.red()
+                                )
                             elif code[0] == site["status"] and site.get("last"):
                                 downtime = round((time.time() - site.get("last")) / 60, 1)
-                                try:
-                                    await notify_channel.send(
-                                        f"{notify_role.mention}",
-                                        allowed_mentions=discord.AllowedMentions(roles=True),
-                                        embed=discord.Embed(
-                                            title="SiteStatus Alert",
-                                            description=f"[{name}]({site['url']}) is back online! It was down for roughly {downtime} minutes.",
-                                            color=discord.Color.green(),
-                                            timestamp=datetime.utcnow()
-                                        )
-                                    )
-                                except discord.Forbidden:
-                                    try:
-                                        await notify_channel.send(f"<{site['url']}> is back online! It was down for roughly {downtime} minutes.")
-                                    except (discord.Forbidden, discord.HTTPException):
-                                        pass
-                                except discord.HTTPException:
-                                    pass
+                                await self._maybe_send_embed(
+                                    channel=notify_channel,
+                                    role=notify_role,
+                                    site=(name, site['url']),
+                                    message=f"is back online! It was down for roughly {downtime} minutes.",
+                                    color=discord.Color.green()
+                                )
 
                     # Set the "last" status
                     if not site.get("last"):
@@ -331,3 +306,25 @@ class SiteStatus(commands.Cog):
         ).replace(
             "{latency}", f"{round(lat, 1)}s"
         )
+
+    @staticmethod
+    async def _maybe_send_embed(channel: discord.TextChannel, role: discord.Role, site: tuple, message: str, color: discord.Color):
+        channel_permissions = channel.permissions_for(channel.guild.me)
+        if not channel_permissions.send_messages or not (role.mentionable or channel.guild.me.guild_permissions.mention_everyone):
+            return
+        if channel_permissions.embed_links:
+            await channel.send(
+                f"{role.mention}",
+                allowed_mentions=discord.AllowedMentions(roles=True),
+                embed=discord.Embed(
+                    title="SiteStatus Alert",
+                    description=f"[{site[0]}]({site[1]}) {message}",
+                    color=color,
+                    timestamp=datetime.utcnow()
+                )
+            )
+        else:
+            await channel.send(
+                f"{role.mention} <{site[1]}> {message}",
+                allowed_mentions=discord.AllowedMentions(roles=True)
+            )
