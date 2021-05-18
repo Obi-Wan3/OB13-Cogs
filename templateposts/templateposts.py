@@ -80,10 +80,9 @@ class TemplatePosts(commands.Cog):
 
                 if missing:
                     original = message.content
-                    try:
-                        await message.delete()
-                    except discord.HTTPException:
+                    if not message.channel.permissions_for(message.guild.me).manage_messages:
                         return
+                    await message.delete()
 
                     if template['message'] and await self.config.guild(message.guild).dm():
                         to_send = template['message'].replace(
@@ -97,14 +96,10 @@ class TemplatePosts(commands.Cog):
                         )
 
                         try:
-                            if message.author.dm_channel is None:
-                                await message.author.create_dm()
-                            await message.author.dm_channel.send(to_send)
+                            await message.author.send(to_send)
                         except discord.HTTPException:
-                            try:
+                            if message.channel.permissions_for(message.guild.me).send_messages:
                                 await message.channel.send(to_send, delete_after=60)
-                            except discord.HTTPException:
-                                pass
 
                 return
 
