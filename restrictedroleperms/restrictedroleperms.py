@@ -57,6 +57,7 @@ class RestrictedRolePerms(commands.Cog):
                 perms = None
         return perms
 
+    @commands.bot_has_permissions(manage_roles=True)
     @commands.guild_only()
     @commands.group(name="rrp")
     async def _rrp(self, ctx: commands.Context):
@@ -76,12 +77,10 @@ class RestrictedRolePerms(commands.Cog):
                 return await ctx.send(rules['message'])
             return await ctx.send(f"Unfortunately, no rules were found allowing you to toggle mentionability for {role.mention}.")
 
-        try:
+        if role < ctx.guild.me.top_role:
             await role.edit(mentionable=True, reason=f"RRP: toggled by {ctx.author.display_name}#{ctx.author.discriminator}")
-        except discord.Forbidden:
+        else:
             return await ctx.send("I do not have permissions to edit this role!")
-        except discord.HTTPException:
-            return await ctx.send("Something went wrong while editing this role.")
 
         if rules['success']:
             return await ctx.send(rules['success'][0].replace("{role}", role.name).replace("{role.mention}", role.mention))
@@ -102,12 +101,10 @@ class RestrictedRolePerms(commands.Cog):
                 return await ctx.send(rules['message'])
             return await ctx.send(f"Unfortunately, no rules were found allowing you to toggle mentionability for {role.mention}.")
 
-        try:
+        if role < ctx.guild.me.top_role:
             await role.edit(mentionable=False, reason=f"RRP: toggled by {ctx.author.display_name}#{ctx.author.discriminator}")
-        except discord.Forbidden:
+        else:
             return await ctx.send("I do not have permissions to edit this role!")
-        except discord.HTTPException:
-            return await ctx.send("Something went wrong while editing this role.")
 
         if rules['success']:
             return await ctx.send(rules['success'][1].replace("{role}", role.name).replace("{role.mention}", role.mention))
@@ -128,12 +125,13 @@ class RestrictedRolePerms(commands.Cog):
                 return await ctx.send(rules['message'])
             return await ctx.send(f"Unfortunately, no rules were found allowing you to assign {role.mention}.")
 
-        try:
+        if role in member.roles:
+            return await ctx.send("The member already has the role!")
+
+        if role < ctx.guild.me.top_role and role not in member.roles:
             await member.add_roles(role, reason=f"RRP: assigned by {ctx.author.display_name}#{ctx.author.discriminator}")
-        except discord.Forbidden:
+        else:
             return await ctx.send("I do not have permissions to assign this role!")
-        except discord.HTTPException:
-            return await ctx.send("Something went wrong while assigning this role.")
 
         if rules['success']:
             return await ctx.send(rules['success'][0].replace("{role}", role.name).replace("{role.mention}", role.mention).replace("{member}", f"{member.display_name}").replace("{member.mention}", member.mention))
@@ -157,12 +155,10 @@ class RestrictedRolePerms(commands.Cog):
         if role not in member.roles:
             return await ctx.send("The member did not have the role!")
 
-        try:
+        if role < ctx.guild.me.top_role:
             await member.remove_roles(role, reason=f"RRP: removed by {ctx.author.display_name}#{ctx.author.discriminator}")
-        except discord.Forbidden:
+        else:
             return await ctx.send("I do not have permissions to remove this role!")
-        except discord.HTTPException:
-            return await ctx.send("Something went wrong while removing this role.")
 
         if rules['success']:
             return await ctx.send(rules['success'][1].replace("{role}", role.name).replace("{role.mention}", role.mention).replace("{member}", f"{member.display_name}").replace("{member.mention}", member.mention))
