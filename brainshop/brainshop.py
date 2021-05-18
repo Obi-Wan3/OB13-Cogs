@@ -29,6 +29,9 @@ import discord
 from redbot.core import commands, Config
 from redbot.core.utils.chat_formatting import humanize_list
 
+BRAINSHOP_ERROR = "Something went wrong while accessing the BrainShop API."
+BRAINSHOP_TIMEOUT = "The BrainShop API timed out; please try again later."
+
 
 class BrainShop(commands.Cog):
     """
@@ -57,9 +60,14 @@ class BrainShop(commands.Cog):
         async with aiohttp.ClientSession() as session:
             async with session.get(f"http://api.brainshop.ai/get?bid={bid}&key={key}&uid={uid}&msg={msg}") as resp:
                 if resp.status != 200:
-                    return "Something went wrong while accessing the BrainShop API."
-                js = await resp.json()
-                return js["cnt"]
+                    return BRAINSHOP_ERROR
+                try:
+                    js = await resp.json()
+                    return js["cnt"]
+                except Exception:  # likely JSONDecodeError
+                    if (await resp.text()) == "(Time out)":
+                        return BRAINSHOP_TIMEOUT
+                    return BRAINSHOP_ERROR
 
     @commands.Cog.listener("on_message_without_command")
     async def _message_listener(self, message: discord.Message):
