@@ -385,34 +385,29 @@ class BotAccess(commands.Cog):
     async def _allowlist(self, ctx: commands.Context):
         """View and set the BotAccess server allowlist."""
         settings = await self.config.allowed()
-        servers = []
-        for i in settings:
-            s = self.bot.get_guild(i)
-            if s:
-                servers.append(f"{s.name} ({s.id})")
         await ctx.send(embed=discord.Embed(
             title="BotAccess Allowed Servers",
-            description=f"{humanize_list(servers)}",
+            description=f"{humanize_list([f'`{gu.name}` (`{g}`)' if (gu := self.bot.get_guild(g)) else f'`{g}`' for g in settings])}",
             color=await ctx.embed_color()
         ))
         await ctx.send_help()
 
     @_allowlist.command("add", require_var_positional=True)
-    async def _allowlist_add(self, ctx: commands.Context, *servers: discord.Guild):
+    async def _allowlist_add(self, ctx: commands.Context, *servers: int):
         """Add to the BotAccess server allowlist."""
         async with self.config.allowed() as settings:
             for server in servers:
-                if server.id not in settings:
-                    settings.append(server.id)
+                if server not in settings:
+                    settings.append(server)
         return await ctx.tick()
 
     @_allowlist.command("remove", aliases=["delete"], require_var_positional=True)
-    async def _allowlist_remove(self, ctx: commands.Context, *servers: discord.Guild):
+    async def _allowlist_remove(self, ctx: commands.Context, *servers: int):
         """Remove from the BotAccess server allowlist."""
         async with self.config.allowed() as settings:
             for server in servers:
-                if server.id in settings:
-                    settings.remove(server.id)
+                if server in settings:
+                    settings.remove(server)
         return await ctx.tick()
 
     @_owner_settings.command(name="serverlimit")
