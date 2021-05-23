@@ -219,22 +219,51 @@ class BrainShop(commands.Cog):
         return await ctx.tick()
 
     @commands.is_owner()
+    @commands.bot_has_permissions(embed_links=True)
+    @_brainshopset.command(name="setup")
+    async def _setup(self, ctx: commands.Context):
+        """View the required BrainShop setup instructions."""
+        instructions = discord.Embed(
+            title="BrainShop Setup Instructions",
+            description="Before being able to use this cog, you must complete the following steps:",
+            color=await ctx.embed_color()
+        )
+        instructions.add_field(
+            name="1. Create an Account",
+            value="Create a free account at https://brainshop.ai/ by clicking `Sign Up`.",
+            inline=False
+        )
+        instructions.add_field(
+            name="2. Setup Your Account",
+            value="Follow the instructions to set up your account. Anything works for the domain name (e.g. `example.com`).",
+            inline=False
+        )
+        instructions.add_field(
+            name='3. Add a "Brain"',
+            value="Go to https://brainshop.ai/user and click on `Add Brain` at the left.",
+            inline=False
+        )
+        instructions.add_field(
+            name="4. Save Changes",
+            value="Give the brain a title, keeping all defaults, and click `Save`.",
+            inline=False
+        )
+        instructions.add_field(
+            name="5. Set API Key and Brain ID",
+            value=f"In the `Settings` tab for the brain, you will find the `API Key` and `Brain ID`. Copy those and use them in the following command (no brackets): ```css\n{ctx.clean_prefix}set api brainshop key [API Key] bid [Brain ID]```",
+            inline=False
+        )
+        instructions.add_field(
+            name="6. Finish Setup",
+            value=f"You're all set! If you would like, toggle whether BrainShop should automatically reply to messages starting with a mention. All settings are under `{ctx.clean_prefix}brainshopset`.",
+            inline=False
+        )
+        return await ctx.send(embed=instructions)
+
+    @commands.is_owner()
     @_brainshopset.command(name="viewglobal")
     async def _view_global(self, ctx: commands.Context, show_api_key: bool = False):
-        """
-        View the global settings for BrainShop.
-
-        **Instructions:** Before being able to use this cog, you must do the following steps:
-        1. Create a free account at https://brainshop.ai/
-        2. Follow the instructions to set up your account (for domain name, use anything random, e.g. `example.com`)
-        3. After creating the account, at https://brainshop.ai/user click on `Add Brain` at the left.
-        4. Give the brain a title, keep all defaults and click `Save`.
-        5. In the `Settings` tab for the brain, you will find the `Brain ID` and `API Key`. Copy those and use them in the following command (no brackets):
-        ```
-        [p]set api brainshop key,[API Key] bid,[Brain ID]
-        ```
-        6. You're all set! If you would like, toggle whether BrainShop should automatically reply to messages starting with a mention.
-        """
+        """View the global settings for BrainShop."""
 
         brainshop_api = await self.bot.get_shared_api_tokens("brainshop")
 
@@ -243,12 +272,12 @@ class BrainShop(commands.Cog):
             color=await ctx.embed_color(),
             description=f"""
             **Global Toggle:** {await self.config.auto()}
-            **Brain ID**: {brainshop_api.get("bid") if brainshop_api.get("bid") else "Not set (see this command's help message)."}
+            **Brain ID**: {brainshop_api.get("bid") if brainshop_api.get("bid") else f"Not set (see `{ctx.clean_prefix}brainshopset setup`)."}
             """
         )
 
         if show_api_key:
-            embed.description += f"""**API Key**: {f"||{brainshop_api.get('key')}||" if brainshop_api.get("key") else "Not set (see this command's help message)."}"""
+            embed.description += f"""**API Key**: {f"||{brainshop_api.get('key')}||" if brainshop_api.get("key") else f"Not set (see `{ctx.clean_prefix}brainshopset setup`)."}"""
 
         embed.set_footer(text="Powered by BrainShop | https://brainshop.ai/")
 
