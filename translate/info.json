@@ -2,9 +2,9 @@
     "author": [
         "Obi-Wan3"
     ],
-    "description": "Translate some text using Google Translate for free.",
+    "description": "Translate text and messages using Google Translate for free.",
     "disabled" : false,
-    "end_user_data_statement" : "This cog does not persistently store data or metadata about users.",
+    "end_user_data_statement" : "This cog stores provided server settings (e.g. auto-translation channels & their destination languages).",
     "hidden": false,
     "install_msg": "Thank you for installing! Use `[p]help Translate` for more info.",
     "min_bot_version" : "3.4.6",
@@ -13,6 +13,6 @@
     "required_cogs" : {},
     "requirements": ["googletrans==3.1.0a0"],
     "short": "Free Google Translations",
-    "tags" : ["utility", "translation", "google translate", "language"],
+    "tags" : ["utility", "translation", "google translate", "language", "auto-translate", "channels"],
     "type": "COG"
 }

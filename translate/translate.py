@@ -22,12 +22,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-import typing
 import functools
 import googletrans, googletrans.models
 
 import discord
-from redbot.core import commands
+from redbot.core import commands, Config
 
 TRANSLATOR = googletrans.Translator()
 MISSING_INPUTS = "Please provide a message ID/link, some text to translate, or reply to the original message."
@@ -44,6 +43,11 @@ class Translate(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        self.config = Config.get_conf(self, identifier=14000605, force_registration=True)
+        default_guild = {
+            "auto": {}
+        }
+        self.config.register_guild(**default_guild)
 
     @staticmethod
     async def _convert_language(language: str):
@@ -84,9 +88,37 @@ class Translate(commands.Cog):
 
     @staticmethod
     async def _result_embed(res: googletrans.models.Translated, color: discord.Color):
-        embed = discord.Embed(color=color)
-        embed.add_field(name=f"{googletrans.LANGUAGES[res.src.lower()].title()} → {googletrans.LANGUAGES[res.dest.lower()].title()}", value=res.text, inline=True)
+        embed = discord.Embed(
+            description=res.text,
+            color=color
+        )
+        embed.set_footer(text=f"{googletrans.LANGUAGES[res.src.lower()].title()} → {googletrans.LANGUAGES[res.dest.lower()].title()}")
         return embed
+
+    @commands.Cog.listener("on_message_without_command")
+    async def _message_listener(self, message: discord.Message):
+        # Ignore these messages
+        if (
+                message.author.bot or  # Message sent by bot
+                not message.guild or  # Message not in a guild
+                not message.content or  # Message content empty
+                not message.channel.permissions_for(message.guild.me).send_messages or  # No send permissions
+                not message.channel.permissions_for(message.guild.me).embed_links or  # No embed permissions
+                not (dest_lang := (await self.config.guild(message.guild).auto()).get(str(message.channel.id)))  # Not in auto-channel
+        ):
+            return
+
+        # Translate
+        task = functools.partial(TRANSLATOR.translate, text=message.content, dest=dest_lang)
+        try:
+            result: googletrans.models.Translated = await self.bot.loop.run_in_executor(None, task)
+        except Exception:
+            return
+
+        # Source and dest languages different
+        if result.src.lower() != result.dest.lower():
+            result_embed = await self._result_embed(result, await self.bot.get_embed_color(message.channel))
+            return await message.reply(embed=result_embed, mention_author=False)
 
     @commands.bot_has_permissions(embed_links=True)
     @commands.command(name="translate")
@@ -172,3 +204,41 @@ class Translate(commands.Cog):
             result_embed.add_field(name="Confidence", value=f"{int(result.confidence*100)}%", inline=True)
 
         return await to_reply.reply(embed=result_embed, mention_author=False)
+
+    @commands.admin_or_permissions(manage_messages=True)
+    @commands.group(name="translateset")
+    async def _translate_set(self, ctx: commands.Context):
+        """Translate Settings"""
+
+    @_translate_set.group(name="auto", invoke_without_command=True)
+    async def _auto(self, ctx: commands.Context):
+        """View and set the auto-translation channels for this server."""
+        settings = await self.config.guild(ctx.guild).auto()
+        description = ""
+        for channel_id, language in settings.items():
+            if channel := ctx.guild.get_channel(int(channel_id)):
+                description += f"{channel.mention}: {language.title()}\n"
+        await ctx.send(embed=discord.Embed(
+            title="Auto-Translation Channels",
+            description=description,
+            color=await ctx.embed_color()
+        ))
+        await ctx.send_help()
+
+    @_auto.command("set", require_var_positional=True)
+    async def _auto_set(self, ctx: commands.Context, channel: discord.TextChannel, language: str):
+        """Set an auto-translation channel."""
+        if not (language := await self._convert_language(language)):
+            return await ctx.send(LANGUAGE_NOT_FOUND)
+        async with self.config.guild(ctx.guild).auto() as settings:
+            settings[str(channel.id)] = language
+        return await ctx.tick()
+
+    @_auto.command("remove", aliases=["delete"], require_var_positional=True)
+    async def _auto_remove(self, ctx: commands.Context, *channels: discord.TextChannel):
+        """Remove an auto-translation channel."""
+        async with self.config.guild(ctx.guild).auto() as settings:
+            for channel in channels:
+                if str(channel.id) in settings.keys():
+                    del settings[str(channel.id)]
+        return await ctx.tick()
