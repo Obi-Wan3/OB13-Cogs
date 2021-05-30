@@ -39,6 +39,8 @@ else:
         default_unit="days"
     )
 
+OVERFLOW_ERROR = "The time set is way too high, consider setting something reasonable."
+
 
 class TempRole(commands.Cog):
     """
@@ -91,7 +93,10 @@ class TempRole(commands.Cog):
                     f"That is already an active TempRole for {user.mention}!",
                     allowed_mentions=discord.AllowedMentions.none()
                 )
-            end_time = datetime.now() + time
+            try:
+                end_time = datetime.now() + time
+            except OverflowError:
+                return await ctx.send(OVERFLOW_ERROR)
             user_tr[str(role.id)] = end_time.timestamp()
 
         if role < ctx.guild.me.top_role:
@@ -159,7 +164,10 @@ class TempRole(commands.Cog):
                     f"That is already an active self-TempRole!",
                     allowed_mentions=discord.AllowedMentions.none()
                 )
-            end_time = datetime.now() + time
+            try:
+                end_time = datetime.now() + time
+            except OverflowError:
+                return await ctx.send(OVERFLOW_ERROR)
             user_tr[str(role.id)] = end_time.timestamp()
 
         if role < ctx.guild.me.top_role:
