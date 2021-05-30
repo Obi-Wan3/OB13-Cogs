@@ -72,10 +72,7 @@ class BrainShop(commands.Cog):
     @commands.Cog.listener("on_message_without_command")
     async def _message_listener(self, message: discord.Message):
 
-        if (
-                message.author.bot or  # Message author is a bot
-                not message.channel.permissions_for(message.guild.me).send_messages  # Cannot send message
-        ):
+        if message.author.bot:
             return
 
         global_auto = await self.config.auto()
@@ -83,7 +80,7 @@ class BrainShop(commands.Cog):
             if not global_auto:
                 return
         else:
-            if await self.bot.cog_disabled_in_guild(self, message.guild):
+            if await self.bot.cog_disabled_in_guild(self, message.guild) or not message.channel.permissions_for(message.guild.me).send_messages:
                 return
 
             guild_settings = await self.config.guild(message.guild).all()
