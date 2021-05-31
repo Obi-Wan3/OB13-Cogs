@@ -251,7 +251,12 @@ class BrainShop(commands.Cog):
             inline=False
         )
         instructions.add_field(
-            name="6. Finish Setup",
+            name="6. Additional Customization",
+            value=f"If you would like to customize your BrainShop AI, read through their documentation. For example, follow the instructions at http://brainshop.ai/node/274434 for naming the AI, and also see https://brainshop.ai/node/277098 for customizing attributes.",
+            inline=False
+        )
+        instructions.add_field(
+            name="7. Finish Setup",
             value=f"You're all set! If you would like, toggle whether BrainShop should automatically reply to messages starting with a mention. All settings are under `{ctx.clean_prefix}brainshopset`.",
             inline=False
         )
