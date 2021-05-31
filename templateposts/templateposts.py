@@ -77,6 +77,8 @@ class TemplatePosts(commands.Cog):
                 for f in template['fields']:
                     if f.lower() not in message.content.lower():
                         missing.append(f)
+                if template.get("attachment", False) and not message.attachments:
+                    missing.append("Message Attachment")
 
                 if missing:
                     original = message.content
@@ -141,7 +143,8 @@ class TemplatePosts(commands.Cog):
                 "toggle": True,
                 "channel": channel.id,
                 "message": "",
-                "fields": [s.strip() for s in fields.split(";")]
+                "fields": [s.strip() for s in fields.split(";")],
+                "attachment": False
             }
 
         return await ctx.send(f"The template `{template_name}` has been added and activated in {channel.mention}. If you would like it to DM users that do not comply, use `{ctx.clean_prefix}templateposts edit message {template_name} <message>`.")
@@ -198,6 +201,17 @@ class TemplatePosts(commands.Cog):
             if not templates.get(template_name):
                 return await ctx.send("There is no template with that name!")
             templates[template_name]["fields"] = [s.strip() for s in new_fields.split(";")]
+
+        return await ctx.tick()
+
+    @_edit.command(name="attachment")
+    async def _edit_attachment(self, ctx: commands.Context, template_name: str, require_an_attachment: bool):
+        """Edit the attachment requirement for a template."""
+
+        async with self.config.guild(ctx.guild).templates() as templates:
+            if not templates.get(template_name):
+                return await ctx.send("There is no template with that name!")
+            templates[template_name]["attachment"] = require_an_attachment
 
         return await ctx.tick()
 
@@ -287,6 +301,7 @@ class TemplatePosts(commands.Cog):
             **Channel:** {ctx.guild.get_channel(template['channel']).mention if ctx.guild.get_channel(template['channel']) else None}
             **DM Message:** {template['message'] if template['message'] else None}
             **Fields:** {humanize_list([f'`{f}`' for f in template['fields']])}
+            **Require Attachments:** {template.get('attachment', False)}
             """)
 
         return await ctx.send(embed=embed)
