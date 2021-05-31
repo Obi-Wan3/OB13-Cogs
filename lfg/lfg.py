@@ -43,7 +43,8 @@ class LFG(commands.Cog):
             "vc_name": [],
             "categories": {},
             "mention_limit": 3,
-            "active": {}
+            "active": {},
+            "no_inputs": "",
         }
         self.config.register_guild(**default_guild)
 
@@ -67,9 +68,15 @@ class LFG(commands.Cog):
                             await before.channel.edit(name=original_name, reason="LFG: all users left VC")
 
     @commands.guild_only()
-    @commands.command(name="lfg", require_var_positional=True)
+    @commands.command(name="lfg")
     async def _lfg(self, ctx: commands.Context, *inputs: str):
-        """Looking for group."""
+        """
+        Looking for group.
+
+        Provide any inputs you would like to be formatted into the invite.
+        """
+
+        # Checks
         if not ctx.author.voice or not (user_vc := ctx.author.voice.channel):
             return await ctx.send("You must be in a voice channel to use this command!")
 
@@ -79,27 +86,28 @@ class LFG(commands.Cog):
         if not user_vc.permissions_for(ctx.guild.me).manage_channels:
             return await ctx.send("I do not have permission to manage the VC!")
 
-        # Thanks PCX for the cooldown bucket example
+        # Delete command message
+        if ctx.channel.permissions_for(ctx.guild.me).manage_messages:
+            await ctx.message.delete()
+
+        # VC cooldown (thanks PCX for the cooldown bucket example)
         retry = self.lfg_vc_bucket.get_bucket(user_vc).update_rate_limit()
         if retry:
             return await ctx.send(f"Due to Discord ratelimits, you can only run this command once every 10 minutes for the same VC. Please try again in {humanize_timedelta(seconds=max(retry, 1))}.")
 
-        invite: discord.Invite = await user_vc.create_invite()
         settings: dict = await self.config.guild(ctx.guild).all()
 
-        to_rename = []
-        categories = {}
-        for c, v in settings["categories"].items():
-            v_lowered = [s.lower() for s in v]
-            if not categories.get(c):
-                for word in inputs:
-                    if str(word).lower() in v_lowered:
-                        categories[c] = v[v_lowered.index(str(word).lower())]
-        for cat in settings["vc_name"]:
-            if v := categories.get(cat):
-                to_rename.append(v)
-        to_rename = user_vc.name + " " + " | ".join(to_rename)
+        # Send help
+        if settings["message"] and not inputs and not settings["no_inputs"]:
+            return await ctx.send_help()
 
+        # Check settings
+        if (inputs and not settings["message"]) or (not inputs and not settings["no_inputs"]):
+            return await ctx.send("Please wait for an admin to setup the necessary settings first!")
+
+        invite: discord.Invite = await user_vc.create_invite()
+
+        # Prepare user mentions
         users = [ctx.author.mention]
         count = 0
         while len(users) < settings["mention_limit"] and count < len(user_vc.members):
@@ -107,28 +115,51 @@ class LFG(commands.Cog):
                 users.append(u.mention)
             count += 1
 
-        to_send = settings["message"].replace(
-            "{inputs}", " ".join(inputs)
-        ).replace(
-            "{invite}", invite.url
-        ).replace(
-            "{users}", humanize_list(users)
-        ).replace(
-            "{vcname}", to_rename
-        )
+        to_rename = []
 
-        if not to_send or not to_rename:
-            return await ctx.send("Please wait for an admin to setup the necessary settings first!")
+        if inputs:
 
-        async with self.config.guild(ctx.guild).active() as active:
-            if active.get(str(user_vc.id)):
-                return await ctx.send("There is already an active LFG session in your VC!")
-            active[str(user_vc.id)] = user_vc.name
+            # Prepare categories/inputs
+            categories = {}
+            for c, v in settings["categories"].items():
+                v_lowered = [s.lower() for s in v]
+                if not categories.get(c):
+                    for word in inputs:
+                        if str(word).lower() in v_lowered:
+                            categories[c] = v[v_lowered.index(str(word).lower())]
+            for cat in settings["vc_name"]:
+                if v := categories.get(cat):
+                    to_rename.append(v)
+            to_rename = user_vc.name + " " + " | ".join(to_rename)
 
-        if ctx.channel.permissions_for(ctx.guild.me).manage_messages:
-            await ctx.message.delete()
-        await ctx.send(to_send)
-        return await user_vc.edit(name=to_rename, reason=f"LFG: {ctx.author} started a session")
+            to_send = settings["message"].replace(
+                "{inputs}", " ".join(inputs)
+            ).replace(
+                "{invite}", invite.url
+            ).replace(
+                "{users}", humanize_list(users)
+            ).replace(
+                "{vcname}", to_rename
+            )
+
+        else:
+            to_send = settings["no_inputs"].replace(
+                "{invite}", invite.url
+            ).replace(
+                "{users}", humanize_list(users)
+            ).replace(
+                "{vcname}", user_vc.name
+            )
+
+        if to_rename and to_rename != (user_vc.name + " "):
+            await user_vc.edit(name=to_rename, reason=f"LFG: {ctx.author} started a session")
+
+            async with self.config.guild(ctx.guild).active() as active:
+                if active.get(str(user_vc.id)):
+                    return await ctx.send("There is already an active LFG session in your VC!")
+                active[str(user_vc.id)] = user_vc.name
+
+        return await ctx.send(to_send)
 
     @commands.guild_only()
     @commands.admin_or_permissions(administrator=True)
@@ -153,6 +184,18 @@ class LFG(commands.Cog):
         `{vcname}`: the name of the VC
         """
         await self.config.guild(ctx.guild).message.set(template)
+        return await ctx.tick()
+
+    @_lfg_set.command(name="noinputs")
+    async def _no_inputs(self, ctx: commands.Context, *, template: str):
+        """
+        If you would like the LFG command to run with no inputs, set the message (see below for replaceable options). To have the help be sent w/ no inputs, just leave the parameter blank.
+
+        `{invite}`: the VC invite
+        `{users}`: mentions of users in the VC
+        `{vcname}`: the name of the VC
+        """
+        await self.config.guild(ctx.guild).no_inputs.set(template)
         return await ctx.tick()
 
     @_lfg_set.command(name="mentionlimit")
@@ -205,6 +248,6 @@ class LFG(commands.Cog):
         settings = await self.config.guild(ctx.guild).all()
         return await ctx.send(embed=discord.Embed(
             title="LFG Settings",
-            description=f"**Post:** {settings['message'] or None}\n**VC Name:** {', '.join(settings['vc_name']) or None}\n**Rename on Empty:** {settings['rename']}\n**Mention Limit:** {settings['mention_limit']}\n**Categories:** see `{ctx.clean_prefix}lfgset categories`",
+            description=f"**Post:** {settings['message'] or None}\n**Post (No Inputs):** {settings['no_inputs'] or None}\n**VC Name:** {', '.join(settings['vc_name']) or None}\n**Rename on Empty:** {settings['rename']}\n**Mention Limit:** {settings['mention_limit']}\n**Categories:** see `{ctx.clean_prefix}lfgset categories`",
             color=await ctx.embed_color()
         ))

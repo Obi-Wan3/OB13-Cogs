@@ -9,7 +9,7 @@
     "install_msg": "Thank you for installing! Use `[p]help LFG` for more info.",
     "min_bot_version" : "3.4.0",
     "min_python_version" : [3, 8, 1],
-    "permissions" : ["embed_links", "create_instant_invite", "manage_channels"],
+    "permissions" : ["embed_links", "create_instant_invite", "manage_channels", "manage_messages"],
     "required_cogs" : {},
     "requirements" : [],
     "short": "VC LFG System w/ Custom Fields",
