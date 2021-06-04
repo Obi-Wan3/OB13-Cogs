@@ -96,19 +96,20 @@ class Counting(commands.Cog):
                 return
 
             await message.delete()
-            penalty = await self.config.guild(message.guild).penalty()
-            async with self.config.guild(message.guild).wrong() as wrong:
-                wrong[str(message.author.id)] = wrong.get(str(message.author.id), 0) + 1
-                if wrong[str(message.author.id)] >= penalty[0] and message.author.id != message.guild.owner.id and not message.author.guild_permissions.administrator:
-                    try:
-                        channel_mute = self.bot.get_command("channelmute")
-                        msg_copy.author = message.guild.owner
-                        ctx = await self.bot.get_context(msg_copy)
-                        if channel_mute:
-                            await channel_mute(ctx=ctx, users=[message.author], time_and_reason={"duration": datetime.timedelta(seconds=penalty[1]), "reason": "Counting: too many wrong counts"})
-                        wrong[str(message.author.id)] = 0
-                    except Exception:
-                        pass
+
+            if all(penalty := await self.config.guild(message.guild).penalty()):
+                async with self.config.guild(message.guild).wrong() as wrong:
+                    wrong[str(message.author.id)] = wrong.get(str(message.author.id), 0) + 1
+                    if wrong[str(message.author.id)] >= penalty[0] and message.author.id != message.guild.owner.id and not message.author.guild_permissions.administrator:
+                        try:
+                            channel_mute = self.bot.get_command("channelmute")
+                            msg_copy.author = message.guild.owner
+                            ctx = await self.bot.get_context(msg_copy)
+                            if channel_mute:
+                                await channel_mute(ctx=ctx, users=[message.author], time_and_reason={"duration": datetime.timedelta(seconds=penalty[1]), "reason": "Counting: too many wrong counts"})
+                            wrong[str(message.author.id)] = 0
+                        except Exception:
+                            pass
             return
 
         await self.config.guild(message.guild).counter.set(counter+1)
