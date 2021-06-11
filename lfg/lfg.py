@@ -105,7 +105,11 @@ class LFG(commands.Cog):
         if (inputs and not settings["message"]) or (not inputs and not settings["no_inputs"]):
             return await ctx.send("Please wait for an admin to setup the necessary settings first!")
 
-        invite: discord.Invite = await user_vc.create_invite()
+        # Create invite
+        try:
+            invite: discord.Invite = await user_vc.create_invite()
+        except discord.HTTPException:
+            return await ctx.send("Something went wrong while creating the VC invite.")
 
         # Prepare user mentions
         users = [ctx.author.mention]
