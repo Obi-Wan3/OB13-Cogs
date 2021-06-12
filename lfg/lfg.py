@@ -78,13 +78,13 @@ class LFG(commands.Cog):
 
         # Checks
         if not ctx.author.voice or not (user_vc := ctx.author.voice.channel):
-            return await ctx.send("You must be in a voice channel to use this command!")
+            return await ctx.send("You must be in a voice channel to use this command!", delete_after=30)
 
         if not user_vc.permissions_for(ctx.guild.me).create_instant_invite:
-            return await ctx.send("I cannot create invites!")
+            return await ctx.send("I cannot create invites!", delete_after=30)
 
         if not user_vc.permissions_for(ctx.guild.me).manage_channels:
-            return await ctx.send("I do not have permission to manage the VC!")
+            return await ctx.send("I do not have permission to manage the VC!", delete_after=30)
 
         # Delete command message
         if ctx.channel.permissions_for(ctx.guild.me).manage_messages:
@@ -93,7 +93,7 @@ class LFG(commands.Cog):
         # VC cooldown (thanks PCX for the cooldown bucket example)
         retry = self.lfg_vc_bucket.get_bucket(user_vc).update_rate_limit()
         if retry:
-            return await ctx.send(f"Due to Discord ratelimits, you can only run this command once every 10 minutes for the same VC. Please try again in {humanize_timedelta(seconds=max(retry, 1))}.")
+            return await ctx.send(f"Due to Discord ratelimits, you can only run this command once every 10 minutes for the same VC. Please try again in {humanize_timedelta(seconds=max(retry, 1))}.", delete_after=30)
 
         settings: dict = await self.config.guild(ctx.guild).all()
 
@@ -103,13 +103,13 @@ class LFG(commands.Cog):
 
         # Check settings
         if (inputs and not settings["message"]) or (not inputs and not settings["no_inputs"]):
-            return await ctx.send("Please wait for an admin to setup the necessary settings first!")
+            return await ctx.send("Please wait for an admin to setup the necessary settings first!", delete_after=30)
 
         # Create invite
         try:
             invite: discord.Invite = await user_vc.create_invite()
         except discord.HTTPException:
-            return await ctx.send("Something went wrong while creating the VC invite.")
+            return await ctx.send("Something went wrong while creating the VC invite.", delete_after=30)
 
         # Prepare user mentions
         users = [ctx.author.mention]
