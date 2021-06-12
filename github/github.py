@@ -135,10 +135,19 @@ class GitHub(commands.Cog):
 
     @staticmethod
     async def _url_from_config(feed_config: dict):
+        final_url = f"https://github.com/{feed_config['user']}/{feed_config['repo']}"
+
         if feed_config['branch']:
-            return f"""https://github.com/{feed_config["user"]}/{feed_config["repo"]}/commits/{feed_config["branch"]}.atom{f"?token={feed_config['token']}" if feed_config["token"] else ""}"""
+
+            token = f"?token={feed_config['token']}" if feed_config["token"] else ""
+
+            if feed_config['branch'] == "releases":
+                return final_url + f"/{feed_config['branch']}.atom{token}"
+
+            return final_url + f"/commits/{feed_config['branch']}.atom{token}"
+
         else:
-            return f"https://github.com/{feed_config['user']}/{feed_config['repo']}/commits.atom"
+            return final_url + f"/commits.atom"
 
     @staticmethod
     async def _fetch(url: str, valid_statuses: list):
@@ -182,7 +191,7 @@ class GitHub(commands.Cog):
                 parsed_url.netloc != "github.com" or
                 not user or not repo or
                 (token and not branch) or
-                (not user_repo_branch.group(3) and branch)
+                (not user_repo_branch.group(3) and branch and branch != "releases")
         ):
             return None, None, None, None
 
@@ -209,26 +218,34 @@ class GitHub(commands.Cog):
         if not entries:
             return None
 
-        num = min(len(entries), 10)
-        _, repo, branch, __ = await self._parse_url(feed_link+".atom")
+        user, repo, branch, __ = await self._parse_url(feed_link+".atom")
 
-        desc = ""
-        for e in entries[:num]:
-            desc += f"[`{re.fullmatch(COMMIT_REGEX, e.link).group(1)[:7]}`]({e.link}) {e.title} – {e.author}\n"
+        if branch == "releases":
+            embed = discord.Embed(
+                title=f"[{user}/{repo}] New release published: {entries[0].title}",
+                color=color if color is not None else COLOR,
+                url=entries[0].link
+            )
 
-        embed = discord.Embed(
-            title=f"[{repo}:{branch}] {num} new commit{'s' if num > 1 else ''}",
-            color=color if color is not None else COLOR,
-            description=desc,
-            url=feed_link if num > 1 else entries[0].link
-        )
+        else:
+            num = min(len(entries), 10)
+            desc = ""
+            for e in entries[:num]:
+                desc += f"[`{re.fullmatch(COMMIT_REGEX, e.link).group(1)[:7]}`]({e.link}) {e.title} – {e.author}\n"
+
+            embed = discord.Embed(
+                title=f"[{repo}:{branch}] {num} new commit{'s' if num > 1 else ''}",
+                color=color if color is not None else COLOR,
+                description=desc,
+                url=feed_link if num > 1 else entries[0].link
+            )
 
         if timestamp:
             embed.timestamp = datetime.strptime(entries[0].updated, TIME_FORMAT).replace(tzinfo=timezone.utc)
 
         embed.set_author(
             name=entries[0].author,
-            url=entries[0].href,
+            url=f"https://github.com/{entries[0].author}",
             icon_url=entries[0].media_thumbnail[0]["url"]
         )
 
@@ -525,6 +542,7 @@ class GitHub(commands.Cog):
             color=guild_config["color"],
             timestamp=guild_config["timestamp"]
         ))
+
         return await ctx.send("Feed successfully added.")
 
     @_github.command(name="remove", aliases=["delete"])
