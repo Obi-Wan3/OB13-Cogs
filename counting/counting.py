@@ -132,12 +132,11 @@ class Counting(commands.Cog):
 
     @commands.Cog.listener("on_message_delete")
     async def _message_deletion_listener(self, message: discord.Message):
-        counting_channel = await self.config.guild(message.guild).channel()
 
         # Ignore these messages
         if (
                 not message.guild or  # Message not in a guild
-                message.channel.id != counting_channel or  # Message not in counting channel
+                message.channel.id != (await self.config.guild(message.guild).channel()) or  # Message not in counting channel
                 await self.bot.cog_disabled_in_guild(self, message.guild) or  # Cog disabled in guild
                 not await self.config.guild(message.guild).toggle() or  # Counting toggled off
                 message.author.bot or  # Message author is a bot
