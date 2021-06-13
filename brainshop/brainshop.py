@@ -72,32 +72,44 @@ class BrainShop(commands.Cog):
     @commands.Cog.listener("on_message_without_command")
     async def _message_listener(self, message: discord.Message):
 
+        # Ignore bots
         if message.author.bot:
             return
 
         global_auto = await self.config.auto()
+        starts_with_mention = message.content.startswith((f"<@{self.bot.user.id}>", f"<@!{self.bot.user.id}>"))
+
+        # Command is in DMs
         if not message.guild:
-            if not global_auto:
+
+            if not starts_with_mention or not global_auto:
                 return
+
+        # Command is in a server
         else:
+
+            # Cog is disabled or bot cannot send messages in channel
             if await self.bot.cog_disabled_in_guild(self, message.guild) or not message.channel.permissions_for(message.guild.me).send_messages:
                 return
 
             guild_settings = await self.config.guild(message.guild).all()
-            if message.channel.id not in guild_settings["channels"]:  # Not in auto-channel
+
+            # Not in auto-channel
+            if message.channel.id not in guild_settings["channels"]:
                 if (
-                        not message.content.startswith((f"<@{self.bot.user.id}>", f"<@!{self.bot.user.id}>")) or  # Does not start with mention
-                        not guild_settings["auto"] or  # Guild auto toggled off
-                        not global_auto  # Global auto toggled off
+                        not starts_with_mention or  # Does not start with mention
+                        not (guild_settings["auto"] or global_auto)  # Both guild & global auto are toggled off
                 ):
                     return
 
+            # Check block/allow-lists
             if (
                     (guild_settings["allowlist"] and message.channel.id not in guild_settings["allowlist"]) or  # Channel not in allowlist
                     (guild_settings["blocklist"] and message.channel.id in guild_settings["blocklist"])  # Channel in blocklist
             ):
                 return
 
+        # Get response from BrainShop
         async with message.channel.typing():
             brainshop_api = await self.bot.get_shared_api_tokens("brainshop")
             bid = brainshop_api.get("bid")
@@ -106,12 +118,14 @@ class BrainShop(commands.Cog):
             if not bid or not key:
                 return
 
+            # Remove bot mention
             filtered = re.sub(f"<@!?{self.bot.user.id}>", "", message.content)
             if not filtered:
                 return
 
             response = await self._get_response(bid=bid, key=key, uid=message.author.id, msg=filtered)
 
+        # Reply or send response
         if hasattr(message, "reply"):
             return await message.reply(response, mention_author=False)
         return await message.channel.send(response)
