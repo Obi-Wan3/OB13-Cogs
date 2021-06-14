@@ -45,6 +45,7 @@ class LFG(commands.Cog):
             "mention_limit": 3,
             "active": {},
             "no_inputs": "",
+            "blocklist": []
         }
         self.config.register_guild(**default_guild)
 
@@ -104,6 +105,10 @@ class LFG(commands.Cog):
         # Check settings
         if (inputs and not settings["message"]) or (not inputs and not settings["no_inputs"]):
             return await ctx.send("Please wait for an admin to setup the necessary settings first!", delete_after=30)
+
+        # Check blocklist
+        if user_vc.id in settings["blocklist"]:
+            return await ctx.send(f"Please move to an allowed VC before running this command!")
 
         # Create invite
         try:
@@ -225,7 +230,7 @@ class LFG(commands.Cog):
             description += f"**{c}:** {', '.join(v)}\n"
         await ctx.send(embed=discord.Embed(
             title="LFG Categories",
-            description=description or "Not set.",
+            description=description or "No categories set.",
             color=await ctx.embed_color()
         ))
         await ctx.send_help()
@@ -246,12 +251,52 @@ class LFG(commands.Cog):
             del settings[category]
         return await ctx.tick()
 
+    @_lfg_set.group(name="blocklist", invoke_without_command=True)
+    async def _blocklist(self, ctx: commands.Context):
+        """View and set the LFG voice channel blocklist."""
+        settings = await self.config.guild(ctx.guild).blocklist()
+        for i in range(len(settings)):
+            if vc := ctx.guild.get_channel(settings[i]):
+                settings[i] = vc.mention
+        await ctx.send(embed=discord.Embed(
+            title="LFG Blocklist",
+            description=humanize_list(settings) if settings else "No voice channels are in the blocklist yet.",
+            color=await ctx.embed_color()
+        ))
+        await ctx.send_help()
+
+    @_blocklist.command("add", require_var_positional=True)
+    async def _blocklist_add(self, ctx: commands.Context, *voice_channels: discord.VoiceChannel):
+        """Add a VC to the LFG blocklist."""
+        async with self.config.guild(ctx.guild).blocklist() as settings:
+            for vc in voice_channels:
+                if vc.id not in settings:
+                    settings.append(vc.id)
+        return await ctx.tick()
+
+    @_blocklist.command("remove", aliases=["delete"])
+    async def _blocklist_remove(self, ctx: commands.Context, *voice_channels: discord.VoiceChannel):
+        """Remove a VC from the LFG blocklist."""
+        async with self.config.guild(ctx.guild).blocklist() as settings:
+            for vc in voice_channels:
+                if vc.id in settings:
+                    settings.remove(vc.id)
+        return await ctx.tick()
+
     @_lfg_set.command(name="view")
     async def _view(self, ctx: commands.Context):
         """View the LFG settings."""
         settings = await self.config.guild(ctx.guild).all()
+        description = [
+            f"**Post:** {settings['message'] or None}\n",
+            f"**VC Name:** {', '.join(settings['vc_name']) or None}\n",
+            f"**Rename on Empty:** {settings['rename']}\n",
+            f"**Mention Limit:** {settings['mention_limit']}\n",
+            f"**Categories:** see `{ctx.clean_prefix}lfgset categories`\n",
+            f"**Blocklist:** see `{ctx.clean_prefix}lfgset blocklist`"
+        ]
         return await ctx.send(embed=discord.Embed(
             title="LFG Settings",
-            description=f"**Post:** {settings['message'] or None}\n**Post (No Inputs):** {settings['no_inputs'] or None}\n**VC Name:** {', '.join(settings['vc_name']) or None}\n**Rename on Empty:** {settings['rename']}\n**Mention Limit:** {settings['mention_limit']}\n**Categories:** see `{ctx.clean_prefix}lfgset categories`",
+            description=("".join(description)),
             color=await ctx.embed_color()
         ))
