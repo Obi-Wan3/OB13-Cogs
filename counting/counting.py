@@ -48,6 +48,7 @@ class Counting(commands.Cog):
             "allowrepeats": False,
             "penalty": (None, None),
             "autoreset": None,
+            "allowtext": False,
             "wrong": {}
         }
         default_member = {
@@ -82,7 +83,8 @@ class Counting(commands.Cog):
             if not (user_count-1 == guild_settings["counter"]):
                 to_delete, incorrect = True, True
         except ValueError:  # No number as first word of message
-            to_delete = True
+            if not guild_settings["allowtext"]:
+                to_delete = True
 
         # User repeated and allow repeats is off (delete)
         if not guild_settings["allowrepeats"] and permissions.read_message_history:
@@ -219,6 +221,12 @@ class Counting(commands.Cog):
         await self.config.guild(ctx.guild).counter.set(num)
         return await ctx.tick()
 
+    @counting.command(name="allowtext")
+    async def _allow_text(self, ctx: commands.Context, true_or_false: bool):
+        """Set whether messages not starting with a number are allowed."""
+        await self.config.guild(ctx.guild).allowtext.set(true_or_false)
+        return await ctx.tick()
+
     @counting.command(name="autoreset")
     async def _auto_reset(self, ctx: commands.Context, *, message: str):
         """
@@ -297,6 +305,7 @@ class Counting(commands.Cog):
             **Current #:** {settings["counter"]}
             **Role:** {role_mention}
             **Allow Repeats:** {settings["allowrepeats"]}
+            **Allow Text:** {settings["allowtext"]}
             **Auto-Reset:** {settings["autoreset"]}
             **Assign Role:** {settings["assignrole"]}
             **Wrong Count Penalty:** {f'ChannelMute for {settings["penalty"][1]}s if {settings["penalty"][0]} wrong tries in a row' if all(settings["penalty"]) else "Not Set"}
