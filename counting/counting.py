@@ -47,6 +47,7 @@ class Counting(commands.Cog):
             "assignrole": False,
             "allowrepeats": False,
             "penalty": (None, None),
+            "autoreset": None,
             "wrong": {}
         }
         default_member = {
@@ -60,66 +61,78 @@ class Counting(commands.Cog):
     async def _message_listener(self, message: discord.Message):
         if not message.guild:
             return
-        counting_channel = await self.config.guild(message.guild).channel()
+
+        guild_settings = await self.config.guild(message.guild).all()
 
         # Ignore these messages
         if (
-            message.channel.id != counting_channel or  # Message not in counting channel
+            message.channel.id != guild_settings["channel"] or  # Message not in counting channel
             await self.bot.cog_disabled_in_guild(self, message.guild) or  # Cog disabled in guild
-            not await self.config.guild(message.guild).toggle() or  # Counting toggled off
+            not guild_settings["toggle"] or  # Counting toggled off
             message.author.bot  # Message author is a bot
         ):
             return
 
         permissions: discord.Permissions = message.channel.permissions_for(message.guild.me)
-        counter = await self.config.guild(message.guild).counter()
-        to_delete = False
+        to_delete, incorrect = False, False
 
         # Incorrect number (delete)
         try:
-            if not (int(message.content.strip().split()[0])-1 == counter):
-                to_delete = True
+            user_count = int(message.content.strip().split()[0])
+            if not (user_count-1 == guild_settings["counter"]):
+                to_delete, incorrect = True, True
         except ValueError:  # No number as first word of message
             to_delete = True
 
         # User repeated and allow repeats is off (delete)
-        if not await self.config.guild(message.guild).allowrepeats() and permissions.read_message_history:
+        if not guild_settings["allowrepeats"] and permissions.read_message_history:
             last_m = (await message.channel.history(limit=1, before=message).flatten())[0]
             if last_m.author.id == message.author.id:
                 to_delete = True
 
         if to_delete:
-            self.deleted.append(message.id)
-            msg_copy = copy(message)
+            if incorrect and guild_settings["autoreset"] and message.channel.permissions_for(message.guild.me).send_messages:
+                await self.config.guild(message.guild).counter.set(0)
+                await message.channel.send(
+                    guild_settings["autoreset"].replace(
+                        "{author}",
+                        message.author.mention
+                    ).replace(
+                        "{count}",
+                        user_count
+                    )
+                )
 
             if not permissions.manage_messages:
                 return
 
             await message.delete()
 
-            if all(penalty := await self.config.guild(message.guild).penalty()):
+            self.deleted.append(message.id)
+            msg_copy = copy(message)
+
+            if all(guild_settings["penalty"]):
                 async with self.config.guild(message.guild).wrong() as wrong:
                     wrong[str(message.author.id)] = wrong.get(str(message.author.id), 0) + 1
-                    if wrong[str(message.author.id)] >= penalty[0] and message.author.id != message.guild.owner.id and not message.author.guild_permissions.administrator:
+                    if wrong[str(message.author.id)] >= guild_settings["penalty"][0] and message.author.id != message.guild.owner.id and not message.author.guild_permissions.administrator:
                         try:
                             channel_mute = self.bot.get_command("channelmute")
                             msg_copy.author = message.guild.owner
                             ctx = await self.bot.get_context(msg_copy)
                             if channel_mute:
-                                await channel_mute(ctx=ctx, users=[message.author], time_and_reason={"duration": datetime.timedelta(seconds=penalty[1]), "reason": "Counting: too many wrong counts"})
+                                await channel_mute(ctx=ctx, users=[message.author], time_and_reason={"duration": datetime.timedelta(seconds=guild_settings["penalty"][1]), "reason": "Counting: too many wrong counts"})
                             wrong[str(message.author.id)] = 0
                         except Exception:
                             pass
             return
 
-        await self.config.guild(message.guild).counter.set(counter+1)
+        await self.config.guild(message.guild).counter.set(guild_settings["counter"]+1)
         async with self.config.member(message.author).all() as member_settings:
             member_settings["counts"] += 1
 
         # Assign a role the latest user to count if toggled
-        role_id = await self.config.guild(message.guild).role()
-        if await self.config.guild(message.guild).assignrole() and role_id and permissions.manage_roles:
-            role = message.guild.get_role(role_id)
+        if guild_settings["assignrole"] and guild_settings["role"] and permissions.manage_roles:
+            role = message.guild.get_role(guild_settings["role"])
             if role and role < message.guild.me.top_role:
                 assigned = False
                 for m in role.members:
@@ -206,6 +219,18 @@ class Counting(commands.Cog):
         await self.config.guild(ctx.guild).counter.set(num)
         return await ctx.tick()
 
+    @counting.command(name="autoreset")
+    async def _auto_reset(self, ctx: commands.Context, *, message: str):
+        """
+        Set the message to be sent on counter reset when a wrong number is sent (leave blank to turn off auto-reset).
+
+        The following variables can be included in the message:
+        - `{author}` for a user mention of the wrong count message's author
+        - `{count}` for the wrong count number
+        """
+        await self.config.guild(ctx.guild).autoreset.set(message)
+        return await ctx.tick()
+
     @commands.admin_or_permissions(manage_roles=True)
     @counting.command(name="role")
     async def _role(self, ctx: commands.Context, role: discord.Role):
@@ -272,6 +297,7 @@ class Counting(commands.Cog):
             **Current #:** {settings["counter"]}
             **Role:** {role_mention}
             **Allow Repeats:** {settings["allowrepeats"]}
+            **Auto-Reset:** {settings["autoreset"]}
             **Assign Role:** {settings["assignrole"]}
             **Wrong Count Penalty:** {f'ChannelMute for {settings["penalty"][1]}s if {settings["penalty"][0]} wrong tries in a row' if all(settings["penalty"]) else "Not Set"}
             """
