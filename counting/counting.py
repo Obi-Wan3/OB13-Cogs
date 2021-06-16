@@ -101,17 +101,16 @@ class Counting(commands.Cog):
                         message.author.mention
                     ).replace(
                         "{count}",
-                        user_count
+                        str(user_count)
                     )
                 )
 
             if not permissions.manage_messages:
                 return
 
-            await message.delete()
-
             self.deleted.append(message.id)
             msg_copy = copy(message)
+            await message.delete()
 
             if all(guild_settings["penalty"]):
                 async with self.config.guild(message.guild).wrong() as wrong:
