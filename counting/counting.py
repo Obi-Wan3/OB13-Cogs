@@ -83,8 +83,9 @@ class Counting(commands.Cog):
             if not (user_count-1 == guild_settings["counter"]):
                 to_delete, incorrect = True, True
         except ValueError:  # No number as first word of message
-            if not guild_settings["allowtext"]:
-                to_delete = True
+            if guild_settings["allowtext"]:
+                return
+            to_delete = True
 
         # User repeated and allow repeats is off (delete)
         if not guild_settings["allowrepeats"] and permissions.read_message_history:
