@@ -109,20 +109,18 @@ class BrainShop(commands.Cog):
             ):
                 return
 
+        # Get BrainShop api key
+        brainshop_api = await self.bot.get_shared_api_tokens("brainshop")
+        if not (bid := brainshop_api.get("bid")) or not (key := brainshop_api.get("key")):
+            return
+
+        # Remove bot mention
+        filtered = re.sub(f"<@!?{self.bot.user.id}>", "", message.content)
+        if not filtered:
+            return
+
         # Get response from BrainShop
         async with message.channel.typing():
-            brainshop_api = await self.bot.get_shared_api_tokens("brainshop")
-            bid = brainshop_api.get("bid")
-            key = brainshop_api.get("key")
-
-            if not bid or not key:
-                return
-
-            # Remove bot mention
-            filtered = re.sub(f"<@!?{self.bot.user.id}>", "", message.content)
-            if not filtered:
-                return
-
             response = await self._get_response(bid=bid, key=key, uid=message.author.id, msg=filtered)
 
         # Reply or send response
