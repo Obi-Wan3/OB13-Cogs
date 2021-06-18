@@ -45,7 +45,8 @@ class Translate(commands.Cog):
         self.bot = bot
         self.config = Config.get_conf(self, identifier=14000605, force_registration=True)
         default_guild = {
-            "auto": {}
+            "auto": {},
+            "auto_confidence": None
         }
         self.config.register_guild(**default_guild)
 
@@ -108,16 +109,28 @@ class Translate(commands.Cog):
         ):
             return
 
+        # Detect source language
+        if (confidence := await self.config.guild(message.guild).auto_confidence()) is not None:
+
+            detect_task = functools.partial(TRANSLATOR.detect, text=message.content)
+            try:
+                detect_result: googletrans.models.Detected = await self.bot.loop.run_in_executor(None, detect_task)
+            except Exception:
+                return
+
+            if detect_result.confidence*100 < confidence:
+                return
+
         # Translate
-        task = functools.partial(TRANSLATOR.translate, text=message.content, dest=dest_lang)
+        translate_task = functools.partial(TRANSLATOR.translate, text=message.content, dest=dest_lang)
         try:
-            result: googletrans.models.Translated = await self.bot.loop.run_in_executor(None, task)
+            translate_result: googletrans.models.Translated = await self.bot.loop.run_in_executor(None, translate_task)
         except Exception:
             return
 
-        # Source and dest languages different
-        if result.src.lower() != result.dest.lower():
-            result_embed = await self._result_embed(result, await self.bot.get_embed_color(message.channel))
+        # Source and dest languages and text are both different
+        if translate_result.src.lower() != translate_result.dest.lower() and translate_result.origin.lower() != translate_result.text.lower():
+            result_embed = await self._result_embed(translate_result, await self.bot.get_embed_color(message.channel))
             return await message.reply(embed=result_embed, mention_author=False)
 
     @commands.bot_has_permissions(embed_links=True)
@@ -241,4 +254,12 @@ class Translate(commands.Cog):
             for channel in channels:
                 if str(channel.id) in settings.keys():
                     del settings[str(channel.id)]
+        return await ctx.tick()
+
+    @_auto.command("confidence")
+    async def _auto_confidence(self, ctx: commands.Context, confidence: int = None):
+        """Set the source language confidence threshold in terms of percentage (leave blank to remove)."""
+        if confidence is not None and not (0 < confidence <= 100):
+            return await ctx.send("Please enter a number between 0 and 100.")
+        await self.config.guild(ctx.guild).auto_confidence.set(confidence)
         return await ctx.tick()
