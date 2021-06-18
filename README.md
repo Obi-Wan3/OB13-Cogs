@@ -6,7 +6,7 @@
 Obi-Wan3's Assorted Utility Cogs for Red v3
 
 Please see below for a list of my cogs and their statuses. 
-A big thank you to the [Red DiscordBot community](https://discord.gg/red) for all the help with coding! 
+A big thank you to the [Red community](https://discord.gg/red) for all the help with coding! 
 Also thanks to those that have commissioned cogs through bounties (denoted below with "BC" for bounty commissioner). 
 Cogs marked with a ✓ are ready for use, while those with a ✗ are still a Work-In-Progress and are either hidden or unavailable.
 
@@ -29,17 +29,18 @@ Cogs marked with a ✓ are ready for use, while those with a ✗ are still a Wor
 | LaTeX | ✗ | Convert LaTeX to Images | Obi-Wan3 |
 | Leveler | ✗ | Customizable Chat + VC Leveling System | Obi-Wan3 |
 | LFG | ✓ | VC LFG System w/ Custom Fields | Obi-Wan3, Eternalll#6100 (BC) |
-| MentionHelp | ✓ | Customizable MentionHelp Message | Obi-Wan3 |
-| MessageNotifier | ✓ | Notify You of Messages in Certain Channels | Obi-Wan3 |
+| MentionHelp | ✓ | Message on Bot Mention | Obi-Wan3 |
+| MessageNotifier | ✓ | New Message Notifications | Obi-Wan3 |
 | NoDMs | ✓ | Disallow DM Commands | Obi-Wan3 |
 | PrivateRooms | ✓ | Automatic Private VCs with Lobby | Obi-Wan3, Archetype (Bloib & Echospawn, BC) |
 | PublicRooms | ✓ | Automatic Public VC Creation | Obi-Wan3, Archetype (Bloib & Echospawn, BC) |
 | QuizRole | ✓ | Take a Quiz to Gain a Role | Obi-Wan3, Tetra#0001 (BC) |
 | RoleSync | ✓ | Cross-Server Role Sync on Join | Obi-Wan3, Cry8wolf9#1337 (BC) |
+| RoleTiers | ✗ | Tiered Roles for New Members | Obi-Wan3, Jademalo#3486 (BC) |
 | ReactionPolls | ✓ | Poll Channels w/ Auto-Reactions | Obi-Wan3 |
 | Referrals | ✓ | Invite Referral -> Credits | Obi-Wan3, Vertyco#0117 (BC) |
 | Reply | ✓ | Bot Replies to Messages | Obi-Wan3 |
-| RestrictedRolePerms | ✓ | Give Certain Roles Restricted Permissions | Obi-Wan3, Mile High#7102 (BC) |
+| RestrictedRolePerms | ✓ | Give Roles Restricted Permissions | Obi-Wan3, Mile High#7102 (BC) |
 | SiteStatus | ✓ | Monitor Website Statuses | Obi-Wan3 |
 | StatusRole | ✓ | Roles for Certain Custom Statuses | Obi-Wan3, ry#1000 (BC) |
 | StreamRole | ✓ | Roles for Discord Streamers | Obi-Wan3 |
@@ -52,7 +53,7 @@ Cogs marked with a ✓ are ready for use, while those with a ✗ are still a Wor
 Run the following commands with your Red instance, replacing `[p]` with your prefix:
 
 If you don't already have Downloader loaded, go ahead and do that first: `[p]load downloader`. Then, 
-```
+```ini
 [p]repo add OB13-Cogs https://github.com/Obi-Wan3/OB13-Cogs
 [p]cog install OB13-Cogs <list of cogs>
 [p]load <list of cogs>
@@ -63,12 +64,12 @@ For support with my cogs, please contact me in #support_ob13-cogs in the [Red Co
 
 
 ## Contributing
-If you have any suggestions, or found any bugs, please let me know or open an issue on my repo!
+If you have any suggestions, or found any bugs, please let me know or [open an issue](https://github.com/Obi-Wan3/OB13-Cogs/issues/new/choose) on my repo!
 
 If you would like to contribute, please talk to me on Discord first about your ideas before opening a PR.
 
 
 ## Cog Requests & Bounties
-I am always open to any ideas or suggestions for new cogs! 
+I am always open to any ideas or suggestions for new cogs, especially ones benefiting the general public! 
 
 If you would like to discuss a possible cog commission, please contact me through Discord at Obi-Wan3#0003.
