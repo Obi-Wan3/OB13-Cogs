@@ -36,7 +36,7 @@ Cogs marked with a ✓ are ready for use, while those with a ✗ are still a Wor
 | PublicRooms | ✓ | Automatic Public VC Creation | Obi-Wan3, Archetype (Bloib & Echospawn, BC) |
 | QuizRole | ✓ | Take a Quiz to Gain a Role | Obi-Wan3, Tetra#0001 (BC) |
 | RoleSync | ✓ | Cross-Server Role Sync on Join | Obi-Wan3, Cry8wolf9#1337 (BC) |
-| RoleTiers | ✗ | Tiered Roles for New Members | Obi-Wan3, Jademalo#3486 (BC) |
+| RoleTiers | ✓ | Tiered Roles for Active Members | Obi-Wan3, Jademalo#3486 (BC) |
 | ReactionPolls | ✓ | Poll Channels w/ Auto-Reactions | Obi-Wan3 |
 | Referrals | ✓ | Invite Referral -> Credits | Obi-Wan3, Vertyco#0117 (BC) |
 | Reply | ✓ | Bot Replies to Messages | Obi-Wan3 |
