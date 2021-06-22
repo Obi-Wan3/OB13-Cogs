@@ -126,6 +126,10 @@ class GitHub(commands.Cog):
             global_config["migrated"] = True
 
     @staticmethod
+    def _escape(text: str):
+        return escape(text, formatting=True)
+
+    @staticmethod
     async def _repo_url(**user_and_repo):
         return f"https://github.com/{user_and_repo['user']}/{user_and_repo['repo']}/"
 
@@ -231,7 +235,7 @@ class GitHub(commands.Cog):
             num = min(len(entries), 10)
             desc = ""
             for e in entries[:num]:
-                desc += f"[`{re.fullmatch(COMMIT_REGEX, e.link).group(1)[:7]}`]({e.link}) {e.title} – {e.author}\n"
+                desc += f"[`{re.fullmatch(COMMIT_REGEX, e.link).group(1)[:7]}`]({e.link}) {self._escape(e.title)} – {self._escape(e.author)}\n"
 
             embed = discord.Embed(
                 title=f"[{repo}:{branch}] {num} new commit{'s' if num > 1 else ''}",
@@ -492,7 +496,7 @@ class GitHub(commands.Cog):
         # Filter name
         if len(name) > 20:
             return await ctx.send("That feed name is too long!")
-        name = escape(name)
+        name = self._escape(name)
 
         # Get channel
         if not((channel := guild_config["channel"]) and (channel := ctx.guild.get_channel(channel))):
@@ -553,7 +557,7 @@ class GitHub(commands.Cog):
         if (role := guild_config["role"]) and role not in [r.id for r in ctx.author.roles]:
             return await ctx.send(NO_ROLE)
 
-        name = escape(name)
+        name = self._escape(name)
 
         # Delete from config
         async with self.config.member(ctx.author).feeds() as feeds:
