@@ -65,13 +65,13 @@ class MentionHelp(commands.Cog):
 
         mention = re.compile(rf"<@!?{self.bot.user.id}>")
         destination = message.channel if message.guild else message.author
-        if not destination.permissions_for(message.guild.me).send_messages:
+        if message.guild and not destination.permissions_for(message.guild.me).send_messages:
             return
 
         to_send = await self.config.message()
 
-        if mention.fullmatch(message.content) and self.bot.user.id in [u.id for u in message.mentions] and to_send:
-            if await self.config.embed() and destination.permissions_for(message.guild.me).embed_links:
+        if mention.fullmatch(message.content.strip()) and self.bot.user.id in [u.id for u in message.mentions] and to_send:
+            if (await self.config.embed()) and ((not message.guild) or destination.permissions_for(message.guild.me).embed_links):
                 return await destination.send(embed=discord.Embed(description=to_send, color=await self.bot.get_embed_color(destination)))
             return await destination.send(to_send)
 
@@ -104,7 +104,7 @@ class MentionHelp(commands.Cog):
     @_mention_help.command(name="view")
     async def _view(self, ctx: commands.Context):
         """View the MentionHelp settings."""
-        return await ctx.send(f"**Global Toggle:** {await self.config.toggle()}\n**Use Embeds:**{await self.config.embed()}\n**Message:** {await self.config.message()}")
+        return await ctx.send(f"**Global Toggle:** {await self.config.toggle()}\n**Use Embeds:** {await self.config.embed()}\n**Message:** {await self.config.message()}")
 
     @commands.admin_or_permissions(administrator=True)
     @commands.guild_only()
