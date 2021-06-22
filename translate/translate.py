@@ -22,11 +22,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+import typing
 import functools
 import googletrans, googletrans.models
 
 import discord
 from redbot.core import commands, Config
+from redbot.core.utils.chat_formatting import pagify
 
 TRANSLATOR = googletrans.Translator()
 MISSING_INPUTS = "Please provide a message ID/link, some text to translate, or reply to the original message."
@@ -89,12 +91,11 @@ class Translate(commands.Cog):
 
     @staticmethod
     async def _result_embed(res: googletrans.models.Translated, color: discord.Color):
-        embed = discord.Embed(
-            description=res.text,
-            color=color
-        )
-        embed.set_footer(text=f"{googletrans.LANGUAGES[res.src.lower()].title()} → {googletrans.LANGUAGES[res.dest.lower()].title()}")
-        return embed
+        embeds: typing.List[discord.Embed] = []
+        for p in pagify(res.text, delims=["\n", " "]):
+            embeds.append(discord.Embed(description=p, color=color))
+        embeds[-1].set_footer(text=f"{googletrans.LANGUAGES[res.src.lower()].title()} → {googletrans.LANGUAGES[res.dest.lower()].title()}")
+        return embeds
 
     @commands.Cog.listener("on_message_without_command")
     async def _message_listener(self, message: discord.Message):
@@ -130,8 +131,10 @@ class Translate(commands.Cog):
 
         # Source and dest languages and text are both different
         if translate_result.src.lower() != translate_result.dest.lower() and translate_result.origin.lower() != translate_result.text.lower():
-            result_embed = await self._result_embed(translate_result, await self.bot.get_embed_color(message.channel))
-            return await message.reply(embed=result_embed, mention_author=False)
+            result_embeds = await self._result_embed(translate_result, await self.bot.get_embed_color(message.channel))
+            await message.reply(embed=result_embeds[0], mention_author=False)
+            for e in result_embeds[1:]:
+                await message.channel.send(embed=e)
 
     @commands.bot_has_permissions(embed_links=True)
     @commands.command(name="translate")
@@ -158,9 +161,11 @@ class Translate(commands.Cog):
             except Exception:
                 return await ctx.channel.send(embed=discord.Embed(description=TRANSLATION_FAILED, color=discord.Color.red()))
 
-            result_embed = await self._result_embed(result, await ctx.embed_color())
+            result_embeds = await self._result_embed(result, await ctx.embed_color())
 
-        return await to_reply.reply(embed=result_embed, mention_author=False)
+        await to_reply.reply(embed=result_embeds[0], mention_author=False)
+        for e in result_embeds[1:]:
+            await to_reply.channel.send(embed=e)
 
     @commands.bot_has_permissions(embed_links=True)
     @commands.command(name="translatefrom")
@@ -187,9 +192,11 @@ class Translate(commands.Cog):
             except Exception:
                 return await ctx.channel.send(embed=discord.Embed(description=TRANSLATION_FAILED, color=discord.Color.red()))
 
-            result_embed = await self._result_embed(result, await ctx.embed_color())
+            result_embeds = await self._result_embed(result, await ctx.embed_color())
 
-        return await to_reply.reply(embed=result_embed, mention_author=False)
+        await to_reply.reply(embed=result_embeds[0], mention_author=False)
+        for e in result_embeds[1:]:
+            await to_reply.channel.send(embed=e)
 
     @commands.bot_has_permissions(embed_links=True)
     @commands.command(name="language")
