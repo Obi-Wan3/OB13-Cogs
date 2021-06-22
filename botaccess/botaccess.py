@@ -32,7 +32,7 @@ from redbot.core.utils import AsyncIter
 from redbot.core.utils.chat_formatting import humanize_list, pagify
 
 NOT_SUPPORTING = "You do not have BotAccess privileges!"
-THANKS = "Thank you for supporting my server! Here is my invite link: {invite}. You can add a BotAccess server with `[p]botaccess addserver <server ID>`."
+THANKS = "Thank you for supporting my server! Here is my invite link: <{invite}>. You can add a BotAccess server with `[p]botaccess addserver <server ID>`."
 EXPIRE = "Unfortunately, your BotAccess servers have expired as you are no longer a supporter."
 
 
@@ -193,8 +193,7 @@ class BotAccess(commands.Cog):
         return bool(list(set(supporting_roles) & set(r.id for r in member.roles)))
 
     async def _fill_template(self, template: str):
-        app_info = await self.bot.application_info()
-        invite_url = discord.utils.oauth_url(app_info.id)
+        invite_url = await self.bot.get_cog("Core")._invite_url()
         return template.replace(
             "{invite}", f"{invite_url}"
         )
