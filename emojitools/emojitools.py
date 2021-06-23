@@ -62,6 +62,45 @@ class EmojiTools(commands.Cog):
         `[p]emojitools save` allows you to save emojis to folders **in the cog data path**: this requires storage!
         """
 
+    @commands.bot_has_permissions(embed_links=True)
+    @emojitools.command(name="info")
+    async def _info(self, ctx: commands.Context, emoji: discord.Emoji):
+        """Get info about a custom emoji from this server."""
+        embed = discord.Embed(
+            description=f"Emoji Information for {emoji}",
+            color=await ctx.embed_color()
+        )
+        embed.add_field(
+            name="Name",
+            value=f"{emoji.name}"
+        )
+        embed.add_field(
+            name="Emoji ID",
+            value=f"{emoji.id}"
+        )
+        embed.add_field(
+            name="Animated",
+            value=f"{emoji.animated}"
+        )
+        embed.add_field(
+            name="URL",
+            value=f"[Image Link]({emoji.url})"
+        )
+        embed.add_field(
+            name="Creation (UTC)",
+            value=f"{str(emoji.created_at)[:19]}"
+        )
+        if ctx.guild.me.guild_permissions.manage_emojis and (e := await ctx.guild.fetch_emoji(emoji.id)):
+            embed.add_field(
+                name="Author",
+                value=f"{e.user.mention if e.user else 'Unknown'}"
+            )
+        embed.add_field(
+            name="Roles Allowed",
+            value=f"{emoji.roles or 'Everyone'}"
+        )
+        return await ctx.send(embed=embed)
+
     @commands.admin_or_permissions(administrator=True)
     @emojitools.group(name="save")
     async def _save(self, ctx: commands.Context):
