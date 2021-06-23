@@ -39,6 +39,8 @@ TIME_OUT = "The request timed out or we are being ratelimited, please try again 
 INVOKE_ERROR = "Something went wrong while adding the emoji(s). Has the limit been reached?"
 HTTP_EXCEPTION = "Something went wrong while adding the emoji(s) (the source file may be too big)."
 FILE_SIZE = "Unfortunately, it seems the attachment was too large to be sent."
+SAME_SERVER_ONLY = "I can only edit emojis from this server!"
+ROLE_HIERARCHY = "I cannot perform this action due to the Discord role hierarchy!"
 
 
 class EmojiTools(commands.Cog):
@@ -437,6 +439,32 @@ class EmojiTools(commands.Cog):
             shutil.rmtree(folder_path)
 
         return await ctx.send(f"{len(added_emojis)} emojis were added to this server: {' '.join([str(e) for e in added_emojis])}")
+
+    @commands.bot_has_permissions(manage_emojis=True)
+    @emojitools.group(name="edit")
+    async def _edit(self, ctx: commands.Context):
+        """Edit Custom Emojis in the Server"""
+
+    @commands.cooldown(rate=1, per=5)
+    @_edit.command(name="name")
+    async def _edit_name(self, ctx: commands.Context, emoji: discord.Emoji, name: str):
+        """Edit the name of a custom emoji from this server."""
+        if emoji.guild_id != ctx.guild.id:
+            return await ctx.send(SAME_SERVER_ONLY)
+        await emoji.edit(name=name, reason=f"EmojiTools: edit requested by {ctx.author}")
+        return await ctx.tick()
+
+    @commands.cooldown(rate=1, per=5)
+    @_edit.command(name="roles")
+    async def _edit_roles(self, ctx: commands.Context, emoji: discord.Emoji, *roles: discord.Role):
+        """Edit the roles to which the usage of a custom emoji from this server is restricted."""
+        if emoji.guild_id != ctx.guild.id:
+            return await ctx.send(SAME_SERVER_ONLY)
+        for r in roles:
+            if (r >= ctx.author.top_role and ctx.author != ctx.guild.owner) or r >= ctx.guild.me.top_role:
+                return await ctx.send(ROLE_HIERARCHY)
+        await emoji.edit(roles=roles, reason=f"EmojiTools: edit requested by {ctx.author}")
+        return await ctx.tick()
 
     @staticmethod
     def _extract_zip(bfile, path):
