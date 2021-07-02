@@ -135,6 +135,24 @@ class RoleSync(commands.Cog):
             return await ctx.send("No role pair with that name found.")
         await ctx.send("Forced sync has started, this may take a while...")
 
+        return await self._sync_role(ctx, settings, name, remove_role)
+
+    @commands.bot_has_permissions(manage_roles=True)
+    @_role_sync.command(name="forcesyncall")
+    async def _force_sync_all(self, ctx: commands.Context, enter_true_to_confirm: bool, remove_role: bool = False):
+        """Force a manual check of all RoleSync roles for all server members."""
+        if not enter_true_to_confirm:
+            return await ctx.send("Please enter `True` to confirm!")
+
+        settings = await self.config.guild(ctx.guild).roles()
+
+        await ctx.send("Forced sync has started, this may take a while...")
+
+        for name in settings.keys():
+            await self._sync_role(ctx, settings, name, remove_role)
+
+    async def _sync_role(self, ctx: commands.Context, settings: dict, name: str, remove_role: bool):
+
         counter = 0
         to_sync = settings[name]
         other_server: discord.Guild = self.bot.get_guild(to_sync["other_server"])
