@@ -11,7 +11,7 @@
     "min_python_version" : [3, 8, 1],
     "permissions": ["embed_links"],
     "required_cogs" : {},
-    "requirements": ["feedparser"],
+    "requirements": ["feedparser", "html2text"],
     "short": "GitHub RSS Commit Feeds",
     "tags": ["utility", "github", "rss", "feed", "commits", "embed"],
     "type": "COG"

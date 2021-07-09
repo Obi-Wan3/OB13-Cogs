@@ -25,6 +25,7 @@ SOFTWARE.
 import re
 import typing
 import aiohttp
+import html2text
 import feedparser
 from urllib.parse import urlparse
 from datetime import datetime, timezone
@@ -41,9 +42,12 @@ COLOR = 0x7289da
 TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
 # Regular expressions
-TOKEN_REGEX = r"token=(.*)"
-COMMIT_REGEX = r"https:\/\/github\.com\/.*?\/.*?\/commit\/(.*?)"
-USER_REPO_BRANCH_REGEX = r"\/(.*?)\/(.*?)\/?(commits)?\/(.*?(?=\.atom))?"
+TOKEN_REGEX: re.Pattern = re.compile(r"token=(.*)")
+COMMIT_REGEX: re.Pattern = re.compile(r"https://github\.com/.*?/.*?/commit/(.*?)")
+USER_REPO_BRANCH_REGEX: re.Pattern = re.compile(r"/(.*?)/(.*?)/?(commits)?/(.*?(?=\.atom))?")
+
+LONG_COMMIT_REGEX: re.Pattern = re.compile(r"^<pre.*?>|</pre>$|(?<=\n)\n+")
+LONG_RELEASE_REGEX: re.Pattern = re.compile(r"^<pre.*?>|</pre>$|(?<=\n)\n+")
 
 # Error messages
 NO_ROLE = "You do not have the required role!"
@@ -70,7 +74,8 @@ class GitHub(commands.Cog):
             "limit": 5,
             "color": None,
             "notify": True,
-            "timestamp": True
+            "timestamp": True,
+            "short": True
         }
         default_member = {
             "feeds": {}
@@ -181,10 +186,10 @@ class GitHub(commands.Cog):
             url = url[1:-1]
 
         parsed_url = urlparse(url)
-        if not (user_repo_branch := re.search(USER_REPO_BRANCH_REGEX, parsed_url.path if (parsed_url.path.endswith("/") or ".atom" in parsed_url.path) else parsed_url.path+"/")):
+        if not (user_repo_branch := USER_REPO_BRANCH_REGEX.search(parsed_url.path if (parsed_url.path.endswith("/") or ".atom" in parsed_url.path) else parsed_url.path+"/")):
             return None, None, None, None
 
-        user, repo, branch, token = user_repo_branch.group(1), user_repo_branch.group(2), user_repo_branch.group(4), re.fullmatch(TOKEN_REGEX, parsed_url.query).group(1) if parsed_url.query else None
+        user, repo, branch, token = user_repo_branch.group(1), user_repo_branch.group(2), user_repo_branch.group(4), TOKEN_REGEX.fullmatch(parsed_url.query).group(1) if parsed_url.query else None
 
         # Set branch to None if it is commits.atom
         if branch == "commits":
@@ -218,7 +223,7 @@ class GitHub(commands.Cog):
             channel = None
         return channel
 
-    async def _commit_embeds(self, entries: list, feed_link: str, color, timestamp: bool):
+    async def _commit_embeds(self, entries: list, feed_link: str, color: int, timestamp: bool, short: bool):
         if not entries:
             return None
 
@@ -230,12 +235,17 @@ class GitHub(commands.Cog):
                 color=color if color is not None else COLOR,
                 url=entries[0].link
             )
+            if not short:
+                embed.description = html2text.html2text(entries[0].content[0].value)
 
         else:
             num = min(len(entries), 10)
             desc = ""
             for e in entries[:num]:
-                desc += f"[`{re.fullmatch(COMMIT_REGEX, e.link).group(1)[:7]}`]({e.link}) {self._escape(e.title)} – {self._escape(e.author)}\n"
+                if short:
+                    desc += f"[`{COMMIT_REGEX.fullmatch(e.link).group(1)[:7]}`]({e.link}) {self._escape(e.title)} – {self._escape(e.author)}\n"
+                else:
+                    desc += f"[`{COMMIT_REGEX.fullmatch(e.link).group(1)[:7]}`]({e.link}) – {self._escape(e.author)}\n{LONG_COMMIT_REGEX.sub('', e.content[0].value)}\n\n"
 
             embed = discord.Embed(
                 title=f"[{repo}:{branch}] {num} new commit{'s' if num > 1 else ''}",
@@ -274,11 +284,17 @@ class GitHub(commands.Cog):
     async def _github_set(self, ctx: commands.Context):
         """GitHub Settings"""
 
+    @_github_set.command(name="short")
+    async def _set_short(self, ctx: commands.Context, short: bool):
+        """Set whether the GitHub message content should just include the title."""
+        await self.config.guild(ctx.guild).short.set(short)
+        return await ctx.send(f"The GitHub RSS feed message content length has been set to `{'short' if short else 'full'}`.")
+
     @_github_set.command(name="color")
     async def _set_color(self, ctx: commands.Context, hex_color: typing.Union[discord.Color, ExplicitNone]):
         """Set the GitHub RSS feed embed color for the server (enter "None" to reset)."""
         await self.config.guild(ctx.guild).color.set(hex_color.value if hex_color is not None else None)
-        return await ctx.send(f"The GitHub RSS feed feed embed color has been set to {f'({hex_color.r}, {hex_color.g}, {hex_color.b})' if hex_color is not None else None}.")
+        return await ctx.send(f"The GitHub RSS feed embed color has been set to {f'({hex_color.r}, {hex_color.g}, {hex_color.b})' if hex_color is not None else None}.")
 
     @_github_set.command(name="notify")
     async def _set_notify(self, ctx: commands.Context, true_or_false: bool):
@@ -345,7 +361,8 @@ class GitHub(commands.Cog):
                 entries=[parsed.entries[0]],
                 feed_link=parsed.feed.link,
                 color=guild_config["color"],
-                timestamp=guild_config["timestamp"]
+                timestamp=guild_config["timestamp"],
+                short=guild_config["short"]
             ))
         else:
             return await ctx.send("Either the set channel has been removed or I do not have permissions to send embeds in the channel.")
@@ -430,7 +447,7 @@ class GitHub(commands.Cog):
 
         return await ctx.send(embed=discord.Embed(
             title="GitHub Server Settings",
-            description=f"**Channel:** {channel.mention if channel else None}\n**Role:** {role.mention if role else None}\n**Limit:** {settings['limit']}\n**Color:** {settings['color']}\n**Notify:** {settings['notify']}\n**Timestamp:** {settings['timestamp']}",
+            description=f"**Channel:** {channel.mention if channel else None}\n**Role:** {role.mention if role else None}\n**Limit:** {settings['limit']}\n**Color:** {settings['color']}\n**Short:** {settings['short']}\n**Notify:** {settings['notify']}\n**Timestamp:** {settings['timestamp']}",
             color=await ctx.embed_color()
         ))
 
@@ -477,7 +494,8 @@ class GitHub(commands.Cog):
             entries=[parsed.entries[0]],
             feed_link=parsed.feed.link,
             color=guild_config["color"],
-            timestamp=guild_config["timestamp"]
+            timestamp=guild_config["timestamp"],
+            short=guild_config["short"]
         ))
 
     @_github.command(name="add")
@@ -544,7 +562,8 @@ class GitHub(commands.Cog):
             entries=[parsed.entries[0]],
             feed_link=parsed.feed.link,
             color=guild_config["color"],
-            timestamp=guild_config["timestamp"]
+            timestamp=guild_config["timestamp"],
+            short=guild_config["short"]
         ))
 
         return await ctx.send("Feed successfully added.")
@@ -639,7 +658,8 @@ class GitHub(commands.Cog):
                             entries=new_entries,
                             feed_link=parsed.feed.link,
                             color=guild_config["color"],
-                            timestamp=guild_config["timestamp"]
+                            timestamp=guild_config["timestamp"],
+                            short=guild_config["short"]
                     ):
 
                         # Get channel (guild vs feed override)
