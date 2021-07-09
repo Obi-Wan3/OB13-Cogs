@@ -275,10 +275,10 @@ class GitHub(commands.Cog):
         """GitHub Settings"""
 
     @_github_set.command(name="color")
-    async def _set_color(self, ctx: commands.Context, hex_color: typing.Union[int, ExplicitNone]):
+    async def _set_color(self, ctx: commands.Context, hex_color: typing.Union[discord.Color, ExplicitNone]):
         """Set the GitHub RSS feed embed color for the server (enter "None" to reset)."""
-        await self.config.guild(ctx.guild).color.set(hex_color)
-        return await ctx.send(f"The GitHub RSS feed feed embed color has been set to {hex_color}.")
+        await self.config.guild(ctx.guild).color.set(hex_color.value if hex_color is not None else None)
+        return await ctx.send(f"The GitHub RSS feed feed embed color has been set to {f'({hex_color.r}, {hex_color.g}, {hex_color.b})' if hex_color is not None else None}.")
 
     @_github_set.command(name="notify")
     async def _set_notify(self, ctx: commands.Context, true_or_false: bool):
