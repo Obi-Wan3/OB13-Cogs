@@ -294,7 +294,7 @@ class GitHub(commands.Cog):
     async def _set_color(self, ctx: commands.Context, hex_color: typing.Union[discord.Color, ExplicitNone]):
         """Set the GitHub RSS feed embed color for the server (enter "None" to reset)."""
         await self.config.guild(ctx.guild).color.set(hex_color.value if hex_color is not None else None)
-        return await ctx.send(f"The GitHub RSS feed embed color has been set to {f'({hex_color.r}, {hex_color.g}, {hex_color.b})' if hex_color is not None else None}.")
+        return await ctx.send(f"The GitHub RSS feed embed color has been set to {hex_color if hex_color else 'the default'}.")
 
     @_github_set.command(name="notify")
     async def _set_notify(self, ctx: commands.Context, true_or_false: bool):
@@ -447,7 +447,7 @@ class GitHub(commands.Cog):
 
         return await ctx.send(embed=discord.Embed(
             title="GitHub Server Settings",
-            description=f"**Channel:** {channel.mention if channel else None}\n**Role:** {role.mention if role else None}\n**Limit:** {settings['limit']}\n**Color:** {settings['color']}\n**Short:** {settings['short']}\n**Notify:** {settings['notify']}\n**Timestamp:** {settings['timestamp']}",
+            description=f"**Channel:** {channel.mention if channel else None}\n**Role:** {role.mention if role else None}\n**Limit:** {settings['limit']}\n**Color:** {str(discord.Color(settings['color'])) if settings['color'] else 'Default'}\n**Short:** {settings['short']}\n**Notify:** {settings['notify']}\n**Timestamp:** {settings['timestamp']}",
             color=await ctx.embed_color()
         ))
 
@@ -477,7 +477,7 @@ class GitHub(commands.Cog):
         return await ctx.send(embed=e)
 
     @_github.command(name="get", aliases=["fetch", "test"])
-    async def _get(self, ctx: commands.Context, url: str, branch: str = None):
+    async def _get(self, ctx: commands.Context, entries: typing.Optional[int], url: str, branch: str = None):
         """Test out fetching a GitHub repository url."""
 
         if not (user_repo_branch_token := await self._parse_url_input(url, branch)):
@@ -491,7 +491,7 @@ class GitHub(commands.Cog):
         guild_config = await self.config.guild(ctx.guild).all()
 
         return await ctx.send(embed=await self._commit_embeds(
-            entries=[parsed.entries[0]],
+            entries=parsed.entries[:entries] if entries else [parsed.entries[0]],
             feed_link=parsed.feed.link,
             color=guild_config["color"],
             timestamp=guild_config["timestamp"],
