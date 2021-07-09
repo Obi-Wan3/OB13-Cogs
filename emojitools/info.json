@@ -11,7 +11,7 @@
     "min_python_version" : [3, 8, 1],
     "permissions" : ["manage_emojis", "attach_files"],
     "required_cogs" : {},
-    "requirements" : ["aiofiles", "aiozipstream", "asynctempfile"],
+    "requirements" : ["aiofiles>=0.7.0", "aiozipstream"],
     "short": "Tools for Managing Custom Emojis",
     "tags" : ["utility", "emojis", "management", "save", "tools", "zip"],
     "type": "COG"
