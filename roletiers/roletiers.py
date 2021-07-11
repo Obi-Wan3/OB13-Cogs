@@ -106,7 +106,7 @@ class RoleTiers(commands.Cog):
 
     @commands.Cog.listener("on_command")
     async def _command_listener(self, message: discord.Message):
-        if self.guild_settings.get(message.guild.id, "count_commands"):
+        if message.guild and self.guild_settings.get(message.guild.id, "count_commands"):
             await self._message_listener(message)
 
     @commands.Cog.listener("on_member_remove")
