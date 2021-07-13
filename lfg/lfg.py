@@ -45,7 +45,11 @@ class LFG(commands.Cog):
             "mention_limit": 3,
             "active": {},
             "no_inputs": "",
-            "blocklist": []
+            "blocklist": [],
+            "invite": {
+                "age": 60,
+                "uses": 0
+            }
         }
         self.config.register_guild(**default_guild)
 
@@ -93,7 +97,7 @@ class LFG(commands.Cog):
 
         # VC cooldown (thanks PCX for the cooldown bucket example)
         retry = self.lfg_vc_bucket.get_bucket(user_vc).update_rate_limit()
-        if retry:
+        if retry and ctx.author.id not in self.bot.owner_ids:
             return await ctx.send(f"Due to Discord ratelimits, you can only run this command once every 10 minutes for the same VC. Please try again in {humanize_timedelta(seconds=max(retry, 1))}.", delete_after=30)
 
         settings: dict = await self.config.guild(ctx.guild).all()
@@ -112,7 +116,11 @@ class LFG(commands.Cog):
 
         # Create invite
         try:
-            invite: discord.Invite = await user_vc.create_invite()
+            invite: discord.Invite = await user_vc.create_invite(
+                max_age=settings["invite"]["age"]*60,
+                max_uses=settings["invite"]["uses"],
+                reason=f"LFG: command ran by {ctx.author} ({ctx.author.id})"
+            )
         except discord.HTTPException:
             return await ctx.send("Something went wrong while creating the VC invite.", delete_after=30)
 
@@ -221,6 +229,14 @@ class LFG(commands.Cog):
         await self.config.guild(ctx.guild).rename.set(true_or_false)
         return await ctx.tick()
 
+    @_lfg_set.command(name="invite")
+    async def _invite(self, ctx: commands.Context, time_limit: int, uses: int):
+        """Set the inputs for invite creation: time in minutes and # uses max (put 0 for unlimited)."""
+        if time_limit < 0 or uses < 0:
+            return await ctx.send("Please do not enter negative integers!")
+        await self.config.guild(ctx.guild).invite.set({"age": time_limit, "uses": uses})
+        return await ctx.tick()
+
     @_lfg_set.group(name="categories", invoke_without_command=True)
     async def _categories(self, ctx: commands.Context):
         """View and set the LFG categories and accepted values."""
@@ -288,15 +304,16 @@ class LFG(commands.Cog):
         """View the LFG settings."""
         settings = await self.config.guild(ctx.guild).all()
         description = [
-            f"**Post:** {settings['message'] or None}\n",
-            f"**VC Name:** {', '.join(settings['vc_name']) or None}\n",
-            f"**Rename on Empty:** {settings['rename']}\n",
-            f"**Mention Limit:** {settings['mention_limit']}\n",
-            f"**Categories:** see `{ctx.clean_prefix}lfgset categories`\n",
+            f"**Post:** {settings['message'] or None}",
+            f"**VC Name:** {', '.join(settings['vc_name']) or None}",
+            f"**Rename on Empty:** {settings['rename']}",
+            f"**Mention Limit:** {settings['mention_limit']}",
+            f"**Invite Settings:** {settings['invite']['age'] or 'unlimited'} min, {settings['invite']['uses'] or 'unlimited'} uses",
+            f"**Categories:** see `{ctx.clean_prefix}lfgset categories`",
             f"**Blocklist:** see `{ctx.clean_prefix}lfgset blocklist`"
         ]
         return await ctx.send(embed=discord.Embed(
             title="LFG Settings",
-            description=("".join(description)),
+            description=("\n".join(description)),
             color=await ctx.embed_color()
         ))
