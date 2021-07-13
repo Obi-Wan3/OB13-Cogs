@@ -49,7 +49,10 @@ class Counting(commands.Cog):
             "penalty": (None, None),
             "autoreset": None,
             "allowtext": False,
-            "wrong": {}
+            "wrong": {},
+            "highscore": 0,
+            "react": False,
+            "delete": True
         }
         default_member = {
             "counts": 0
@@ -94,7 +97,8 @@ class Counting(commands.Cog):
                 to_delete = True
 
         if to_delete:
-            if incorrect and guild_settings["autoreset"] and message.channel.permissions_for(message.guild.me).send_messages:
+
+            if incorrect and guild_settings["autoreset"] and permissions.send_messages:
                 await self.config.guild(message.guild).counter.set(0)
                 await message.channel.send(
                     guild_settings["autoreset"].replace(
@@ -103,15 +107,19 @@ class Counting(commands.Cog):
                     ).replace(
                         "{count}",
                         str(user_count)
+                    ).replace(
+                        "{correct}",
+                        str(guild_settings["counter"]+1)
                     )
                 )
 
-            if not permissions.manage_messages:
-                return
-
-            self.deleted.append(message.id)
-            msg_copy = copy(message)
-            await message.delete()
+            if not guild_settings["delete"] or not permissions.manage_messages:
+                if guild_settings["react"] and permissions.add_reactions:
+                    await message.add_reaction("\N{CROSS MARK}")
+            else:
+                self.deleted.append(message.id)
+                msg_copy = copy(message)
+                await message.delete()
 
             if all(guild_settings["penalty"]):
                 async with self.config.guild(message.guild).wrong() as wrong:
@@ -128,7 +136,14 @@ class Counting(commands.Cog):
                             pass
             return
 
-        await self.config.guild(message.guild).counter.set(guild_settings["counter"]+1)
+        if guild_settings["react"] and permissions.add_reactions:
+            await message.add_reaction("\N{WHITE HEAVY CHECK MARK}")
+
+        async with self.config.guild(message.guild).all() as guild_config:
+            guild_config["counter"] += 1
+            if guild_config["counter"] > guild_config["highscore"]:
+                guild_config["highscore"] = guild_config["counter"]
+
         async with self.config.member(message.author).all() as member_settings:
             member_settings["counts"] += 1
 
@@ -180,9 +195,18 @@ class Counting(commands.Cog):
         await self._message_deletion_listener(before)
 
     @commands.guild_only()
+    @commands.group(name="counting")
+    async def _counting(self, ctx: commands.Context):
+        """Multifeatured Counting Channel"""
+
+    @_counting.command(name="highscore", aliases=["score"])
+    async def _high_score(self, ctx: commands.Context):
+        """Show the highest count reached in this server."""
+        return await ctx.maybe_send_embed(f"{ctx.guild.name}'s counting highscore is {await self.config.guild(ctx.guild).highscore()}!")
+
     @commands.bot_has_permissions(embed_links=True)
-    @commands.command(name="topcounters")
-    async def _top_counters(self, ctx: commands.Context):
+    @_counting.command(name="leaderboard", aliases=["top", "topcounters"])
+    async def _leaderboard(self, ctx: commands.Context):
         """Show the Counting leaderboard in this server."""
         members = await self.config.all_members(ctx.guild)
         member_counts = sorted([(k, v["counts"]) for k, v in members.items()], key=lambda m: m[1], reverse=True)
@@ -199,35 +223,47 @@ class Counting(commands.Cog):
 
     @commands.guild_only()
     @commands.mod_or_permissions(manage_messages=True)
-    @commands.group()
-    async def counting(self, ctx: commands.Context):
+    @commands.group(name="countingset")
+    async def _counting_set(self, ctx: commands.Context):
         """Settings for Counting"""
 
-    @counting.command(name="toggle")
+    @_counting_set.command(name="toggle")
     async def _toggle(self, ctx: commands.Context, true_or_false: bool):
         """Toggle Counting in this server."""
         await self.config.guild(ctx.guild).toggle.set(true_or_false)
         return await ctx.tick()
 
-    @counting.command(name="channel")
+    @_counting_set.command(name="channel")
     async def _channel(self, ctx: commands.Context, channel: discord.TextChannel):
         """Set the Counting channel."""
         await self.config.guild(ctx.guild).channel.set(channel.id)
         return await ctx.tick()
 
-    @counting.command(name="starting")
+    @_counting_set.command(name="starting")
     async def _starting(self, ctx: commands.Context, num: int):
         """Set the counter to start off with."""
         await self.config.guild(ctx.guild).counter.set(num)
         return await ctx.tick()
 
-    @counting.command(name="allowtext")
+    @_counting_set.command(name="allowtext")
     async def _allow_text(self, ctx: commands.Context, true_or_false: bool):
         """Set whether messages not starting with a number are allowed."""
         await self.config.guild(ctx.guild).allowtext.set(true_or_false)
         return await ctx.tick()
 
-    @counting.command(name="autoreset")
+    @_counting_set.command(name="react")
+    async def _react(self, ctx: commands.Context, true_or_false: bool):
+        """Toggle whether ✓ and ✗ reactions should be added to messages."""
+        await self.config.guild(ctx.guild).react.set(true_or_false)
+        return await ctx.tick()
+
+    @_counting_set.command(name="delete")
+    async def _delete(self, ctx: commands.Context, true_or_false: bool):
+        """Toggle whether incorrect counts should be deleted."""
+        await self.config.guild(ctx.guild).delete.set(true_or_false)
+        return await ctx.tick()
+
+    @_counting_set.command(name="autoreset")
     async def _auto_reset(self, ctx: commands.Context, *, message: str):
         """
         Set the message to be sent on counter reset when a wrong number is sent (leave blank to turn off auto-reset).
@@ -235,12 +271,13 @@ class Counting(commands.Cog):
         The following variables can be included in the message:
         - `{author}` for a user mention of the wrong count message's author
         - `{count}` for the wrong count number
+        - `{correct}` for what the count should have been
         """
         await self.config.guild(ctx.guild).autoreset.set(message)
         return await ctx.tick()
 
     @commands.admin_or_permissions(manage_roles=True)
-    @counting.command(name="role")
+    @_counting_set.command(name="role")
     async def _role(self, ctx: commands.Context, role: discord.Role):
         """Set the role to assign to the most recent user to count."""
 
@@ -252,7 +289,7 @@ class Counting(commands.Cog):
         await self.config.guild(ctx.guild).role.set(role.id)
         return await ctx.tick()
 
-    @counting.command(name="assignrole")
+    @_counting_set.command(name="assignrole")
     async def _assignrole(self, ctx: commands.Context, true_or_false: bool):
         """Toggle whether to assign a role to the most recent user to count (requires add/remove role perms)."""
         if not await self.config.guild(ctx.guild).role():
@@ -260,25 +297,25 @@ class Counting(commands.Cog):
         await self.config.guild(ctx.guild).assignrole.set(true_or_false)
         return await ctx.tick()
 
-    @counting.command(name="allowrepeats")
+    @_counting_set.command(name="allowrepeats")
     async def _allow_repeats(self, ctx: commands.Context, true_or_false: bool):
         """Toggle whether users can count multiple times in a row."""
         await self.config.guild(ctx.guild).allowrepeats.set(true_or_false)
         return await ctx.tick()
 
-    @counting.command(name="penalty")
+    @_counting_set.command(name="penalty")
     async def _penalty(self, ctx: commands.Context, wrong: int = None, mute_time_in_seconds: int = None):
         """Mute users for a specified amount of time if they count wrong x times in a row (leave both values empty to turn off, requires Core `mutes` to be loaded)."""
         await self.config.guild(ctx.guild).penalty.set((wrong, mute_time_in_seconds))
         return await ctx.tick()
 
-    @counting.command(name="resetcounts")
+    @_counting_set.command(name="resetcounts")
     async def _reset_counts(self, ctx: commands.Context):
         """Reset the current Counting scores for all server members."""
         await self.config.clear_all_members(ctx.guild)
         return await ctx.tick()
 
-    @counting.command(name="clear")
+    @_counting_set.command(name="clear")
     async def _clear(self, ctx: commands.Context):
         """Clear & reset the current Counting settings."""
         await self.config.guild(ctx.guild).clear()
@@ -286,7 +323,7 @@ class Counting(commands.Cog):
         return await ctx.tick()
 
     @commands.bot_has_permissions(embed_links=True)
-    @counting.command(name="view")
+    @_counting_set.command(name="view")
     async def _view(self, ctx: commands.Context):
         """View the current Counting settings."""
         settings = await self.config.guild(ctx.guild).all()
@@ -299,16 +336,18 @@ class Counting(commands.Cog):
         if settings["role"] and (r := ctx.guild.get_role(settings["role"])):
             role_mention = r.mention
 
-        desc = f"""
-            **Toggle:** {settings["toggle"]}
-            **Channel:** {channel_mention}
-            **Current #:** {settings["counter"]}
-            **Role:** {role_mention}
-            **Allow Repeats:** {settings["allowrepeats"]}
-            **Allow Text:** {settings["allowtext"]}
-            **Auto-Reset:** {settings["autoreset"]}
-            **Assign Role:** {settings["assignrole"]}
-            **Wrong Count Penalty:** {f'ChannelMute for {settings["penalty"][1]}s if {settings["penalty"][0]} wrong tries in a row' if all(settings["penalty"]) else "Not Set"}
-            """
+        desc = [
+            f"**Toggle:** {settings['toggle']}",
+            f"**Channel:** {channel_mention}",
+            f"**React:** {settings['react']}",
+            f"**Delete:** {settings['delete']}"
+            f"**Current #:** {settings['counter']}",
+            f"**Role:** {role_mention}",
+            f"**Allow Repeats:** {settings['allowrepeats']}",
+            f"**Allow Text:** {settings['allowtext']}",
+            f"**Auto-Reset:** {settings['autoreset']}",
+            f"**Assign Role:** {settings['assignrole']}",
+            f"""**Wrong Count Penalty:** {f'ChannelMute for {settings["penalty"][1]}s if {settings["penalty"][0]} wrong tries in a row' if all(settings["penalty"]) else "Not Set"}"""
+        ]
 
-        return await ctx.send(embed=discord.Embed(title="Counting Settings", color=await ctx.embed_color(), description=desc))
+        return await ctx.send(embed=discord.Embed(title="Counting Settings", color=await ctx.embed_color(), description="\n".join(desc)))
