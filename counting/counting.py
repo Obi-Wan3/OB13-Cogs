@@ -52,7 +52,8 @@ class Counting(commands.Cog):
             "wrong": {},
             "highscore": 0,
             "react": False,
-            "delete": True
+            "delete": True,
+            "last": None
         }
         default_member = {
             "counts": 0
@@ -91,10 +92,8 @@ class Counting(commands.Cog):
             to_delete = True
 
         # User repeated and allow repeats is off (delete)
-        if not guild_settings["allowrepeats"] and permissions.read_message_history:
-            last_m = (await message.channel.history(limit=1, before=message).flatten())[0]
-            if last_m.author.id == message.author.id:
-                to_delete = True
+        if not guild_settings["allowrepeats"] and guild_settings["last"] == message.author.id:
+            to_delete = True
 
         if to_delete:
 
@@ -134,12 +133,14 @@ class Counting(commands.Cog):
                             wrong[str(message.author.id)] = 0
                         except Exception:
                             pass
+
             return
 
         if guild_settings["react"] and permissions.add_reactions:
             await message.add_reaction("\N{WHITE HEAVY CHECK MARK}")
 
         async with self.config.guild(message.guild).all() as guild_config:
+            guild_config["last"] = message.author.id
             guild_config["counter"] += 1
             if guild_config["counter"] > guild_config["highscore"]:
                 guild_config["highscore"] = guild_config["counter"]
@@ -340,7 +341,7 @@ class Counting(commands.Cog):
             f"**Toggle:** {settings['toggle']}",
             f"**Channel:** {channel_mention}",
             f"**React:** {settings['react']}",
-            f"**Delete:** {settings['delete']}"
+            f"**Delete:** {settings['delete']}",
             f"**Current #:** {settings['counter']}",
             f"**Role:** {role_mention}",
             f"**Allow Repeats:** {settings['allowrepeats']}",
