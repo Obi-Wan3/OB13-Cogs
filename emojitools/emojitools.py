@@ -54,16 +54,18 @@ class EmojiTools(commands.Cog):
         return ".gif" if e.animated else ".png"
 
     @staticmethod
-    async def _convert_emoji(ctx: commands.Context, emoji: str):
+    async def _convert_emoji(ctx: commands.Context, emoji: str, partial_emoji: bool = True):
         try:
-            return await commands.PartialEmojiConverter().convert(ctx=ctx, argument=emoji)
+            if partial_emoji:
+                return await commands.PartialEmojiConverter().convert(ctx=ctx, argument=emoji)
+            return await commands.EmojiConverter().convert(ctx=ctx, argument=emoji)
         except commands.BadArgument:
-            return await ctx.send(f"Invalid emoji: {emoji}")
+            raise commands.UserFeedbackCheckFailure(f"Invalid emoji: {emoji}")
 
     @commands.guild_only()
     @commands.admin_or_permissions(manage_emojis=True)
-    @commands.group()
-    async def emojitools(self, ctx: commands.Context):
+    @commands.group(name="emojitools")
+    async def _emojitools(self, ctx: commands.Context):
         """
         Various tools for managing custom emojis in servers.
 
@@ -74,7 +76,7 @@ class EmojiTools(commands.Cog):
         """
 
     @commands.bot_has_permissions(embed_links=True)
-    @emojitools.command(name="info")
+    @_emojitools.command(name="info")
     async def _info(self, ctx: commands.Context, emoji: discord.Emoji):
         """Get info about a custom emoji from this server."""
         embed = discord.Embed(
@@ -113,7 +115,7 @@ class EmojiTools(commands.Cog):
         return await ctx.send(embed=embed)
 
     @commands.admin_or_permissions(administrator=True)
-    @emojitools.group(name="save")
+    @_emojitools.group(name="save")
     async def _save(self, ctx: commands.Context):
         """
         Save Custom Emojis to Folders
@@ -133,7 +135,7 @@ class EmojiTools(commands.Cog):
         return folder_path
 
     @commands.cooldown(rate=1, per=15)
-    @_save.command(name="emojis")
+    @_save.command(name="emojis", require_var_positional=True)
     async def _emojis(self, ctx: commands.Context, folder_name: str, *emojis: str):
         """Save to a folder the specified custom emojis (can be from any server)."""
 
@@ -221,19 +223,21 @@ class EmojiTools(commands.Cog):
             return await ctx.send(FILE_SIZE)
 
     @commands.bot_has_permissions(manage_emojis=True)
-    @emojitools.group(name="delete")
+    @_emojitools.group(name="delete", aliases=["remove"])
     async def _delete(self, ctx: commands.Context):
         """Delete Server Custom Emojis"""
 
     @commands.cooldown(rate=1, per=15)
-    @_delete.command(name="emoji")
-    async def _delete_emoji(self, ctx: commands.Context, emoji_name: str):
-        """Delete a specific custom emoji from the server."""
-        for e in ctx.guild.emojis:
-            if e.name == emoji_name:
-                await e.delete()
-                return await ctx.send(f"The emoji `{emoji_name}` has been removed from this server!")
-        return await ctx.send(f"I didn't find any emoji called `{emoji_name}`!")
+    @_delete.command(name="emojis", aliases=["emoji"], require_var_positional=True)
+    async def _delete_emojis(self, ctx: commands.Context, *emoji_names: typing.Union[discord.Emoji, str]):
+        """Delete custom emojis from the server."""
+        for e in emoji_names:
+            if isinstance(e, str):
+                e: discord.Emoji = await self._convert_emoji(ctx, e, partial_emoji=False)
+            elif e.guild_id != ctx.guild.id:
+                return await ctx.send(f"The following emoji is not in this server: {e}")
+            await e.delete(reason=f"EmojiTools: deleted by {ctx.author}")
+        return await ctx.send(f"The following emojis have been removed from this server: `{'`, `'.join([str(e) for e in emoji_names])}`")
 
     @commands.cooldown(rate=1, per=60)
     @_delete.command(name="all")
@@ -252,7 +256,7 @@ class EmojiTools(commands.Cog):
         return await ctx.send(f"All {counter} custom emojis have been removed from this server.")
 
     @commands.bot_has_permissions(manage_emojis=True)
-    @emojitools.group(name="add")
+    @_emojitools.group(name="add")
     async def _add(self, ctx: commands.Context):
         """Add Custom Emojis to Server"""
 
@@ -281,7 +285,7 @@ class EmojiTools(commands.Cog):
         return await ctx.send(f"{final_emoji} has been added to this server!")
 
     @commands.cooldown(rate=1, per=30)
-    @_add.command(name="emojis")
+    @_add.command(name="emojis", require_var_positional=True)
     async def _add_emojis(self, ctx: commands.Context, *emojis: str):
         """Add some emojis to this server."""
 
@@ -459,7 +463,7 @@ class EmojiTools(commands.Cog):
         return await ctx.send(f"{len(added_emojis)} emojis were added to this server: {' '.join([str(e) for e in added_emojis])}")
 
     @commands.bot_has_permissions(manage_emojis=True)
-    @emojitools.group(name="edit")
+    @_emojitools.group(name="edit")
     async def _edit(self, ctx: commands.Context):
         """Edit Custom Emojis in the Server"""
 
@@ -485,7 +489,7 @@ class EmojiTools(commands.Cog):
         return await ctx.tick()
 
     @commands.bot_has_permissions(attach_files=True)
-    @emojitools.group(name="tozip")
+    @_emojitools.group(name="tozip")
     async def _to_zip(self, ctx: commands.Context):
         """Get a `.zip` Archive of Emojis"""
 
@@ -499,7 +503,7 @@ class EmojiTools(commands.Cog):
         for e in emojis:
             emojis_list.append({
                 "stream": self._generate_emoji(e),
-                "name": f"{e.name}.gif" if e.animated else f"{e.name}.png"
+                "name": f"{e.name}{self._ext(e)}"
             })
 
         stream = AioZipStream(emojis_list, chunksize=32768)
@@ -512,7 +516,7 @@ class EmojiTools(commands.Cog):
         return zip_file
 
     @commands.cooldown(rate=1, per=30)
-    @_to_zip.command(name="emojis")
+    @_to_zip.command(name="emojis", require_var_positional=True)
     async def _to_zip_emojis(self, ctx: commands.Context, *emojis: str):
         """
         Get a `.zip` archive of the provided emojis.
