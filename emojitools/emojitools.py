@@ -231,12 +231,13 @@ class EmojiTools(commands.Cog):
     @_delete.command(name="emojis", aliases=["emoji"], require_var_positional=True)
     async def _delete_emojis(self, ctx: commands.Context, *emoji_names: typing.Union[discord.Emoji, str]):
         """Delete custom emojis from the server."""
-        for e in emoji_names:
-            if isinstance(e, str):
-                e: discord.Emoji = await self._convert_emoji(ctx, e, partial_emoji=False)
-            elif e.guild_id != ctx.guild.id:
-                return await ctx.send(f"The following emoji is not in this server: {e}")
-            await e.delete(reason=f"EmojiTools: deleted by {ctx.author}")
+        async with ctx.typing():
+            for e in emoji_names:
+                if isinstance(e, str):
+                    e: discord.Emoji = await self._convert_emoji(ctx, e, partial_emoji=False)
+                elif e.guild_id != ctx.guild.id:
+                    return await ctx.send(f"The following emoji is not in this server: {e}")
+                await e.delete(reason=f"EmojiTools: deleted by {ctx.author}")
         return await ctx.send(f"The following emojis have been removed from this server: `{'`, `'.join([str(e) for e in emoji_names])}`")
 
     @commands.cooldown(rate=1, per=60)
