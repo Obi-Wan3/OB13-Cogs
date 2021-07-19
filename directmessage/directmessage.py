@@ -48,14 +48,10 @@ class DirectMessage(commands.Cog):
 
     @commands.is_owner()
     @commands.command(name="dm", aliases=["sdm", "directmessage"])
-    async def _dm(self, ctx: commands.Context, user: discord.User, *, title: str, message: str):
+    async def _dm(self, ctx: commands.Context, user: discord.User, *, message):
         """Sends a DM to a user (sends raw text directly)."""
-        embed = discord.Embed(
-            title=title,
-            description=message
-        )
         try:
-            await user.send(embed=embed)
+            await user.send(message)
         except discord.Forbidden:
             await ctx.author.send(f"User does not have DMs enabled.")
 
