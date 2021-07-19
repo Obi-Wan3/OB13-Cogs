@@ -24,16 +24,30 @@ SOFTWARE.
 
 import discord
 from redbot.core import commands
+import logging
+
+log = logging.getLogger("red.obi.directmessage")
 
 
 class DirectMessage(commands.Cog):
     """Send DMs as the bot!"""
+   
+    def cog_unload(self):
+        global dm
+        if invite:
+            try:
+                self.bot.remove_command("dm")
+            except Exception as e:
+                log.info(e)
+            self.bot.add_command(dm)
+        if self.startup_task:
+            self.startup_task.cancel() 
 
     def __init__(self, bot):
         self.bot = bot
 
     @commands.is_owner()
-    @commands.command(name="directmessage", aliases=["sdm"])
+    @commands.command(name="dm", aliases=["sdm", "directmessage"])
     async def _direct_message(self, ctx: commands.Context, user: discord.User, *, message):
         """Sends a DM to a user (sends raw text directly)."""
         try:
