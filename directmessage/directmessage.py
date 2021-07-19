@@ -48,7 +48,7 @@ class DirectMessage(commands.Cog):
 
     @commands.is_owner()
     @commands.command(name="dm", aliases=["sdm", "directmessage"])
-    async def _dm(self, ctx: commands.Context, user: discord.User, *, title, message: str):
+    async def _dm(self, ctx: commands.Context, user: discord.User, *, title: str, message: str):
         """Sends a DM to a user (sends raw text directly)."""
         embed = discord.Embed(
             title=title,
