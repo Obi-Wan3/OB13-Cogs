@@ -54,3 +54,10 @@ class DirectMessage(commands.Cog):
             await user.send(message)
         except discord.Forbidden:
             await ctx.author.send(f"User does not have DMs enabled.")
+
+def setup(bot):
+    cog = DirectMessage(bot)
+    global dm
+    
+    dm = bot.remove_command("dm")
+    bot.add_cog(cog)
