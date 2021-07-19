@@ -34,7 +34,7 @@ class DirectMessage(commands.Cog):
    
     def cog_unload(self):
         global dm
-        if invite:
+        if dm:
             try:
                 self.bot.remove_command("dm")
             except Exception as e:
