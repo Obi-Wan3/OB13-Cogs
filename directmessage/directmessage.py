@@ -55,7 +55,7 @@ class DirectMessage(commands.Cog):
             description=message
         )
         try:
-            await user.send(message)
+            await user.send(embed=embed)
         except discord.Forbidden:
             await ctx.author.send(f"User does not have DMs enabled.")
 
