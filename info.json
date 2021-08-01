@@ -3,7 +3,7 @@
         "Obi-Wan3"
     ],
     "description" : "Assorted utility cogs for Red v3: custom emoji management, website status monitoring, public/private VC system creation, custom bot mentionhelp, and more!",
-    "install_msg" : "Thanks for installing!\nIf you have any suggestions, or found any bugs, feel free to create an issue on my repo at https://github.com/Obi-Wan3/OB13-Cogs or contact me in #support_ob13-cogs in Red's Cog Support server at <https://discord.gg/GET4DVk>.",
+    "install_msg" : "Thanks for installing!\nIf you have any suggestions, or found any bugs, feel free to create an issue on my repo at https://github.com/Obi-Wan3/OB13-Cogs, contact me in #support_ob13-cogs in Red's Cog Support server at <https://discord.gg/GET4DVk>, or join my dedicated support server at https://discord.gg/hmWgGr2DxA . If you love my work, consider becoming a GitHub Sponsor at https://github.com/sponsors/Obi-Wan3 !",
     "name" : "OB13-Cogs",
     "short" : "Utility Cogs for Red by Obi-Wan3",
     "tags" : [

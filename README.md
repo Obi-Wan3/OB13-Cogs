@@ -6,7 +6,7 @@
 Obi-Wan3's Assorted Utility Cogs for Red v3
 
 Please see below for a list of my cogs and their statuses. 
-A big thank you to the [Red community](https://discord.gg/red) for all the help with coding! 
+A big thank you to the [Red community](https://discord.gg/red) for all the help with coding, and to my GitHub Sponsors for their support! 
 Also thanks to those that have commissioned cogs through bounties (denoted below with "BC" for bounty commissioner). 
 Cogs marked with a ✓ are ready for use, while those with a ✗ are still a Work-In-Progress and are either hidden or unavailable.
 
@@ -61,6 +61,8 @@ If you don't already have Downloader loaded, go ahead and do that first: `[p]loa
 
 # Contact
 For support with my cogs, please contact me in #support_ob13-cogs in the [Red Cog Support](https://discord.gg/GET4DVk) server.
+Feel free to also join [my dedicated support server](https://discord.gg/hmWgGr2DxA).
+If you love my work, please consider becoming a GitHub Sponsor at https://github.com/sponsors/Obi-Wan3!
 
 
 ## Contributing
