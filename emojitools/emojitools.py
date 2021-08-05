@@ -26,6 +26,7 @@ import os
 import asyncio
 import shutil
 import typing
+import contextlib
 
 from io import BytesIO
 from zipfile import ZipFile
@@ -103,11 +104,13 @@ class EmojiTools(commands.Cog):
             name="Creation (UTC)",
             value=f"{str(emoji.created_at)[:19]}"
         )
-        if ctx.guild.me.guild_permissions.manage_emojis and (e := await ctx.guild.fetch_emoji(emoji.id)):
-            embed.add_field(
-                name="Author",
-                value=f"{e.user.mention if e.user else 'Unknown'}"
-            )
+        if ctx.guild.me.guild_permissions.manage_emojis:
+            with contextlib.suppress(discord.HTTPException):
+                e: discord.Emoji = await ctx.guild.fetch_emoji(emoji.id)
+                embed.add_field(
+                    name="Author",
+                    value=f"{e.user.mention if e.user else 'Unknown'}"
+                )
         embed.add_field(
             name="Roles Allowed",
             value=f"{emoji.roles or 'Everyone'}"
