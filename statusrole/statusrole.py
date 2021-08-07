@@ -77,7 +77,7 @@ class StatusRole(commands.Cog):
                 after_status = await self._custom_activity(after.activities)
 
                 # Role hierarchy check
-                if role >= after.guild.me.top_role:
+                if not role or role >= after.guild.me.top_role:
                     continue
 
                 # Now have custom status (did not have before)
