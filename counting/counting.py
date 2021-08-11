@@ -218,7 +218,8 @@ class Counting(commands.Cog):
         else:
             embed.description = "```py\nCounts | User\n"
             for member, counts in member_counts[:10]:
-                embed.description += f"{str(counts).rjust(6)}   {ctx.guild.get_member(member).display_name}\n"
+                mem = await self.bot.get_or_fetch_member(member)
+                embed.description += f"{str(counts).rjust(6)}   {mem.display_name}\n"
             embed.description += "```"
         return await ctx.send(embed=embed)
 
