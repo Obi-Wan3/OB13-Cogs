@@ -132,7 +132,10 @@ class Translate(commands.Cog):
         # Source and dest languages and text are both different
         if translate_result.src.lower() != translate_result.dest.lower() and translate_result.origin.lower() != translate_result.text.lower():
             result_embeds = await self._result_embed(translate_result, await self.bot.get_embed_color(message.channel))
-            await message.reply(embed=result_embeds[0], mention_author=False)
+            try:
+                await message.reply(embed=result_embeds[0], mention_author=False)
+            except discord.HTTPException:
+                await message.channel.send(embed=result_embeds[0])
             for e in result_embeds[1:]:
                 await message.channel.send(embed=e)
 
@@ -162,8 +165,10 @@ class Translate(commands.Cog):
                 return await ctx.channel.send(embed=discord.Embed(description=TRANSLATION_FAILED, color=discord.Color.red()))
 
             result_embeds = await self._result_embed(result, await ctx.embed_color())
-
-        await to_reply.reply(embed=result_embeds[0], mention_author=False)
+        try:
+            await to_reply.reply(embed=result_embeds[0], mention_author=False)
+        except discord.HTTPException:
+            await to_reply.channel.send(embed=result_embeds[0])
         for e in result_embeds[1:]:
             await to_reply.channel.send(embed=e)
 
@@ -193,8 +198,10 @@ class Translate(commands.Cog):
                 return await ctx.channel.send(embed=discord.Embed(description=TRANSLATION_FAILED, color=discord.Color.red()))
 
             result_embeds = await self._result_embed(result, await ctx.embed_color())
-
-        await to_reply.reply(embed=result_embeds[0], mention_author=False)
+        try:
+            await to_reply.reply(embed=result_embeds[0], mention_author=False)
+        except discord.HTTPException:
+            await to_reply.channel.send(embed=result_embeds[0])
         for e in result_embeds[1:]:
             await to_reply.channel.send(embed=e)
 
@@ -222,8 +229,10 @@ class Translate(commands.Cog):
             result_embed = discord.Embed(color=await ctx.embed_color())
             result_embed.add_field(name="Language", value=googletrans.LANGUAGES[result.lang.lower()].title(), inline=True)
             result_embed.add_field(name="Confidence", value=f"{int(result.confidence*100)}%", inline=True)
-
-        return await to_reply.reply(embed=result_embed, mention_author=False)
+        try:
+            await to_reply.reply(embed=result_embed, mention_author=False)
+        except discord.HTTPException:
+            await to_reply.channel.send(embed=result_embed)
 
     @commands.admin_or_permissions(manage_messages=True)
     @commands.group(name="translateset")
