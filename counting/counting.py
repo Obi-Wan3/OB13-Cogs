@@ -177,7 +177,7 @@ class Counting(commands.Cog):
 
         # Also ignore these
         try:
-            _ = int(message.content.strip())
+            _ = int(message.content.strip().split()[0])
             if message.id in self.deleted:
                 return self.deleted.remove(message.id)
         except ValueError:  # Message contains non-numerical characters
