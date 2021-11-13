@@ -32,7 +32,7 @@ from redbot.core.utils import AsyncIter
 from redbot.core.utils.chat_formatting import humanize_list, pagify
 
 NOT_SUPPORTING = "You do not have BotAccess privileges!"
-THANKS = "Thank you for supporting my server! Here is my invite link: <{invite}>. You can add a BotAccess server with `[p]botaccess addserver <server ID>`."
+THANKS = "Thank you for supporting my server! Here is my invite link: <{invite}>. You can add a BotAccess server with `[p]botaccess servers add <server ID>`."
 EXPIRE = "Unfortunately, your BotAccess servers have expired as you are no longer a supporter."
 
 
