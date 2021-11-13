@@ -13,6 +13,6 @@
     "required_cogs" : {},
     "requirements" : [],
     "short": "AI Chatbot Using BrainShop (https://brainshop.ai/)",
-    "tags" : ["fun", "brainshop", "ai", "chatbot"],
+    "tags" : ["fun", "brainshop", "ai", "chatbot", "cleverbot"],
     "type": "COG"
 }
