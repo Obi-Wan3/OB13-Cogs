@@ -172,14 +172,12 @@ class RoleSync(commands.Cog):
             async for m in AsyncIter(ctx.guild.members, steps=500):
                 counter += 1
                 other_member: discord.Member = other_server.get_member(m.id)
-                if not other_member:
-                    continue
 
-                if to_check in other_member.roles:
+                if other_member and (to_check in other_member.roles):
                     if to_add not in m.roles:
                         await m.add_roles(to_add, reason=f"RoleSync: user has {to_check.name} in {other_server.name}")
-                else:
-                    if to_add in m.roles and remove_role:
+                elif remove_role:
+                    if to_add in m.roles:
                         await m.remove_roles(to_add, reason=f"RoleSync: user does not have {to_check.name} in {other_server.name}")
 
         return await ctx.send(f"Force synced {name} for {counter} users on this server.")
