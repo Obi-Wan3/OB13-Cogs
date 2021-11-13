@@ -554,7 +554,7 @@ class GitHub(commands.Cog):
         if guild_config["notify"]:
             await channel.send(embed=discord.Embed(
                 color=discord.Color.green(),
-                description=f"[[{user_repo_branch_token['repo']}:{user_repo_branch_token['branch']}]]({await self._repo_url(**user_repo_branch_token)}) has been added by {ctx.author.mention}"
+                description=f"[[{user_repo_branch_token['repo']}:{(await self._parse_url(parsed.feed.link+'.atom'))[2]}]]({await self._repo_url(**user_repo_branch_token)}) has been added by {ctx.author.mention}"
             ))
 
         # Send last feed entry
@@ -589,7 +589,7 @@ class GitHub(commands.Cog):
             channel = await self._get_feed_channel(ctx.guild.me, guild_config["channel"], to_remove["channel"])
             await channel.send(embed=discord.Embed(
                 color=discord.Color.red(),
-                description=f"[[{to_remove['repo']}:{to_remove['branch']}]]({await self._repo_url(**to_remove)}) has been removed by {ctx.author.mention}")
+                description=f"[[{to_remove['repo']}:{to_remove['branch'] or 'main'}]]({await self._repo_url(**to_remove)}) has been removed by {ctx.author.mention}")
             )
 
         return await ctx.send("Feed successfully removed.")
