@@ -217,8 +217,12 @@ class Counting(commands.Cog):
             embed.description = "No users have counted yet."
         else:
             embed.description = "```py\nCounts | User\n"
-            for member, counts in member_counts[:10]:
-                embed.description += f"{str(counts).rjust(6)}   {ctx.guild.get_member(member).display_name}\n"
+            for member_id, counts in member_counts[:10]:
+                try:
+                    name = (ctx.guild.get_member(member_id) or (await ctx.bot.fetch_user(member_id))).display_name
+                except discord.HTTPException:
+                    name = "Unknown"
+                embed.description += f"{str(counts).rjust(6)}   {name}\n"
             embed.description += "```"
         return await ctx.send(embed=embed)
 
@@ -265,7 +269,7 @@ class Counting(commands.Cog):
         return await ctx.tick()
 
     @_counting_set.command(name="autoreset")
-    async def _auto_reset(self, ctx: commands.Context, *, message: str):
+    async def _auto_reset(self, ctx: commands.Context, *, message: str = ""):
         """
         Set the message to be sent on counter reset when a wrong number is sent (leave blank to turn off auto-reset).
 
