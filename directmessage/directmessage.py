@@ -23,7 +23,7 @@ SOFTWARE.
 """
 
 import discord
-from redbot.core import commands
+from redbot.core import commands, Config
 
 
 class DirectMessage(commands.Cog):
@@ -31,6 +31,13 @@ class DirectMessage(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        self.config = Config.get_conf(self, identifier=14000605, force_registration=True)
+        default_global = {
+            "confirm": True,
+        }
+        self.config.register_global(**default_global)
+
+        self.confirm = None
 
     @commands.is_owner()
     @commands.command(name="directmessage", aliases=["sdm"])
@@ -40,3 +47,17 @@ class DirectMessage(commands.Cog):
             await user.send(message)
         except discord.Forbidden:
             await ctx.author.send(f"User does not have DMs enabled.")
+
+        if self.confirm is None:
+            self.confirm = await self.config.confirm()
+
+        if self.confirm:
+            return await ctx.tick()
+
+    @commands.is_owner()
+    @commands.command(name="dmconfirm", aliases=["dmc"])
+    async def _confirm(self, ctx: commands.Context, true_or_false: bool):
+        """Toggle whether to react to [p]directmessage commands with a check for confirmation."""
+        await self.config.confirm.set(true_or_false)
+        self.confirm = true_or_false
+        return await ctx.tick()
