@@ -54,6 +54,7 @@ class TempRole(commands.Cog):
         self.config = Config.get_conf(self, identifier=14000605, force_registration=True)
         default_guild = {
             "log": None,
+            "confirmation": True,
             "allowed": []
         }
         default_member = {
@@ -109,10 +110,7 @@ class TempRole(commands.Cog):
             return await ctx.send("I cannot assign this role!")
 
         message = f"TempRole {role.mention} for {user.mention} has been added. Expires in {time.days} days {time.seconds//3600} hours."
-        await ctx.send(
-            message,
-            allowed_mentions=discord.AllowedMentions.none()
-        )
+        await self._maybe_confirm(ctx, message)
 
         await self._maybe_send_log(ctx.guild, message)
         await self._tr_timer(user, role, end_time.timestamp())
@@ -130,10 +128,7 @@ class TempRole(commands.Cog):
                 )
             del user_tr[str(role.id)]
         message = f"TempRole {role.mention} for {user.mention} has been removed."
-        await ctx.send(
-            message,
-            allowed_mentions=discord.AllowedMentions.none()
-        )
+        await self._maybe_confirm(ctx, message)
         await self._maybe_send_log(ctx.guild, message)
         await self._tr_end(user, role, admin=ctx.author)
 
@@ -182,10 +177,7 @@ class TempRole(commands.Cog):
             return await ctx.send("I cannot assign this role!")
 
         message = f"Self-TempRole {role.mention} has been added. Expires in {time.days} days {time.seconds//3600} hours."
-        await ctx.send(
-            message,
-            allowed_mentions=discord.AllowedMentions.none()
-        )
+        await self._maybe_confirm(ctx, message)
 
         await self._maybe_send_log(ctx.guild, message)
         await self._tr_timer(ctx.author, role, end_time.timestamp())
@@ -201,10 +193,7 @@ class TempRole(commands.Cog):
                 )
             del user_tr[str(role.id)]
         message = f"Self-TempRole {role.mention} has been removed."
-        await ctx.send(
-            message,
-            allowed_mentions=discord.AllowedMentions.none()
-        )
+        await self._maybe_confirm(ctx, message)
         await self._maybe_send_log(ctx.guild, message)
         await self._tr_end(ctx.author, role, admin=ctx.author)
 
@@ -273,6 +262,17 @@ class TempRole(commands.Cog):
             return await ctx.send(f"I cannot send messages to {channel.mention}!")
         await self.config.guild(ctx.guild).log.set(channel.id if channel else None)
         return await ctx.tick()
+
+    @commands.admin_or_permissions(manage_roles=True)
+    @_temp_role.command(name="confirmation")
+    async def _confirmation(self, ctx: commands.Context, true_or_false: bool):
+        """Toggle whether to send confirmation messages after TempRole commands."""
+        await self.config.guild(ctx.guild).confirmation.set(true_or_false)
+        return await ctx.tick()
+
+    async def _maybe_confirm(self, ctx: commands.Context, message: str):
+        if await self.config.guild(ctx.guild).confirmation():
+            await ctx.send(message, allowed_mentions=discord.AllowedMentions.none())
 
     async def _maybe_send_log(self, guild: discord.Guild, message: str):
         log_channel = await self.config.guild(guild).log()
