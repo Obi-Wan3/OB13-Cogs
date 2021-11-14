@@ -49,7 +49,8 @@ class LFG(commands.Cog):
             "invite": {
                 "age": 60,
                 "uses": 0
-            }
+            },
+            "allow_role_ping": False
         }
         self.config.register_guild(**default_guild)
 
@@ -176,6 +177,8 @@ class LFG(commands.Cog):
                     return await ctx.send("There is already an active LFG session in your VC!")
                 active[str(user_vc.id)] = user_vc.name
 
+        if settings['allow_role_ping']:
+            return await ctx.send(to_send, allowed_mentions=discord.AllowedMentions(roles=True))
         return await ctx.send(to_send)
 
     @commands.guild_only()
@@ -235,6 +238,12 @@ class LFG(commands.Cog):
         if time_limit < 0 or uses < 0:
             return await ctx.send("Please do not enter negative integers!")
         await self.config.guild(ctx.guild).invite.set({"age": time_limit, "uses": uses})
+        return await ctx.tick()
+
+    @_lfg_set.command(name="allowroleping")
+    async def _allow_role_ping(self, ctx: commands.Context, true_or_false: bool):
+        """Set whether to allow roles to be pinged in LFG messages."""
+        await self.config.guild(ctx.guild).allow_role_ping.set(true_or_false)
         return await ctx.tick()
 
     @_lfg_set.group(name="categories", invoke_without_command=True)
@@ -308,6 +317,7 @@ class LFG(commands.Cog):
             f"**VC Name:** {', '.join(settings['vc_name']) or None}",
             f"**Rename on Empty:** {settings['rename']}",
             f"**Mention Limit:** {settings['mention_limit']}",
+            f"**Allow Role Ping:** {settings['allow_role_ping']}",
             f"**Invite Settings:** {settings['invite']['age'] or 'unlimited'} min, {settings['invite']['uses'] or 'unlimited'} uses",
             f"**Categories:** see `{ctx.clean_prefix}lfgset categories`",
             f"**Blocklist:** see `{ctx.clean_prefix}lfgset blocklist`"
