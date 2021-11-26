@@ -69,12 +69,21 @@ class NoDMs(commands.Cog):
 
     # Thanks PhenoM4n4n for the before_invoke_hook idea
     async def before_invoke_hook(self, ctx: commands.Context):
-        if self.toggle and ctx.channel == ctx.author.dm_channel and ctx.author.id not in ctx.bot.owner_ids:
+
+        if (
+                self.toggle and  # NoDMs toggled on
+                (ctx.channel == ctx.author.dm_channel) and  # Command is in DMs
+                (ctx.author.id not in ctx.bot.owner_ids) and  # Author is not a bot owner
+                (not isinstance(ctx.command, commands.commands._AlwaysAvailableMixin))  # Command is not always-available
+        ):
+
+            # Check allowlist
             if self.allowed:
                 if ctx.author.id not in self.allowed:
                     await self._error_message(ctx=ctx)
                     raise commands.CheckFailure()
 
+            # Check blocklist
             elif self.blocked:
                 if ctx.author.id in self.blocked:
                     await self._error_message(ctx=ctx)
