@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+import re
 import typing
 import functools
 import googletrans, googletrans.models
@@ -34,6 +35,8 @@ TRANSLATOR = googletrans.Translator()
 MISSING_INPUTS = "Please provide a message ID/link, some text to translate, or reply to the original message."
 LANGUAGE_NOT_FOUND = "An invalid language code was provided."
 TRANSLATION_FAILED = "Something went wrong while translating."
+
+CUSTOM_EMOJI = re.compile("<(?P<animated>a?):(?P<name>[a-zA-Z0-9_]{2,32}):(?P<id>[0-9]{18,22})>")  # Thanks R.Danny
 
 
 class Translate(commands.Cog):
@@ -87,7 +90,7 @@ class Translate(commands.Cog):
         if to_reply and to_reply.channel.id != context.channel.id:
             to_reply = context.message
 
-        return to_translate, to_reply
+        return CUSTOM_EMOJI.sub("", to_translate).strip(), to_reply
 
     @staticmethod
     async def _result_embed(res: googletrans.models.Translated, color: discord.Color):
@@ -99,11 +102,14 @@ class Translate(commands.Cog):
 
     @commands.Cog.listener("on_message_without_command")
     async def _message_listener(self, message: discord.Message):
+
+        message_content = CUSTOM_EMOJI.sub("", message.content).strip()
+
         # Ignore these messages
         if (
                 message.author.bot or  # Message sent by bot
                 not message.guild or  # Message not in a guild
-                not message.content or  # Message content empty
+                not message_content or  # Message content empty
                 not message.channel.permissions_for(message.guild.me).send_messages or  # No send permissions
                 not message.channel.permissions_for(message.guild.me).embed_links or  # No embed permissions
                 not (dest_lang := (await self.config.guild(message.guild).auto()).get(str(message.channel.id)))  # Not in auto-channel
@@ -113,7 +119,7 @@ class Translate(commands.Cog):
         # Detect source language
         if (confidence := await self.config.guild(message.guild).auto_confidence()) is not None:
 
-            detect_task = functools.partial(TRANSLATOR.detect, text=message.content)
+            detect_task = functools.partial(TRANSLATOR.detect, text=message_content)
             try:
                 detect_result: googletrans.models.Detected = await self.bot.loop.run_in_executor(None, detect_task)
             except Exception:
@@ -123,7 +129,7 @@ class Translate(commands.Cog):
                 return
 
         # Translate
-        translate_task = functools.partial(TRANSLATOR.translate, text=message.content, dest=dest_lang)
+        translate_task = functools.partial(TRANSLATOR.translate, text=message_content, dest=dest_lang)
         try:
             translate_result: googletrans.models.Translated = await self.bot.loop.run_in_executor(None, translate_task)
         except Exception:
