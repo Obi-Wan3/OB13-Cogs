@@ -31,6 +31,7 @@ from redbot.core.utils.chat_formatting import humanize_list
 
 BRAINSHOP_ERROR = "Something went wrong while accessing the BrainShop API."
 BRAINSHOP_TIMEOUT = "The BrainShop API timed out; please try again later."
+CUSTOM_EMOJI = re.compile("<(?P<animated>a?):(?P<name>[a-zA-Z0-9_]{2,32}):(?P<id>[0-9]{18,22})>")  # Thanks R.Danny
 
 
 class BrainShop(commands.Cog):
@@ -54,6 +55,10 @@ class BrainShop(commands.Cog):
         }
         self.config.register_global(**default_global)
         self.config.register_guild(**default_guild)
+
+    @staticmethod
+    async def _filter_custom_emoji(message: str):
+        return CUSTOM_EMOJI.sub('', message).strip()
 
     @staticmethod
     async def _get_response(bid, key, uid, msg):
@@ -116,6 +121,7 @@ class BrainShop(commands.Cog):
 
         # Remove bot mention
         filtered = re.sub(f"<@!?{self.bot.user.id}>", "", message.content)
+        filtered = await self._filter_custom_emoji(filtered)
         if not filtered:
             return
 
@@ -140,7 +146,10 @@ class BrainShop(commands.Cog):
             if not bid or not key:
                 return await ctx.send("The BrainShop API has not been set up yet!")
 
-            response = await self._get_response(bid=bid, key=key, uid=ctx.author.id, msg=message)
+            if message := await self._filter_custom_emoji(message):
+                response = await self._get_response(bid=bid, key=key, uid=ctx.author.id, msg=message)
+            else:
+                return await ctx.send("Please enter a message containing more than just emojis.")
 
         if hasattr(ctx.message, "reply"):
             return await ctx.reply(response, mention_author=False)
