@@ -90,7 +90,7 @@ class Translate(commands.Cog):
         if to_reply and to_reply.channel.id != context.channel.id:
             to_reply = context.message
 
-        return CUSTOM_EMOJI.sub("", to_translate).strip(), to_reply
+        return CUSTOM_EMOJI.sub("", to_translate or "").strip(), to_reply
 
     @staticmethod
     async def _result_embed(res: googletrans.models.Translated, color: discord.Color):
