@@ -218,7 +218,7 @@ class ReactionPolls(commands.Cog):
 
             del settings[str(channel.id)]
 
-        return await ctx.send(f"{channel.mention} is not longer a ReactionPoll channel for this server.")
+        return await ctx.send(f"{channel.mention} is no longer a ReactionPoll channel for this server.")
 
     @_reaction_polls.command(name="toggle")
     async def _toggle(self, ctx: commands.Context, channel: typing.Optional[discord.TextChannel], true_or_false: bool):
