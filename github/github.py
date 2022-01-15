@@ -421,7 +421,7 @@ class GitHub(commands.Cog):
         if not feeds_string:
             return await ctx.send("No GitHub RSS feeds have been set up in this server yet.")
 
-        embeds: list[discord.Embed] = []
+        embeds: typing.List[discord.Embed] = []
         for page in pagify(feeds_string, delims=["\n\n"]):
             embeds.append(discord.Embed(
                 description=page,
@@ -610,7 +610,7 @@ class GitHub(commands.Cog):
         if not feeds_string:
             return await ctx.send(f"No feeds found. Try adding one with `{ctx.clean_prefix}github add`!")
 
-        embeds: list[discord.Embed] = []
+        embeds: typing.List[discord.Embed] = []
         for page in pagify(feeds_string):
             embeds.append(discord.Embed(
                 description=page,
