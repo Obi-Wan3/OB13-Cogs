@@ -120,17 +120,8 @@ class TempRole(commands.Cog):
     @_temp_role.command(name="remove")
     async def _remove(self, ctx: commands.Context, user: discord.Member, role: discord.Role):
         """Cancel the timer & remove a TempRole from a user."""
-        async with self.config.member(user).temp_roles() as user_tr:
-            if not (user_tr.get(str(role.id))):
-                return await ctx.send(
-                    f"That is not an active TempRole for {user.mention}.",
-                    allowed_mentions=discord.AllowedMentions.none()
-                )
-            del user_tr[str(role.id)]
-        message = f"TempRole {role.mention} for {user.mention} has been removed."
-        await self._maybe_confirm(ctx, message)
-        await self._maybe_send_log(ctx.guild, message)
-        await self._tr_end(user, role, admin=ctx.author)
+        await self._tr_end(user, role, remover=ctx.author, ctx=ctx)
+        await self._maybe_confirm(ctx, f"TempRole {role.mention} for {user.mention} has been removed.")
 
     @commands.bot_has_permissions(manage_roles=True)
     @_temp_role.group(name="self")
@@ -185,17 +176,10 @@ class TempRole(commands.Cog):
     @_self_role.command(name="remove")
     async def _self_remove(self, ctx: commands.Context, role: discord.Role):
         """Cancel the timer & remove a self-TempRole."""
-        async with self.config.member(ctx.author).temp_roles() as user_tr:
-            if not (user_tr.get(str(role.id))):
-                return await ctx.send(
-                    f"That is not an active self-TempRole.",
-                    allowed_mentions=discord.AllowedMentions.none()
-                )
-            del user_tr[str(role.id)]
-        message = f"Self-TempRole {role.mention} has been removed."
-        await self._maybe_confirm(ctx, message)
-        await self._maybe_send_log(ctx.guild, message)
-        await self._tr_end(ctx.author, role, admin=ctx.author)
+        if role.id not in await self.config.guild(ctx.guild).allowed():
+            return await ctx.send("That is not a valid self-TempRole!")
+        await self._tr_end(ctx.author, role, remover=ctx.author, ctx=ctx)
+        await self._maybe_confirm(ctx, f"Self-TempRole {role.mention} has been removed.")
 
     @_self_role.command(name="list")
     async def _self_list(self, ctx: commands.Context):
@@ -303,11 +287,11 @@ class TempRole(commands.Cog):
             await asyncio.sleep(seconds_left)
         await self._tr_end(member, role)
 
-    async def _tr_end(self, member: discord.Member, role: discord.Role, admin=None):
+    async def _tr_end(self, member: discord.Member, role: discord.Role, remover=None, ctx=None):
         async with self.config.member(member).temp_roles() as tr_entries:
             if tr_entries.get(str(role.id)):
                 del tr_entries[str(role.id)]
-                reason = "TempRole: timer ended" if not admin else f"TempRole: timer ended early by {admin}"
+                reason = "TempRole: timer ended" if not remover else f"TempRole: timer ended early by {remover}"
                 if member.guild.me.guild_permissions.manage_roles and role < member.guild.me.top_role:
                     if role in member.roles:
                         await member.remove_roles(role, reason=reason)
@@ -325,3 +309,5 @@ class TempRole(commands.Cog):
                         member.guild,
                         f"TempRole {role.mention} for {member.mention} was unable to be removed due to a lack of permissions."
                     )
+            elif ctx:
+                await ctx.send(f"Error: that is not an active TempRole.")
