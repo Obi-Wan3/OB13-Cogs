@@ -49,6 +49,7 @@ class Counting(commands.Cog):
             "penalty": (None, None),
             "autoreset": None,
             "allowtext": False,
+            "ignoreedits": False,
             "wrong": {},
             "highscore": 0,
             "react": False,
@@ -170,6 +171,7 @@ class Counting(commands.Cog):
                 message.channel.id != (await self.config.guild(message.guild).channel()) or  # Message not in counting channel
                 await self.bot.cog_disabled_in_guild(self, message.guild) or  # Cog disabled in guild
                 not await self.config.guild(message.guild).toggle() or  # Counting toggled off
+                await self.config.guild(message.guild).ignoreedits()    # Ignore edits is on
                 message.author.bot or  # Message author is a bot
                 not message.channel.permissions_for(message.guild.me).send_messages  # Cannot send message
         ):
@@ -254,6 +256,12 @@ class Counting(commands.Cog):
     async def _allow_text(self, ctx: commands.Context, true_or_false: bool):
         """Set whether messages not starting with a number are allowed."""
         await self.config.guild(ctx.guild).allowtext.set(true_or_false)
+        return await ctx.tick()
+    
+    @_counting_set.command(name="ignoreedits")
+    async def _ignore_edits(self, ctx: commands.Context, true_or_false: bool):
+        """Set whether edits/deletions should be ignored by the bot."""
+        await self.config.guild(ctx.guild).ignoreedits.set(true_or_false)
         return await ctx.tick()
 
     @_counting_set.command(name="react")
@@ -350,6 +358,7 @@ class Counting(commands.Cog):
             f"**Role:** {role_mention}",
             f"**Allow Repeats:** {settings['allowrepeats']}",
             f"**Allow Text:** {settings['allowtext']}",
+            f"**Ignore Edits:** {settings['ignoreedits']}",
             f"**Auto-Reset:** {settings['autoreset']}",
             f"**Assign Role:** {settings['assignrole']}",
             f"""**Wrong Count Penalty:** {f'ChannelMute for {settings["penalty"][1]}s if {settings["penalty"][0]} wrong tries in a row' if all(settings["penalty"]) else "Not Set"}"""
