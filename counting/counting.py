@@ -171,7 +171,7 @@ class Counting(commands.Cog):
                 message.channel.id != (await self.config.guild(message.guild).channel()) or  # Message not in counting channel
                 await self.bot.cog_disabled_in_guild(self, message.guild) or  # Cog disabled in guild
                 not await self.config.guild(message.guild).toggle() or  # Counting toggled off
-                await self.config.guild(message.guild).ignoreedits()    # Ignore edits is on
+                await self.config.guild(message.guild).ignoreedits() or # Ignore edits is on
                 message.author.bot or  # Message author is a bot
                 not message.channel.permissions_for(message.guild.me).send_messages  # Cannot send message
         ):
