@@ -260,7 +260,7 @@ class Counting(commands.Cog):
     
     @_counting_set.command(name="ignoreedits")
     async def _ignore_edits(self, ctx: commands.Context, true_or_false: bool):
-        """Set whether edits/deletions should be ignored by the bot."""
+        """Toggle whether edits/deletions should be ignored by the bot."""
         await self.config.guild(ctx.guild).ignoreedits.set(true_or_false)
         return await ctx.tick()
 
