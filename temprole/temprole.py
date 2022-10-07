@@ -34,9 +34,9 @@ if typing.TYPE_CHECKING:
     TimeConverter = timedelta
 else:
     TimeConverter = commands.converter.TimedeltaConverter(
-        minimum=timedelta(hours=1),
-        allowed_units=["weeks", "days", "hours"],
-        default_unit="days"
+        minimum=timedelta(seconds=30),
+        allowed_units=["weeks", "days", "hours", "seconds", "minutes"],
+        default_unit="minutes"
     )
 
 OVERFLOW_ERROR = "The time set is way too high, consider setting something reasonable."
