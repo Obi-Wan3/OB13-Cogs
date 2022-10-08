@@ -28,7 +28,7 @@ from datetime import datetime, timedelta
 
 import discord
 from redbot.core import commands, Config
-from redbot.core.utils.chat_formatting import humanize_list
+from redbot.core.utils.chat_formatting import humanize_list, humanize_timedelta
 
 if typing.TYPE_CHECKING:
     TimeConverter = timedelta
@@ -80,7 +80,7 @@ class TempRole(commands.Cog):
         """
         Assign a temporary role to expire after a time.
 
-        For the time, enter in terms of weeks (w), days (d), and/or hours (h).
+        For the time, enter in terms of weeks (w), days (d), hours (h), minutes (m) and/or seconds (s).
         """
         if role in user.roles:
             return await ctx.send(f"That user already has {role.mention}!")
@@ -104,12 +104,12 @@ class TempRole(commands.Cog):
             if role not in user.roles:
                 await user.add_roles(
                     role,
-                    reason=f"TempRole: added by {ctx.author}, expires in {time.days}d {time.seconds//3600}h"
+                    reason=f"TempRole: added by {ctx.author}, expires in {huamnize_timedelta(timedelta=time)}"
                 )
         else:
             return await ctx.send("I cannot assign this role!")
 
-        message = f"TempRole {role.mention} for {user.mention} has been added. Expires in {time.days} days {time.seconds//3600} hours."
+        message = f"TempRole {role.mention} for {user.mention} has been added. Expires in {huamnize_timedelta(timedelta=time)}."
         await self._maybe_confirm(ctx, message)
 
         await self._maybe_send_log(ctx.guild, message)
@@ -160,14 +160,14 @@ class TempRole(commands.Cog):
             if role not in ctx.author.roles:
                 await ctx.author.add_roles(
                     role,
-                    reason=f"TempRole: added by {ctx.author}, expires in {time.days}d {time.seconds//3600}h"
+                    reason=f"TempRole: added by {ctx.author}, expires in {huamnize_timedelta(timedelta=time)}"
                 )
             else:
                 return await ctx.send("You already have this role!")
         else:
             return await ctx.send("I cannot assign this role!")
 
-        message = f"Self-TempRole {role.mention} has been added. Expires in {time.days} days {time.seconds//3600} hours."
+        message = f"Self-TempRole {role.mention} has been added. Expires in {huamnize_timedelta(timedelta=time)}."
         await self._maybe_confirm(ctx, message)
 
         await self._maybe_send_log(ctx.guild, message)
@@ -205,7 +205,7 @@ class TempRole(commands.Cog):
                     allowed_mentions=discord.AllowedMentions.none()
                 )
             r_time = datetime.fromtimestamp(cur_tr) - datetime.now()
-            return await ctx.maybe_send_embed(f"**Time remaining:** {r_time.days} days {round(r_time.seconds/3600, 1)} hours")
+            return await ctx.maybe_send_embed(f"**Time remaining:** {huamnize_timedelta(timedelta=r_time)}")
 
     @commands.bot_has_permissions(embed_links=True)
     @commands.admin_or_permissions(manage_roles=True)
@@ -229,7 +229,7 @@ class TempRole(commands.Cog):
                     role: discord.Role = ctx.guild.get_role(int(temp_role))
                     if role:
                         r_time = datetime.fromtimestamp(end_ts) - datetime.now()
-                        desc += f"{role.mention}: ends in {r_time.days}d {round(r_time.seconds/3600, 1)}h\n"
+                        desc += f"{role.mention}: ends in {huamnize_timedelta(timedelta=r_time)}\n"
                     else:
                         del member_temp_roles[temp_role]
         return await ctx.send(embed=discord.Embed(
