@@ -221,7 +221,7 @@ class SiteStatus(commands.Cog):
         for guild in all_guilds:
             async with self.config.guild(self.bot.get_guild(guild)).sites() as sites:
                 for name, site in sites.items():
-                    if not(site["channel"] or site["notify_channel"] or site["notify_role"]):
+                    if not site["channel"] and not site["notify_channel"] and not site["notify_role"]:
                         continue
                     try:
                         async with aiohttp.ClientSession() as session:
@@ -253,15 +253,14 @@ class SiteStatus(commands.Cog):
                                             ),
                                             timeout=5
                                         )
-                                else:
-                                    if channel.name != offline_filled:  # Edit if necessary
-                                        await asyncio.wait_for(
-                                            channel.edit(
-                                                name=offline_filled,
-                                                reason="SiteStatus: site is offline"
-                                            ),
-                                            timeout=5
-                                        )
+                                elif channel.name != offline_filled:  # Edit if necessary
+                                    await asyncio.wait_for(
+                                        channel.edit(
+                                            name=offline_filled,
+                                            reason="SiteStatus: site is offline"
+                                        ),
+                                        timeout=5
+                                    )
                             except asyncio.TimeoutError:
                                 pass
 

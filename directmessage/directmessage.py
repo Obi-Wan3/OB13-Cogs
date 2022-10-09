@@ -46,7 +46,7 @@ class DirectMessage(commands.Cog):
         try:
             await user.send(message)
         except discord.Forbidden:
-            await ctx.author.send(f"User does not have DMs enabled.")
+            await ctx.author.send("User does not have DMs enabled.")
 
         if self.confirm is None:
             self.confirm = await self.config.confirm()

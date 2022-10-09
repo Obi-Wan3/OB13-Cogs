@@ -94,9 +94,8 @@ class Translate(commands.Cog):
 
     @staticmethod
     async def _result_embed(res: googletrans.models.Translated, color: discord.Color):
-        embeds: typing.List[discord.Embed] = []
-        for p in pagify(res.text, delims=["\n", " "]):
-            embeds.append(discord.Embed(description=p, color=color))
+        embeds: typing.List[discord.Embed] = [discord.Embed(description=p, color=color) for p in pagify(res.text, delims=["\n", " "])]
+
         embeds[-1].set_footer(text=f"{googletrans.LANGUAGES[res.src.lower()].title()} → {googletrans.LANGUAGES[res.dest.lower()].title()}")
         return embeds
 

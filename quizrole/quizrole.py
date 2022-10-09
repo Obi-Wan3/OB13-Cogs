@@ -22,15 +22,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+import asyncio
+import random
 import time
 import typing
-import random
-import asyncio
 from datetime import datetime, timedelta
 
 import discord
-from redbot.core import commands, Config
+from redbot.core import Config, commands
 from redbot.core.utils.predicates import MessagePredicate
+
 from .converters import ExplicitNone, PositiveInteger
 
 
@@ -74,7 +75,7 @@ class QuizRole(commands.Cog):
         if quiz['role'] in [r.id for r in ctx.author.roles]:
             return await ctx.send("You already have this role!", delete_after=15)
 
-        if quiz['req'] and not (quiz['req'] in [r.id for r in ctx.author.roles]):
+        if quiz['req'] and quiz['req'] not in [r.id for r in ctx.author.roles]:
             return await ctx.send("You do not have the required role to take this quiz!", delete_after=15)
 
         randomize = quiz['randomize']
@@ -120,7 +121,7 @@ class QuizRole(commands.Cog):
             try:
                 resp = await self.bot.wait_for("message", check=MessagePredicate.same_context(channel=ctx.author.dm_channel, user=ctx.author), timeout=min_time)
                 if time.time() > start_time + time_limit:
-                    await ctx.author.send( f"You have exceeded the time limit for this quiz.")
+                    await ctx.author.send("You have exceeded the time limit for this quiz.")
                     break
                 if resp.content.lower() == question[1].lower():
                     score += 1
@@ -322,7 +323,8 @@ class QuizRole(commands.Cog):
             except ValueError:
                 return await ctx.send(f"Failed to convert {new_value} to an integer.")
             if field.lower() == "timelimit" and not 0 < time0 <= 60:
-                return await ctx.send(f"The time limit should be an integer between 0 and 60 (minutes)")
+                return await ctx.send("The time limit should be an integer between 0 and 60 (minutes)")
+
             async with self.config.guild(ctx.guild).quizzes() as quizzes:
                 quizzes[quiz_name][field.lower()] = time0
             return await ctx.send(f"The {field.lower()} for quiz `{quiz_name}` has been set to {time0}.")
@@ -372,7 +374,7 @@ class QuizRole(commands.Cog):
                 return await ctx.send("There was no quiz found with that name!")
 
             separated = question_and_answer.split("//")
-            if not len(separated) > 1:
+            if len(separated) <= 1:
                 return await ctx.send("Please separate the question and answer with `//`.")
 
             quizzes[quiz_name]["questions"].append((separated[0].strip(), separated[1].strip()))

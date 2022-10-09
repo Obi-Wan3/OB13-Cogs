@@ -25,7 +25,7 @@ SOFTWARE.
 import random
 
 import discord
-from redbot.core import commands, Config
+from redbot.core import Config, commands
 from redbot.core.utils.chat_formatting import humanize_list, pagify
 
 
@@ -171,11 +171,9 @@ class ImprovTime(commands.Cog):
         settings = await self.config.guild(ctx.guild).all()
 
         phrases = settings["phrase_list"]
-        phrases_string = ""
+        phrases_string = "".join(f"{phrase_index}. {phrase}\n" for phrase_index, phrase in enumerate(phrases))
 
-        for phrase_index, phrase in enumerate(phrases):
-            phrases_string += f"{phrase_index}. {phrase}\n"
-        
+
         channel = None
         if settings["channel"] and (ch := ctx.guild.get_channel(settings["channel"])):
             channel = ch.mention

@@ -38,11 +38,7 @@ class Reply(commands.Cog):
     @commands.command(name="reply")
     async def _reply(self, ctx: commands.Context, to_mention: typing.Optional[bool], message: discord.Message, *, content: str):
         """Reply to a message using the Discord reply feature."""
-        if not to_mention:
-            mention_author = False
-        else:
-            mention_author = to_mention
-
+        mention_author = to_mention or False
         try:
             await message.reply(content, mention_author=mention_author)
         except discord.Forbidden:
