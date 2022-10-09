@@ -69,9 +69,8 @@ class LFG(commands.Cog):
             async with self.config.guild(member.guild).active() as active:
                 if original_name := active.get(str(before.channel.id)):
                     del active[str(before.channel.id)]
-                    if before.channel.permissions_for(member.guild.me).manage_channels and before.channel.name != original_name:
-                        if to_rename:
-                            await before.channel.edit(name=original_name, reason="LFG: all users left VC")
+                    if before.channel.permissions_for(member.guild.me).manage_channels and before.channel.name != original_name and to_rename:
+                        await before.channel.edit(name=original_name, reason="LFG: all users left VC")
 
     @commands.guild_only()
     @commands.command(name="lfg")
@@ -113,7 +112,8 @@ class LFG(commands.Cog):
 
         # Check blocklist
         if user_vc.id in settings["blocklist"]:
-            return await ctx.send(f"Please move to an allowed VC before running this command!")
+            return await ctx.send("Please move to an allowed VC before running this command!")
+
 
         # Create invite
         try:
@@ -148,7 +148,7 @@ class LFG(commands.Cog):
             for cat in settings["vc_name"]:
                 if v := categories.get(cat):
                     to_rename.append(v)
-            to_rename = user_vc.name + " " + " | ".join(to_rename)
+            to_rename = f"{user_vc.name} " + " | ".join(to_rename)
 
             to_send = settings["message"].replace(
                 "{inputs}", " ".join(inputs)
@@ -169,7 +169,7 @@ class LFG(commands.Cog):
                 "{vcname}", user_vc.name
             )
 
-        if to_rename and to_rename != (user_vc.name + " "):
+        if to_rename and to_rename != f"{user_vc.name} ":
             await user_vc.edit(name=to_rename, reason=f"LFG: {ctx.author} started a session")
 
             async with self.config.guild(ctx.guild).active() as active:
@@ -250,9 +250,8 @@ class LFG(commands.Cog):
     async def _categories(self, ctx: commands.Context):
         """View and set the LFG categories and accepted values."""
         settings = await self.config.guild(ctx.guild).categories()
-        description = ""
-        for c, v in settings.items():
-            description += f"**{c}:** {', '.join(v)}\n"
+        description = "".join(f"**{c}:** {', '.join(v)}\n" for c, v in settings.items())
+
         await ctx.send(embed=discord.Embed(
             title="LFG Categories",
             description=description or "No categories set.",

@@ -84,7 +84,7 @@ class Counting(commands.Cog):
         # Incorrect number (delete)
         try:
             user_count = int(message.content.strip().split()[0])
-            if not (user_count-1 == guild_settings["counter"]):
+            if user_count - 1 != guild_settings["counter"]:
                 to_delete, incorrect = True, True
         except ValueError:  # No number as first word of message
             if guild_settings["allowtext"]:
@@ -112,14 +112,13 @@ class Counting(commands.Cog):
                     )
                 )
 
-            if not guild_settings["delete"] or not permissions.manage_messages:
-                if guild_settings["react"] and permissions.add_reactions:
-                    await message.add_reaction("\N{CROSS MARK}")
-            else:
+            if guild_settings["delete"] and permissions.manage_messages:
                 self.deleted.append(message.id)
                 msg_copy = copy(message)
                 await message.delete()
 
+            elif guild_settings["react"] and permissions.add_reactions:
+                await message.add_reaction("\N{CROSS MARK}")
             if all(guild_settings["penalty"]):
                 async with self.config.guild(message.guild).wrong() as wrong:
                     wrong[str(message.author.id)] = wrong.get(str(message.author.id), 0) + 1

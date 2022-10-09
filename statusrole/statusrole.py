@@ -26,7 +26,7 @@ import re
 import typing
 
 import discord
-from redbot.core import commands, Config
+from redbot.core import Config, commands
 from redbot.core.utils.chat_formatting import humanize_list
 
 
@@ -63,9 +63,8 @@ class StatusRole(commands.Cog):
             perms = log_channel.permissions_for(after.guild.me)
             if not perms.send_messages:
                 log_channel = None
-            else:
-                if perms.embed_links:
-                    can_embed = True
+            elif perms.embed_links:
+                can_embed = True
 
         async with self.config.guild(before.guild).roles() as status_roles:
             for name, sr in status_roles.items():
@@ -121,10 +120,7 @@ class StatusRole(commands.Cog):
 
     @staticmethod
     async def _custom_activity(activities):
-        for act in activities:
-            if isinstance(act, discord.CustomActivity):
-                return act
-        return None
+        return next((act for act in activities if isinstance(act, discord.CustomActivity)), None)
 
     @staticmethod
     async def _status_matches(st, em, user_status, guild: discord.Guild):
@@ -135,31 +131,28 @@ class StatusRole(commands.Cog):
             return False
 
         async def _st_match(r, s):
-            if not r:  # No requirement
+            if not r:
                 return True
-            else:
-                if not s:
-                    return False
-                try:
-                    pattern = "|".join(rf"(\s|^){re.escape(word)}(\s|$)" for word in r)
-                    return re.search(pattern, s, flags=re.I)
-                except re.error:
-                    return False
+            if not s:
+                return False
+            try:
+                pattern = "|".join(rf"(\s|^){re.escape(word)}(\s|$)" for word in r)
+                return re.search(pattern, s, flags=re.I)
+            except re.error:
+                return False
 
         async def _em_match(r, e):
             if not r:  # No requirement
                 return True
-            else:
-                if not e:
-                    return False
-                else:
-                    if r is True:
-                        if e.is_custom_emoji() and e.id in [emoji.id for emoji in guild.emojis]:  # Emoji in guild
-                            return True
-                    elif e.is_custom_emoji() and r[1] == e.id:  # Custom emoji matches
-                        return True
-                    elif e.is_unicode_emoji() and r[0] == e.name:  # Default emoji matches
-                        return True
+            if not e:
+                return False
+            if r is True:
+                if e.is_custom_emoji() and e.id in [emoji.id for emoji in guild.emojis]:  # Emoji in guild
+                    return True
+            elif e.is_custom_emoji() and r[1] == e.id:  # Custom emoji matches
+                return True
+            elif e.is_unicode_emoji() and r[0] == e.name:  # Default emoji matches
+                return True
 
         return (await _st_match(st, status)) and (await _em_match(em, emoji))
 
@@ -292,9 +285,8 @@ class StatusRole(commands.Cog):
                 perms = log_channel.permissions_for(ctx.guild.me)
                 if not perms.send_messages:
                     log_channel = None
-                else:
-                    if perms.embed_links:
-                        can_embed = True
+                elif perms.embed_links:
+                    can_embed = True
 
             async with self.config.guild(ctx.guild).roles() as roles:
                 for sr in statusroles:

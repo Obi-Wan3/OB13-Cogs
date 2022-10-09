@@ -26,7 +26,7 @@ import typing
 from datetime import datetime, timedelta, timezone
 
 import discord
-from redbot.core import commands, Config, bank
+from redbot.core import Config, bank, commands
 from redbot.core.utils.chat_formatting import humanize_list
 
 
@@ -67,8 +67,7 @@ class UploadStreaks(commands.Cog):
                 ):
                     continue
 
-                orig = challenge['users'].get(str(message.author.id))
-                if orig:
+                if orig := challenge['users'].get(str(message.author.id)):
                     interval_before = (datetime.utcnow() - timedelta(days=challenge['interval'][0])).replace(microsecond=0, second=0, minute=0, hour=challenge['interval'][2], tzinfo=timezone.utc).timestamp()
                     interval_start = datetime.utcnow().replace(microsecond=0, second=0, minute=0, hour=challenge['interval'][2], tzinfo=timezone.utc).timestamp()
                     interval_end = (datetime.utcnow() + timedelta(days=challenge['interval'][0])).replace(microsecond=0, second=0, minute=0, hour=challenge['interval'][2], tzinfo=timezone.utc).timestamp()
@@ -128,8 +127,7 @@ class UploadStreaks(commands.Cog):
             embed.description = "```Streak   Points   User\n"
             ldb = sorted(settings[challenge]['users'].items(), key=lambda x: x[1][1], reverse=True)
             for i in range(min(num, len(ldb))):
-                member = ctx.guild.get_member(int(ldb[i][0]))
-                if member:
+                if member := ctx.guild.get_member(int(ldb[i][0])):
                     name = member.display_name
                 else:
                     try:
@@ -151,8 +149,7 @@ class UploadStreaks(commands.Cog):
             embed.description = "No UploadStreaks Challenges Found"
         else:
             for name, challenge in settings.items():
-                u = challenge['users'].get(str(user.id))
-                if u:
+                if u := challenge['users'].get(str(user.id)):
                     embed.add_field(name=f"Challenge `{name}`", inline=False, value=f"Points: {u[0]}\nStreak: {u[1]}{challenge['streak']}")
         if not embed.fields:
             embed.description = "This user has not participated in any UploadStreaks challenges."
@@ -345,12 +342,11 @@ class UploadStreaks(commands.Cog):
             if challenge_name not in challenges.keys():
                 return await ctx.send("There was no UploadStreaks challenge found with that name!")
 
-            orig = challenges[challenge_name]['users'].get(str(user.id))
+            if orig := challenges[challenge_name]['users'].get(str(user.id)):
+                challenges[challenge_name]['users'][str(user.id)] = (points, orig[1], orig[2])
 
-            if not orig:
+            else:
                 return await ctx.send("That user has not participated in the challenge yet!")
-
-            challenges[challenge_name]['users'][str(user.id)] = (points, orig[1], orig[2])
 
         return await ctx.tick()
 
@@ -365,12 +361,11 @@ class UploadStreaks(commands.Cog):
             if challenge_name not in challenges.keys():
                 return await ctx.send("There was no UploadStreaks challenge found with that name!")
 
-            orig = challenges[challenge_name]['users'].get(str(user.id))
+            if orig := challenges[challenge_name]['users'].get(str(user.id)):
+                challenges[challenge_name]['users'][str(user.id)] = (orig[0], streak, orig[2])
 
-            if not orig:
+            else:
                 return await ctx.send("That user has not participated in the challenge yet!")
-
-            challenges[challenge_name]['users'][str(user.id)] = (orig[0], streak, orig[2])
 
         return await ctx.tick()
 

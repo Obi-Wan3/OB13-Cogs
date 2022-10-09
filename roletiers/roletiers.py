@@ -356,10 +356,8 @@ class RoleTiers(commands.Cog):
             )
 
         if invalid_tiers:
-            new_tiers = []
-            for t in range(len(guild_tiers)):
-                if t not in invalid_tiers:
-                    new_tiers.append(guild_tiers[t])
+            new_tiers = [guild_tiers[t] for t in range(len(guild_tiers)) if t not in invalid_tiers]
+
             await self.config.guild(ctx.guild).tiers.set(new_tiers)
 
         return await ctx.send(embed=embed)

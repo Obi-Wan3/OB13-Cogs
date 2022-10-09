@@ -22,12 +22,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-import typing
 import asyncio
+import typing
 from datetime import datetime, timedelta
 
 import discord
-from redbot.core import commands, Config
+from redbot.core import Config, commands
 from redbot.core.utils.chat_formatting import humanize_list
 
 if typing.TYPE_CHECKING:
@@ -216,8 +216,7 @@ class TempRole(commands.Cog):
         if not user:
             title = f"{ctx.guild.name} TempRoles"
             for member_id, temp_roles in (await self.config.all_members(ctx.guild)).items():
-                member: discord.Member = ctx.guild.get_member(int(member_id))
-                if member:
+                if member := ctx.guild.get_member(int(member_id)):
                     if roles := [ctx.guild.get_role(int(r)) for r in temp_roles["temp_roles"].keys()]:
                         desc += f"{member.mention}: {humanize_list([r.mention for r in roles])}\n"
                     else:
@@ -226,8 +225,7 @@ class TempRole(commands.Cog):
             title = f"{user.display_name} TempRoles"
             async with self.config.member(user).temp_roles() as member_temp_roles:
                 for temp_role, end_ts in member_temp_roles.items():
-                    role: discord.Role = ctx.guild.get_role(int(temp_role))
-                    if role:
+                    if role := ctx.guild.get_role(int(temp_role)):
                         r_time = datetime.fromtimestamp(end_ts) - datetime.now()
                         desc += f"{role.mention}: ends in {r_time.days}d {round(r_time.seconds/3600, 1)}h\n"
                     else:
@@ -291,7 +289,8 @@ class TempRole(commands.Cog):
         async with self.config.member(member).temp_roles() as tr_entries:
             if tr_entries.get(str(role.id)):
                 del tr_entries[str(role.id)]
-                reason = "TempRole: timer ended" if not remover else f"TempRole: timer ended early by {remover}"
+                reason = f"TempRole: timer ended early by {remover}" if remover else "TempRole: timer ended"
+
                 if member.guild.me.guild_permissions.manage_roles and role < member.guild.me.top_role:
                     if role in member.roles:
                         await member.remove_roles(role, reason=reason)
@@ -310,4 +309,4 @@ class TempRole(commands.Cog):
                         f"TempRole {role.mention} for {member.mention} was unable to be removed due to a lack of permissions."
                     )
             elif ctx:
-                await ctx.send(f"Error: that is not an active TempRole.")
+                await ctx.send("Error: that is not an active TempRole.")

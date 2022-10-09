@@ -66,12 +66,7 @@ class EmbedReact(commands.Cog):
             return
 
         match = re.search(URL_REGEX, message.content)
-        if (
-                len(message.attachments) > 0 or
-                (
-                        match and not (match.group(0).startswith("<") and match.group(0).endswith(">"))
-                )
-        ):
+        if len(message.attachments) > 0 or match and not (match[0].startswith("<") and match[0].endswith(">")):
             for r in reactions:
                 try:
                     await message.add_reaction(r)
@@ -125,7 +120,8 @@ class EmbedReact(commands.Cog):
         """View the current EmbedReact settings."""
         config = await self.config.guild(ctx.guild).all()
 
-        embed = discord.Embed(title="EmbedReact Settings", color=await ctx.embed_color(), description=f"**Toggle:** {config['toggle']}\n{'**Reactions:** None' if not config['reactions'] else ''}")
+        embed = discord.Embed(title="EmbedReact Settings", color=await ctx.embed_color(), description=f"**Toggle:** {config['toggle']}\n{'' if config['reactions'] else '**Reactions:** None'}")
+
 
         if config['reactions']:
             r_string = ""
