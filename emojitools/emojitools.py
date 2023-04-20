@@ -146,7 +146,7 @@ class EmojiTools(commands.Cog):
             folder_path = await self._maybe_create_folder(ctx, folder_name)
             for e in emojis:
                 em = await self._convert_emoji(ctx, e)
-                await em.url.save(os.path.join(folder_path, f"{em.name}{self._ext(em)}"))
+                await em.save(os.path.join(folder_path, f"{em.name}{self._ext(em)}"))
 
         return await ctx.send(f"{len(emojis)} emojis were saved to `{folder_name}`.")
 
@@ -158,7 +158,7 @@ class EmojiTools(commands.Cog):
         async with ctx.typing():
             folder_path = await self._maybe_create_folder(ctx, folder_name or ctx.guild.name)
             for e in ctx.guild.emojis:
-                await e.url.save(os.path.join(folder_path, f"{e.name}{self._ext(e)}"))
+                await e.save(os.path.join(folder_path, f"{e.name}{self._ext(e)}"))
 
         return await ctx.send(f"{len(ctx.guild.emojis)} emojis were saved to `{folder_name or ctx.guild.name}`.")
 
@@ -274,7 +274,7 @@ class EmojiTools(commands.Cog):
                 final_emoji = await asyncio.wait_for(
                     ctx.guild.create_custom_emoji(
                         name=name or emoji.name,
-                        image=await emoji.url.read(),
+                        image=await emoji.read(),
                         reason=f"EmojiTools: emoji added by {ctx.author.name}#{ctx.author.discriminator}"
                     ),
                     timeout=10
@@ -301,7 +301,7 @@ class EmojiTools(commands.Cog):
                     fe = await asyncio.wait_for(
                         ctx.guild.create_custom_emoji(
                             name=em.name,
-                            image=await em.url.read(),
+                            image=await em.read(),
                             reason=f"EmojiTools: emoji added by {ctx.author.name}#{ctx.author.discriminator}"
                         ),
                         timeout=10
@@ -329,7 +329,7 @@ class EmojiTools(commands.Cog):
                         final_emoji = await asyncio.wait_for(
                             ctx.guild.create_custom_emoji(
                                 name=new_name or r.emoji.name,
-                                image=await r.emoji.url.read(),
+                                image=await r.emoji.read(),
                                 reason=f"EmojiTools: emoji added by {ctx.author.name}#{ctx.author.discriminator}"
                             ),
                             timeout=10
@@ -360,7 +360,7 @@ class EmojiTools(commands.Cog):
                     fe = await asyncio.wait_for(
                         ctx.guild.create_custom_emoji(
                             name=r.emoji.name,
-                            image=await r.emoji.url.read(),
+                            image=await r.emoji.read(),
                             reason=f"EmojiTools: emoji added by {ctx.author.name}#{ctx.author.discriminator}"
                         ),
                         timeout=10
@@ -499,7 +499,7 @@ class EmojiTools(commands.Cog):
 
     @staticmethod
     async def _generate_emoji(e):
-        yield await e.url.read()
+        yield await e.read()
 
     async def _zip_emojis(self, emojis: list, file_name: str):
 
