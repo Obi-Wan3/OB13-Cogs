@@ -8,8 +8,4 @@ with open(Path(__file__).parent / "info.json") as fp:
 
 
 async def setup(bot):
-    cog = DirectMessage(bot)
-    if asyncio.iscoroutinefunction(bot.add_cog):
-        await bot.add_cog(cog)
-    else:
-        bot.add_cog(DirectMessage(bot))
+    await bot.add_cog(DirectMessage(bot))
