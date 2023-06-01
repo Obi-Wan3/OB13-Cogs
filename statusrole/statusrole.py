@@ -46,7 +46,7 @@ class StatusRole(commands.Cog):
         }
         self.config.register_guild(**default_guild)
 
-    @commands.Cog.listener("on_member_update")
+    @commands.Cog.listener("on_presence_update")
     async def _member_update_listener(self, before: discord.Member, after: discord.Member):
         if (
             before.bot or  # Member is a bot
