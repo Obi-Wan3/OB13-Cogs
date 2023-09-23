@@ -87,7 +87,7 @@ class RoleTiers(commands.Cog):
 
     @staticmethod
     async def _seconds_since(time: datetime):
-        return (datetime.utcnow() - time).total_seconds()
+        return (datetime.now(timezone.utc) - time).total_seconds()
 
     @commands.Cog.listener("on_message_without_command")
     async def _message_listener(self, message: discord.Message):
